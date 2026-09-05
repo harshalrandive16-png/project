@@ -1,6 +1,5 @@
 // ═══════════════════════════════════════════════════════════
-// 🏔️ BhoomiSuraksha — Netlify Serverless API Handler (Crash-Proof)
-// SIH 2025 | PAN-INDIA Multi-Disaster Early Warning System
+// 🏔️ BhoomiSuraksha — Netlify Serverless Handler
 // ═══════════════════════════════════════════════════════════
 
 const serverless = require('serverless-http');
@@ -19,7 +18,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // ═══════════════════════════════════════════════════════════
-// 🔥 FIREBASE INIT (BULLETPROOF WITH PRIVATE KEY FIX)
+// 🔥 FIREBASE INIT
 // ═══════════════════════════════════════════════════════════
 let db = null;
 let firebaseReady = false;
@@ -34,14 +33,10 @@ function initFirebase() {
       try {
         const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
         serviceAccount = typeof raw === 'string' ? JSON.parse(raw) : raw;
-
-        // 🔧 CRITICAL FIX FOR NETLIFY: Fix unescaped newlines in PEM private key
         if (serviceAccount && serviceAccount.private_key) {
           serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
         }
-        console.log('🔑 Firebase key parsed successfully from ENV');
       } catch (e) {
-        console.error('❌ FIREBASE_SERVICE_ACCOUNT ENV parse error:', e.message);
         serviceAccount = null;
       }
     }
@@ -54,15 +49,11 @@ function initFirebase() {
           if (serviceAccount && serviceAccount.private_key) {
             serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
           }
-          console.log('🔑 Firebase key loaded from local file');
         }
-      } catch (e) { /* fallback */ }
+      } catch (e) {}
     }
 
-    if (!serviceAccount) {
-      console.log('🎭 Firebase credentials unavailable. Running in DEMO FALLBACK mode.');
-      return false;
-    }
+    if (!serviceAccount) return false;
 
     if (!admin.apps.length) {
       admin.initializeApp({
@@ -73,47 +64,35 @@ function initFirebase() {
 
     db = admin.firestore();
     firebaseReady = true;
-    console.log('✅ Firebase Firestore Connected');
     return true;
   } catch (err) {
-    console.error('❌ Firebase init error (handled safely):', err.message);
     firebaseReady = false;
     return false;
   }
 }
 
-// Safely invoke init without crashing lambda startup
-try {
-  initFirebase();
-} catch (err) {
-  console.error('⚠️ Top-level Firebase init safe catch:', err.message);
-}
+try { initFirebase(); } catch (e) {}
 
 // ═══════════════════════════════════════════════════════════
-// 🧠 SERVICES (CRASH-PROOF LOAD)
+// 🧠 SERVICES LOAD
 // ═══════════════════════════════════════════════════════════
 let kiraAI = null;
 let openMeteo = null;
 let riskFallback = null;
-let haversine = null;
 
-try { kiraAI = require('../../services/kiraAI'); } catch (e) { console.log('⚠️ kiraAI service fallback'); }
-try { openMeteo = require('../../services/openmeteo'); } catch (e) { console.log('⚠️ openmeteo fallback'); }
-try { riskFallback = require('../../services/riskFallback'); } catch (e) { console.log('⚠️ riskFallback fallback'); }
-try { haversine = require('../../services/haversine'); } catch (e) { console.log('⚠️ haversine fallback'); }
+try { kiraAI = require('../../services/kiraAI'); } catch (e) {}
+try { openMeteo = require('../../services/openmeteo'); } catch (e) {}
+try { riskFallback = require('../../services/riskFallback'); } catch (e) {}
 
 // ═══════════════════════════════════════════════════════════
-// 📡 ROUTER LOGIC
+// 📡 ROUTER (HANDLES ALL REDIRECT PATHS)
 // ═══════════════════════════════════════════════════════════
 
 const router = express.Router();
 
-// HEALTH CHECK
-const handleHealth = (req, res) => {
+const healthResponse = (req, res) => {
   let kiraStatus = false;
-  try {
-    kiraStatus = kiraAI && typeof kiraAI.isKiraReady === 'function' && kiraAI.isKiraReady();
-  } catch (e) {}
+  try { kiraStatus = kiraAI && typeof kiraAI.isKiraReady === 'function' && kiraAI.isKiraReady(); } catch (e) {}
 
   res.json({
     status: 'ok',
@@ -132,70 +111,8 @@ const handleHealth = (req, res) => {
   });
 };
 
-router.get('/health', handleHealth);
-router.get('/', handleHealth);
-
-// SIGNUP
-router.post('/signup', async (req, res) => {
-  try {
-    const { name, email, phone, state, password } = req.body;
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: 'Name, email, and password required' });
-    }
-
-    if (!firebaseReady) {
-      const user = { uid: 'demo_' + Date.now(), name, email, phone: phone || '', state: state || '', role: 'citizen' };
-      const token = jwt.sign(user, JWT_SECRET, { expiresIn: '7d' });
-      return res.json({ message: 'Signup successful (Demo Mode)', user, token });
-    }
-
-    const existing = await db.collection('users').where('email', '==', email).limit(1).get();
-    if (!existing.empty) return res.status(400).json({ error: 'Email already registered' });
-
-    const hashed = await bcrypt.hash(password, 10);
-    const userData = {
-      name, email, phone: phone || '', state: state || '', password: hashed,
-      role: 'citizen',
-      alertPreferences: ['flood', 'cyclone', 'landslide', 'earthquake', 'cloudburst'],
-      createdAt: new Date().toISOString()
-    };
-
-    const docRef = await db.collection('users').add(userData);
-    const user = { uid: docRef.id, name, email, phone: phone || '', state: state || '', role: 'citizen' };
-    const token = jwt.sign({ uid: docRef.id, email, name, role: 'citizen' }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ message: 'Signup successful', user, token });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// LOGIN
-router.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
-
-    if (!firebaseReady) {
-      const user = { uid: 'demo_' + Date.now(), name: 'Citizen User', email, role: 'citizen' };
-      const token = jwt.sign(user, JWT_SECRET, { expiresIn: '7d' });
-      return res.json({ message: 'Login successful (Demo Mode)', user, token });
-    }
-
-    const snap = await db.collection('users').where('email', '==', email).limit(1).get();
-    if (snap.empty) return res.status(401).json({ error: 'Invalid credentials' });
-
-    const doc = snap.docs[0];
-    const data = doc.data();
-    const valid = await bcrypt.compare(password, data.password);
-    if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
-
-    const user = { uid: doc.id, name: data.name, email: data.email, role: data.role || 'citizen' };
-    const token = jwt.sign({ uid: doc.id, email, name: data.name, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ message: 'Login successful', user, token });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+router.get('/health', healthResponse);
+router.get('/', healthResponse);
 
 // ANALYZE RISK
 router.post('/analyze-risk', async (req, res) => {
@@ -253,7 +170,7 @@ router.post('/analyze-risk', async (req, res) => {
   }
 });
 
-// PUBLIC ALERTS FEED
+// ALERTS FEED
 router.get('/alerts', async (req, res) => {
   try {
     if (!firebaseReady) {
@@ -269,16 +186,9 @@ router.get('/alerts', async (req, res) => {
   }
 });
 
-// MOUNT ROUTER
+// MOUNT PATHS
 app.use('/.netlify/functions/api', router);
 app.use('/api', router);
 app.use('/', router);
 
-const handler = serverless(app);
-
-module.exports.handler = async (event, context) => {
-  if (event.path && event.path.startsWith('/.netlify/functions/api')) {
-    event.path = event.path.replace('/.netlify/functions/api', '/api') || '/api/health';
-  }
-  return handler(event, context);
-};
+module.exports.handler = serverless(app);

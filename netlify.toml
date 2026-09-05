@@ -1,0 +1,19 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Rule 1: /api/* requests ko Serverless Function pe bhejo
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
+
+# Rule 2: Normal pages
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
