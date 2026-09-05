@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Profile – BhoomiSuraksha</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    /* =============================================
+       PROFILE PAGE — OVERLAP FIX + FULL STYLES
+       ============================================= */
+
+    /* Ensure body doesn't hide under sticky navbar */
+    body {
+      background: #060b11;
+      color: #f8fafc;
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background-image: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
+    }
+
+    /* Navbar must stay on top */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(6, 11, 17, 0.92) !important;
+      backdrop-filter: blur(16px);
+    }
+
+    /* ========== PROFILE CHIP (navbar right) ========== */
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.4rem 0.5rem 0.4rem 0.4rem;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      backdrop-filter: blur(12px);
+    }
+    .user-profile.hidden { display: none !important; }
+    .auth-buttons.hidden { display: none !important; }
+
+    .user-avatar {
+      width: 40px; height: 40px; min-width: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1.05rem;
+      text-decoration: none; cursor: pointer;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15), 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+
+    .user-info {
+      display: flex; flex-direction: column;
+      line-height: 1.15;
+      text-decoration: none; color: inherit; cursor: pointer;
+      padding-right: 0.35rem;
+    }
+    .user-info .user-greet { font-size: 0.7rem; color: #94a3b8; }
+    .user-info .user-name { font-size: 0.95rem; font-weight: 700; color: #f8fafc; margin-top: 1px; }
+
+    .btn-logout {
+      width: 32px; height: 32px; min-width: 32px;
+      border-radius: 50%;
+      background: transparent;
+      border: 1.5px solid rgba(220, 38, 38, 0.45);
+      color: #f87171;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; padding: 0; transition: all 0.2s ease;
+    }
+    .btn-logout:hover {
+      background: rgba(220, 38, 38, 0.15);
+      border-color: #dc2626; color: #fff;
+      transform: rotate(90deg);
+    }
+    .btn-logout svg { width: 14px; height: 14px; }
+
+    .btn-nav-cta {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 0.6rem 1.25rem;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #060b11;
+      font-weight: 700; font-size: 0.88rem;
+      border-radius: 999px;
+      text-decoration: none;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+      white-space: nowrap;
+    }
+    .btn-nav-cta:hover {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+      color: #060b11;
+    }
+
+    /* ========== MAIN CONTENT — TOP SPACING FIX ========== */
+    .profile-page {
+      /* THIS FIXES THE OVERLAP */
+      padding: 2rem 1.5rem 4rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      clear: both;
+    }
+
+    .profile-header-bar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+      /* Extra top breathing room under sticky nav */
+      padding-top: 0.5rem;
+    }
+
+    .profile-header-bar h1 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #f8fafc;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.35rem 0;
+      line-height: 1.2;
+    }
+
+    .profile-header-bar p {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    .btn-back-dash {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.65rem 1.15rem;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #e2e8f0;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .btn-back-dash:hover {
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.06);
+    }
+
+    /* ========== GRID ========== */
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .profile-grid { grid-template-columns: 1fr; }
+      .profile-identity { position: static !important; }
+    }
+
+    /* ========== LEFT IDENTITY CARD ========== */
+    .profile-identity {
+      background: rgba(11, 15, 26, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      backdrop-filter: blur(16px);
+      position: sticky;
+      top: 100px; /* sits below navbar when scrolling */
+    }
+
+    .profile-avatar-lg {
+      width: 96px; height: 96px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10b981, #059669);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.4rem; font-weight: 800; color: #fff;
+      margin: 0 auto 1.25rem;
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15), 0 12px 40px rgba(16, 185, 129, 0.25);
+    }
+
+    .profile-name-lg {
+      font-size: 1.35rem; font-weight: 700; color: #f8fafc;
+      margin: 0 0 0.5rem 0;
+    }
+
+    .profile-role-badge {
+      display: inline-block;
+      font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      padding: 0.3rem 0.85rem;
+      border-radius: 999px;
+      margin-bottom: 1.5rem;
+    }
+
+    .profile-meta-list {
+      text-align: left;
+      display: flex; flex-direction: column; gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding: 1.25rem 0;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .profile-meta-item .meta-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      margin-bottom: 0.2rem;
+    }
+    .profile-meta-item .meta-value {
+      font-size: 0.9rem; color: #e2e8f0;
+      display: flex; align-items: center; gap: 0.5rem;
+      word-break: break-all;
+    }
+
+    .profile-stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .p-stat {
+      background: rgba(0,0,0,0.25);
+      border-radius: 12px;
+      padding: 0.75rem 0.4rem;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .p-stat-num { font-size: 1.15rem; font-weight: 800; color: #10b981; }
+    .p-stat-label { font-size: 0.65rem; color: #64748b; margin-top: 0.15rem; }
+
+    .btn-logout-full {
+      width: 100%;
+      background: rgba(220, 38, 38, 0.1);
+      color: #f87171;
+      border: 1px solid rgba(220, 38, 38, 0.3);
+      padding: 0.8rem 1rem;
+      border-radius: 12px;
+      font-weight: 600; font-size: 0.9rem;
+      cursor: pointer; font-family: inherit;
+      transition: all 0.25s;
+    }
+    .btn-logout-full:hover {
+      background: #dc2626; color: #fff; border-color: #dc2626;
+    }
+
+    /* ========== RIGHT PANELS ========== */
+    .profile-panels {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .profile-panel {
+      background: rgba(11, 15, 26, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 1.75rem;
+      backdrop-filter: blur(16px);
+    }
+
+    .panel-title {
+      font-size: 1.1rem; font-weight: 700; color: #f8fafc;
+      display: flex; align-items: center; gap: 0.6rem;
+      margin: 0 0 0.4rem 0;
+    }
+    .panel-desc {
+      font-size: 0.85rem; color: #94a3b8;
+      margin: 0 0 1.5rem 0; line-height: 1.5;
+    }
+
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.1rem;
+      margin-bottom: 1.25rem;
+    }
+    @media (max-width: 600px) {
+      .form-grid-2 { grid-template-columns: 1fr; }
+    }
+
+    .form-field label {
+      display: block;
+      font-size: 0.78rem; color: #94a3b8;
+      margin-bottom: 0.4rem; font-weight: 500;
+    }
+    .form-field input,
+    .form-field select {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #f1f5f9;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+    .form-field input:focus,
+    .form-field select:focus { border-color: #10b981; }
+    .form-field select option { background: #0b0f1a; color: #f1f5f9; }
+
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 1rem 1.15rem;
+      margin-bottom: 0.75rem;
+    }
+    .toggle-row h4 { font-size: 0.9rem; font-weight: 600; color: #e2e8f0; margin: 0 0 0.15rem 0; }
+    .toggle-row p { font-size: 0.78rem; color: #64748b; margin: 0; }
+
+    .toggle-switch {
+      position: relative; width: 44px; height: 24px; flex-shrink: 0;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: #334155; border-radius: 999px;
+      cursor: pointer; transition: 0.3s;
+    }
+    .toggle-slider::before {
+      content: "";
+      position: absolute;
+      width: 18px; height: 18px;
+      left: 3px; bottom: 3px;
+      background: #fff; border-radius: 50%;
+      transition: 0.3s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background: #10b981; }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+    .hazard-chips {
+      display: flex; flex-wrap: wrap; gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .hazard-chip {
+      display: flex; align-items: center; gap: 0.4rem;
+      padding: 0.45rem 0.85rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(0,0,0,0.25);
+      color: #94a3b8;
+      font-size: 0.8rem;
+      cursor: pointer; user-select: none;
+      transition: all 0.2s;
+    }
+    .hazard-chip input { display: none; }
+    .hazard-chip.active {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #10b981;
+    }
+
+    .btn-save-pref {
+      background: #10b981;
+      color: #060b11;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 10px;
+      font-weight: 700; font-size: 0.9rem;
+      cursor: pointer; font-family: inherit;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-save-pref:hover { background: #059669; transform: translateY(-1px); }
+    .btn-save-pref:disabled { opacity: 0.7; cursor: wait; }
+
+    /* Reports */
+    .report-list { display: flex; flex-direction: column; gap: 0.75rem; }
+    .my-report-card {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem 1.15rem;
+      background: rgba(0,0,0,0.28);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .my-report-card:hover {
+      border-color: rgba(16, 185, 129, 0.3);
+      transform: translateX(4px);
+    }
+    .my-report-card h4 {
+      font-size: 0.95rem; font-weight: 600; color: #f1f5f9;
+      margin: 0 0 0.25rem 0;
+    }
+    .my-report-card .rep-meta { font-size: 0.78rem; color: #64748b; }
+
+    .status-pill {
+      font-size: 0.72rem; font-weight: 700;
+      padding: 0.3rem 0.7rem; border-radius: 999px;
+      white-space: nowrap;
+    }
+    .status-pill.verified { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .status-pill.pending { background: rgba(249, 115, 22, 0.15); color: #f97316; }
+    .status-pill.severe-tag { background: rgba(220, 38, 38, 0.15); color: #f87171; }
+
+    .profile-quick-links {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+    }
+    @media (max-width: 600px) {
+      .profile-quick-links { grid-template-columns: 1fr; }
+    }
+    .quick-link-card {
+      display: flex; flex-direction: column; align-items: flex-start; gap: 0.4rem;
+      padding: 1.1rem;
+      background: rgba(0,0,0,0.28);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      text-decoration: none; color: #e2e8f0;
+      transition: all 0.2s;
+    }
+    .quick-link-card:hover {
+      border-color: rgba(16, 185, 129, 0.35);
+      background: rgba(16, 185, 129, 0.08);
+    }
+    .quick-link-card .ql-icon { font-size: 1.3rem; }
+    .quick-link-card strong { font-size: 0.88rem; }
+    .quick-link-card span { font-size: 0.75rem; color: #64748b; }
+
+    /* Toast */
+    .auth-toast {
+      position: fixed; top: 90px; right: 24px;
+      background: #10b981; color: #060b11;
+      padding: 0.85rem 1.3rem; border-radius: 12px;
+      font-weight: 700; font-size: 0.9rem;
+      box-shadow: 0 12px 32px rgba(16, 185, 129, 0.4);
+      z-index: 9999;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .auth-toast.hidden { display: none !important; }
+
+    /* Footer compact */
+    .footer { margin-top: 2rem; }
+    .footer-bottom {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 1rem;
+      padding: 1.25rem 2rem;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      color: #64748b; font-size: 0.8rem;
+    }
+    .footer-badges { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .footer-badges span {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem;
+    }
+
+    @media (max-width: 768px) {
+      .user-info { display: none; }
+      .profile-page { padding: 1.25rem 1rem 3rem; }
+      .profile-header-bar h1 { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============ NAVBAR ============ -->
+<header class="navbar" id="navbar">
+  <div class="nav-brand">
+    <a href="index.html" style="display:flex;align-items:center;gap:inherit;text-decoration:none;color:inherit;">
+      <div class="brand-icon">🌍</div>
+      <div class="brand-text">
+        <span class="brand-name">BhoomiSuraksha</span>
+        <span class="brand-sub">AI EARLY WARNING SYSTEM</span>
+      </div>
+    </a>
+  </div>
+
+  <nav class="nav-links" id="navLinks">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="dashboard.html">Dashboard</a>
+    <a class="nav-link" href="alerts.html">Alerts</a>
+    <a class="nav-link" href="report.html">Report Incident</a>
+    <a class="nav-link active" href="profile.html">Profile</a>
+  </nav>
+
+  <div class="nav-right" id="navRightSection">
+    <select class="lang-select" id="langSelect">
+      <option value="en">English</option>
+      <option value="hi">हिंदी</option>
+      <option value="bn">বাংলা</option>
+      <option value="mr">मराठी</option>
+      <option value="ta">தமிழ்</option>
+      <option value="as">অসমীয়া</option>
+    </select>
+
+    <div id="authButtons" class="auth-buttons">
+      <a href="auth.html?mode=login" class="btn-login">Log In</a>
+      <a href="auth.html?mode=signup" class="btn-signup">Sign Up</a>
+    </div>
+
+    <div id="userProfile" class="user-profile hidden">
+      <a href="profile.html" class="user-avatar" id="userAvatar" title="My profile">U</a>
+      <a href="profile.html" class="user-info" title="My profile">
+        <span class="user-greet">Welcome back,</span>
+        <span class="user-name" id="userNameDisplay">User</span>
+      </a>
+      <button type="button" class="btn-logout" onclick="logoutUser()" title="Logout">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+        </svg>
+      </button>
+      <a href="dashboard.html" class="btn-nav-cta">Dashboard</a>
+    </div>
+
+    <button class="hamburger" id="hamburger" type="button">☰</button>
+  </div>
+</header>
+
+<!-- ============ PROFILE CONTENT (no overlap) ============ -->
+<main class="profile-page">
+
+  <!-- Header row -->
+  <div class="profile-header-bar">
+    <div>
+      <h1>👤 My Profile</h1>
+      <p>Manage your BhoomiSuraksha account, alert preferences &amp; incident history</p>
+    </div>
+    <a href="dashboard.html" class="btn-back-dash">← Back to Dashboard</a>
+  </div>
+
+  <div class="profile-grid">
+
+    <!-- LEFT CARD -->
+    <aside class="profile-identity">
+      <div class="profile-avatar-lg" id="profileAvatarLg">U</div>
+      <h2 class="profile-name-lg" id="profileNameLg">Citizen User</h2>
+      <div class="profile-role-badge" id="profileRoleBadge">Citizen Reporter</div>
+
+      <div class="profile-meta-list">
+        <div class="profile-meta-item">
+          <div class="meta-label">Email</div>
+          <div class="meta-value">✉️ <span id="profileEmail">user@bhoomisuraksha.in</span></div>
+        </div>
+        <div class="profile-meta-item">
+          <div class="meta-label">Phone</div>
+          <div class="meta-value">📱 <span id="profilePhone">+91 —</span></div>
+        </div>
+        <div class="profile-meta-item">
+          <div class="meta-label">Home State</div>
+          <div class="meta-value">📍 <span id="profileState">India</span></div>
+        </div>
+        <div class="profile-meta-item">
+          <div class="meta-label">Member Since</div>
+          <div class="meta-value">📅 <span id="profileJoined">SIH 2025</span></div>
+        </div>
+      </div>
+
+      <div class="profile-stats-row">
+        <div class="p-stat">
+          <div class="p-stat-num" id="statReports">2</div>
+          <div class="p-stat-label">Reports</div>
+        </div>
+        <div class="p-stat">
+          <div class="p-stat-num" id="statAlerts">14</div>
+          <div class="p-stat-label">Alerts</div>
+        </div>
+        <div class="p-stat">
+          <div class="p-stat-num" id="statScore">MH</div>
+          <div class="p-stat-label">Risk Watch</div>
+        </div>
+      </div>
+
+      <button type="button" class="btn-logout-full" onclick="logoutUser()">
+        ⎋ Log Out of BhoomiSuraksha
+      </button>
+    </aside>
+
+    <!-- RIGHT PANELS -->
+    <div class="profile-panels">
+
+      <!-- Personal Details -->
+      <section class="profile-panel">
+        <h3 class="panel-title">📝 Personal Details</h3>
+        <p class="panel-desc">Update your basic info used for emergency contact and multilingual alerts.</p>
+
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label for="editName">Full Name</label>
+            <input type="text" id="editName" placeholder="Your full name" autocomplete="name"/>
+          </div>
+          <div class="form-field">
+            <label for="editPhone">Phone Number</label>
+            <input type="tel" id="editPhone" placeholder="+91 98765 43210" autocomplete="tel"/>
+          </div>
+          <div class="form-field">
+            <label for="editEmail">Email Address</label>
+            <input type="email" id="editEmail" placeholder="you@example.com" autocomplete="email"/>
+          </div>
+          <div class="form-field">
+            <label for="editState">Primary State</label>
+            <select id="editState">
+              <option value="">Select state</option>
+              <option value="All India">All India (National)</option>
+              <option value="Andhra Pradesh">Andhra Pradesh</option>
+              <option value="Assam">Assam</option>
+              <option value="Bihar">Bihar</option>
+              <option value="Delhi">Delhi</option>
+              <option value="Gujarat">Gujarat</option>
+              <option value="Himachal Pradesh">Himachal Pradesh</option>
+              <option value="Kerala">Kerala</option>
+              <option value="Maharashtra">Maharashtra</option>
+              <option value="Odisha">Odisha</option>
+              <option value="Tamil Nadu">Tamil Nadu</option>
+              <option value="Uttarakhand">Uttarakhand</option>
+              <option value="West Bengal">West Bengal</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="button" class="btn-save-pref" id="btnSaveProfile" onclick="saveProfileDetails()">
+          Save Profile Details
+        </button>
+      </section>
+
+      <!-- Alert Preferences -->
+      <section class="profile-panel">
+        <h3 class="panel-title">⚡ Alert Preferences</h3>
+        <p class="panel-desc">Choose language, channels, and which multi-disaster hazards you want early warnings for — Pan-India.</p>
+
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label for="prefLang">Preferred Alert Language</label>
+            <select id="prefLang">
+              <option value="en">English</option>
+              <option value="hi" selected>Hindi (हिंदी)</option>
+              <option value="bn">Bengali (বাংলা)</option>
+              <option value="mr">Marathi (मराठी)</option>
+              <option value="ta">Tamil (தமிழ்)</option>
+              <option value="as">Assamese (অসমীয়া)</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="prefRegion">Monitored Region</label>
+            <select id="prefRegion">
+              <option value="national">All India (National Feed)</option>
+              <option value="home" selected>My Home State Only</option>
+              <option value="coastal">Coastal Belt (Cyclone focus)</option>
+              <option value="himalayan">Himalayan Belt (Landslide / Seismic)</option>
+              <option value="riverine">River Basins (Flood focus)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-bottom:0.5rem;">
+          <label style="font-size:0.78rem;color:#94a3b8;font-weight:500;">Hazard Types You Want Alerts For</label>
+        </div>
+        <div class="hazard-chips" id="hazardChips">
+          <label class="hazard-chip active"><input type="checkbox" value="flood" checked/> 🌊 Floods</label>
+          <label class="hazard-chip active"><input type="checkbox" value="cyclone" checked/> 🌀 Cyclones</label>
+          <label class="hazard-chip active"><input type="checkbox" value="landslide" checked/> 🏔️ Landslides</label>
+          <label class="hazard-chip active"><input type="checkbox" value="earthquake" checked/> 🌍 Earthquakes</label>
+          <label class="hazard-chip"><input type="checkbox" value="cloudburst"/> ⛈️ Cloudburst / Extreme Rain</label>
+        </div>
+
+        <div class="toggle-row">
+          <div>
+            <h4>SMS Early Warnings</h4>
+            <p>Severe &amp; High risk alerts via SMS (works offline-friendly)</p>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggleSms" checked/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div>
+            <h4>Push / In-App Alerts</h4>
+            <p>Live feed notifications on Dashboard &amp; Alerts page</p>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="togglePush" checked/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div>
+            <h4>Emergency Contact Sharing</h4>
+            <p>Allow NDRF / 112 flow to use your saved phone in SOS</p>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggleSosShare" checked/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div style="margin-top:1.25rem;">
+          <button type="button" class="btn-save-pref" id="btnSavePrefs" onclick="saveAlertPreferences()">
+            Save Alert Preferences
+          </button>
+        </div>
+      </section>
+
+      <!-- My Reports -->
+      <section class="profile-panel">
+        <h3 class="panel-title">📋 My Incident Reports</h3>
+        <p class="panel-desc">Geo-tagged field reports you submitted across floods, cyclones, landslides &amp; more.</p>
+        <div class="report-list" id="myReportsList"></div>
+      </section>
+
+      <!-- Quick Links -->
+      <section class="profile-panel">
+        <h3 class="panel-title">🚀 Quick Actions</h3>
+        <p class="panel-desc">Jump straight into the multi-disaster command tools.</p>
+        <div class="profile-quick-links">
+          <a class="quick-link-card" href="dashboard.html">
+            <span class="ql-icon">🗺️</span>
+            <strong>Live Dashboard</strong>
+            <span>Pan-India GIS risk map</span>
+          </a>
+          <a class="quick-link-card" href="alerts.html">
+            <span class="ql-icon">🚨</span>
+            <strong>Alert Feed</strong>
+            <span>Severe → Low filters</span>
+          </a>
+          <a class="quick-link-card" href="report.html">
+            <span class="ql-icon">📷</span>
+            <strong>Report Incident</strong>
+            <span>Upload field evidence</span>
+          </a>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-bottom">
+    <p>BhoomiSuraksha · Smart India Hackathon · Built for Disaster Resilience</p>
+    <div class="footer-badges">
+      <span>🏆 SIH 2025</span>
+      <span>🇮🇳 Made in India</span>
+      <span>🌍 Pan-India Ready</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Floating SOS -->
+<div class="float-sos-container" id="floatSosContainer">
+  <div class="float-sos-menu" id="floatSosMenu">
+    <a href="tel:112" class="sos-option primary">
+      <span class="sos-opt-icon">📞</span>
+      <div class="sos-opt-text"><strong>Call 112</strong><span>National Emergency</span></div>
+    </a>
+    <a href="tel:1070" class="sos-option">
+      <span class="sos-opt-icon">🛡️</span>
+      <div class="sos-opt-text"><strong>NDRF 1070</strong><span>Disaster Response</span></div>
+    </a>
+    <a href="report.html" class="sos-option">
+      <span class="sos-opt-icon">📷</span>
+      <div class="sos-opt-text"><strong>Report Incident</strong><span>Field Report</span></div>
+    </a>
+  </div>
+  <button type="button" class="float-sos-btn" onclick="toggleSosMenu(event)" aria-label="SOS">
+    <span class="sos-pulse-ring"></span>
+    <span class="sos-btn-icon">🆘</span>
+    <span class="sos-btn-label">SOS</span>
+  </button>
+</div>
+
+<!-- Toast -->
+<div id="authToast" class="auth-toast hidden">
+  <span id="toastIcon">✅</span>
+  <span id="toastMessage">Success!</span>
+</div>
+
+<script src="script.js"></script>
+<script>
+(function () {
+  function readUser() {
+    try {
+      const raw = localStorage.getItem('landslideUser') || localStorage.getItem('bhoomiUser');
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
+  function writeUser(user) {
+    localStorage.setItem('landslideUser', JSON.stringify(user));
+    localStorage.setItem('bhoomiUser', JSON.stringify(user));
+  }
+
+  function showToast(msg, icon) {
+    const toast = document.getElementById('authToast');
+    const tMsg = document.getElementById('toastMessage');
+    const tIcon = document.getElementById('toastIcon');
+    if (!toast) { alert(msg); return; }
+    if (tMsg) tMsg.textContent = msg;
+    if (tIcon) tIcon.textContent = icon || '✅';
+    toast.classList.remove('hidden');
+    clearTimeout(window.__profileToastTimer);
+    window.__profileToastTimer = setTimeout(function () {
+      toast.classList.add('hidden');
+    }, 2800);
+  }
+
+  function applyUserToUI(user) {
+    const name = user.name || 'Citizen User';
+    const initial = name.charAt(0).toUpperCase();
+    const email = user.email || 'user@bhoomisuraksha.in';
+    const phone = user.phone || '+91 —';
+    const state = user.state || 'India';
+    const role = user.role || 'Citizen Reporter';
+    const joined = user.joined || 'SIH 2025';
+
+    const set = function (id, val) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+    };
+
+    set('profileAvatarLg', initial);
+    set('profileNameLg', name);
+    set('profileRoleBadge', role);
+    set('profileEmail', email);
+    set('profilePhone', phone);
+    set('profileState', state);
+    set('profileJoined', joined);
+    set('statReports', user.reportsCount != null ? user.reportsCount : 2);
+    set('statAlerts', user.alertsCount != null ? user.alertsCount : 14);
+    set('statScore', user.riskWatch || (state === 'Maharashtra' ? 'MH' : 'ON'));
+
+    const editName = document.getElementById('editName');
+    const editPhone = document.getElementById('editPhone');
+    const editEmail = document.getElementById('editEmail');
+    const editState = document.getElementById('editState');
+    if (editName) editName.value = name;
+    if (editPhone) editPhone.value = phone !== '+91 —' ? phone : '';
+    if (editEmail) editEmail.value = email;
+    if (editState && state) editState.value = state;
+
+    // Navbar chip
+    const authButtons = document.getElementById('authButtons');
+    const userProfile = document.getElementById('userProfile');
+    const userAvatar = document.getElementById('userAvatar');
+    const userNameDisplay = document.getElementById('userNameDisplay');
+    if (authButtons) authButtons.classList.add('hidden');
+    if (userProfile) userProfile.classList.remove('hidden');
+    if (userAvatar) userAvatar.textContent = initial;
+    if (userNameDisplay) userNameDisplay.textContent = name.split(' ')[0];
+  }
+
+  function loadPreferences() {
+    let prefs = null;
+    try {
+      const raw = localStorage.getItem('bhoomiAlertPrefs');
+      if (raw) prefs = JSON.parse(raw);
+    } catch (e) {}
+    prefs = prefs || {
+      lang: 'hi', region: 'home',
+      hazards: ['flood', 'cyclone', 'landslide', 'earthquake'],
+      sms: true, push: true, sosShare: true
+    };
+
+    const prefLang = document.getElementById('prefLang');
+    const prefRegion = document.getElementById('prefRegion');
+    if (prefLang) prefLang.value = prefs.lang || 'hi';
+    if (prefRegion) prefRegion.value = prefs.region || 'home';
+
+    const sms = document.getElementById('toggleSms');
+    const push = document.getElementById('togglePush');
+    const sos = document.getElementById('toggleSosShare');
+    if (sms) sms.checked = prefs.sms !== false;
+    if (push) push.checked = prefs.push !== false;
+    if (sos) sos.checked = prefs.sosShare !== false;
+
+    document.querySelectorAll('#hazardChips .hazard-chip').forEach(function (chip) {
+      const input = chip.querySelector('input');
+      const on = prefs.hazards && prefs.hazards.indexOf(input.value) !== -1;
+      input.checked = on;
+      chip.classList.toggle('active', on);
+    });
+  }
+
+  function loadMyReports() {
+    const list = document.getElementById('myReportsList');
+    if (!list) return;
+
+    const reports = [
+      {
+        title: 'Urban Flooding — Andheri East',
+        meta: '🌊 Flood · Maharashtra · 2 days ago',
+        status: 'verified',
+        statusText: '✓ Verified'
+      },
+      {
+        title: 'Waterlogging near Sion Causeway',
+        meta: '🌊 Flood · Maharashtra · 1 week ago',
+        status: 'pending',
+        statusText: '⏳ AI Analyzing'
+      },
+      {
+        title: 'Slope crack after heavy rain',
+        meta: '🏔️ Landslide watch · 12 days ago',
+        status: 'severe-tag',
+        statusText: '⚑ Flagged'
+      }
+    ];
+
+    list.innerHTML = reports.map(function (r) {
+      return (
+        '<div class="my-report-card">' +
+          '<div><h4>' + r.title + '</h4><div class="rep-meta">' + r.meta + '</div></div>' +
+          '<span class="status-pill ' + r.status + '">' + r.statusText + '</span>' +
+        '</div>'
+      );
+    }).join('');
+  }
+
+  document.querySelectorAll('#hazardChips .hazard-chip').forEach(function (chip) {
+    chip.addEventListener('click', function (e) {
+      e.preventDefault();
+      const input = chip.querySelector('input');
+      input.checked = !input.checked;
+      chip.classList.toggle('active', input.checked);
+    });
+  });
+
+  window.saveProfileDetails = function () {
+    const btn = document.getElementById('btnSaveProfile');
+    const user = readUser() || {};
+    user.name = (document.getElementById('editName').value || user.name || '').trim();
+    user.phone = (document.getElementById('editPhone').value || '').trim();
+    user.email = (document.getElementById('editEmail').value || '').trim();
+    user.state = document.getElementById('editState').value || user.state || 'India';
+    user.role = user.role || 'Citizen Reporter';
+    user.joined = user.joined || 'SIH 2025';
+
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+
+    setTimeout(function () {
+      writeUser(user);
+      applyUserToUI(user);
+      showToast('Profile details saved successfully!', '✅');
+      if (btn) { btn.disabled = false; btn.textContent = 'Save Profile Details'; }
+    }, 700);
+  };
+
+  window.saveAlertPreferences = function () {
+    const btn = document.getElementById('btnSavePrefs');
+    const hazards = [];
+    document.querySelectorAll('#hazardChips input:checked').forEach(function (el) {
+      hazards.push(el.value);
+    });
+
+    const prefs = {
+      lang: document.getElementById('prefLang').value,
+      region: document.getElementById('prefRegion').value,
+      hazards: hazards,
+      sms: document.getElementById('toggleSms').checked,
+      push: document.getElementById('togglePush').checked,
+      sosShare: document.getElementById('toggleSosShare').checked
+    };
+
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+
+    setTimeout(function () {
+      localStorage.setItem('bhoomiAlertPrefs', JSON.stringify(prefs));
+      const langSelect = document.getElementById('langSelect');
+      if (langSelect && prefs.lang) langSelect.value = prefs.lang;
+      showToast('Alert preferences updated!', '⚡');
+      if (btn) { btn.disabled = false; btn.textContent = 'Save Alert Preferences'; }
+    }, 700);
+  };
+
+  window.logoutUser = function () {
+    if (!confirm('Log out from BhoomiSuraksha?')) return;
+    localStorage.removeItem('landslideUser');
+    localStorage.removeItem('landslideToken');
+    localStorage.removeItem('bhoomiUser');
+    localStorage.removeItem('bhoomiToken');
+    window.location.href = 'index.html';
+  };
+
+  // INIT — require login
+  document.addEventListener('DOMContentLoaded', function () {
+    const user = readUser();
+
+    if (!user || !user.name) {
+      // Not logged in → auth page
+      window.location.href = 'auth.html?mode=login';
+      return;
+    }
+
+    applyUserToUI(user);
+    loadPreferences();
+    loadMyReports();
+  });
+})();
+</script>
+<script src="config.js"></script>
+</body>
+</html>

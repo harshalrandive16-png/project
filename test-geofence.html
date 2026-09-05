@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <title>Geofence Test</title>
+  <style>
+    body { font-family: Inter, sans-serif; background:#0b0f1a; color:#fff; padding:2rem; }
+    button { background:#10b981; color:#000; border:0; padding:12px 18px; border-radius:10px; font-weight:700; margin:8px 8px 8px 0; cursor:pointer; }
+    pre { background:#111; padding:1rem; border-radius:10px; overflow:auto; }
+  </style>
+</head>
+<body>
+  <h1>📢 Geofence Test</h1>
+  <button onclick="createAlert()">1. Create Severe Alert (Nagpur)</button>
+  <button onclick="loadMine()">2. Load My Alerts + Show Banner</button>
+  <pre id="out">Ready...</pre>
+  <script src="geofence-banner.js"></script>
+  <script>
+    const API = 'http://localhost:5000';
+    const out = document.getElementById('out');
+    function token() {
+      return localStorage.getItem('bhoomiToken') || localStorage.getItem('landslideToken') || '';
+    }
+    async function createAlert() {
+      out.textContent = 'Creating...';
+      const res = await fetch(API + '/api/alerts/geofence', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lat: 21.1524,
+          lon: 79.0805,
+          location: 'Nagpur Test Zone',
+          radiusKm: 50,
+          riskLevel: 'Severe',
+          score: 90,
+          primaryDisaster: 'Flood',
+          smsEnglish: 'SEVERE flood risk near Nagpur. Call 112.',
+          smsHindi: 'नागपुर में गंभीर बाढ़ खतरा। 112 कॉल करें।',
+          engine: 'test-demo'
+        })
+      });
+      const data = await res.json();
+      out.textContent = JSON.stringify(data, null, 2);
+    }
+    async function loadMine() {
+      const t = token();
+      if (!t) { out.textContent = 'Login pehle karo'; return; }
+      const res = await fetch(API + '/api/alerts/my', {
+        headers: { Authorization: 'Bearer ' + t }
+      });
+      const data = await res.json();
+      out.textContent = JSON.stringify(data, null, 2);
+      if (data.alerts && data.alerts[0] && window.BhoomiGeofence) {
+        window.BhoomiGeofence.showBanner(data.alerts[0]);
+      }
+    }
+  </script>
+  <script src="config.js"></script>
+</body>
+</html>

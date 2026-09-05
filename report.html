@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Report Incident – BhoomiSuraksha</title>
+  
+  <!-- CSS Files -->
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="report.css"/>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- ============ NAVBAR ============ -->
+<header class="navbar" id="navbar">
+  <div class="nav-brand">
+    <div class="brand-icon">🏔️</div>
+    <div class="brand-text">
+      <span class="brand-name">BhoomiSuraksha</span>
+      <span class="brand-sub">AI EARLY WARNING SYSTEM</span>
+    </div>
+  </div>
+
+  <nav class="nav-links" id="navLinks">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="dashboard.html">Dashboard</a>
+    <a class="nav-link" href="alerts.html">Alerts</a>
+    <!-- Active state shifted to Report Incident -->
+    <a class="nav-link active" href="report.html">Report Incident</a>
+  </nav>
+
+  <div class="nav-right">
+    <select class="lang-select" id="langSelect">
+      <option value="en">English</option>
+      <option value="hi">हिंदी</option>
+      <option value="as">অসমীয়া</option>
+      <option value="bn">বাংলা</option>
+      <option value="mn">Meitei</option>
+    </select>
+    <a href="dashboard.html" class="btn-nav-cta">Open Dashboard</a>
+    <button class="hamburger" id="hamburger">☰</button>
+  </div>
+</header>
+
+<!-- ============ PAGE HEADER ============ -->
+<section class="report-hero">
+  <div class="report-hero-inner">
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      Citizen & Field Reporting
+    </div>
+    <h1 class="report-title">
+      Report a Landslide <br/>
+      <span class="hero-title-accent">Incident or Risk</span>
+    </h1>
+    <p class="report-desc">
+      Help us protect the community. Submit photos, location, and details of any slope failures, road blockages, or early warning signs (like deep cracks).
+    </p>
+  </div>
+</section>
+
+<!-- ============ MAIN CONTENT AREA ============ -->
+<section class="report-main">
+  <div class="report-layout">
+    
+    <!-- LEFT: THE FORM -->
+    <div class="report-form-container glass-card">
+      <h2 class="form-title">Incident Details</h2>
+      
+      <form id="incidentForm" class="incident-form">
+        
+        <!-- Reporter Info -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="repName" placeholder="Enter your name" required />
+          </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="tel" id="repPhone" placeholder="+91 98765 43210" required />
+          </div>
+        </div>
+
+        <!-- Location Group -->
+        <div class="form-section-title">Location Information</div>
+        <div class="location-box">
+          <button type="button" class="btn-gps" onclick="getLocation()" id="gpsBtn">
+            <span>📍</span> Auto-detect Current Location
+          </button>
+          
+          <div class="form-row mt-3">
+            <div class="form-group">
+              <label>State / District</label>
+              <select id="repState" required>
+                <option value="">Select State...</option>
+                <option value="Meghalaya">Meghalaya</option>
+                <option value="Nagaland">Nagaland</option>
+                <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                <option value="Sikkim">Sikkim</option>
+                <option value="Assam">Assam</option>
+                <option value="Mizoram">Mizoram</option>
+                <option value="Manipur">Manipur</option>
+                <option value="Tripura">Tripura</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Coordinates (Auto-filled or manual)</label>
+              <input type="text" id="repCoords" placeholder="e.g. 25.5788° N, 91.8933° E" />
+            </div>
+          </div>
+          <div class="form-group mt-3">
+            <label>Detailed Address / Landmark</label>
+            <input type="text" id="repAddress" placeholder="e.g. NH-6 highway near Shillong viewpoint" required />
+          </div>
+        </div>
+
+        <!-- Incident Specifics -->
+        <div class="form-section-title">Incident Specifications</div>
+        <div class="form-group">
+          <label>Type of Incident</label>
+          <select id="repType" required>
+            <option value="">Select type...</option>
+            <option value="mudslide">Mudslide / Debris Flow</option>
+            <option value="rockfall">Rockfall</option>
+            <option value="cracks">Deep Cracks on Slope/Road (Warning Sign)</option>
+            <option value="blockage">Complete Road Blockage</option>
+            <option value="flooding">Flash Flood / Water Logging</option>
+          </select>
+        </div>
+
+        <!-- Severity Selection (Custom Radio Buttons) -->
+        <div class="form-group">
+          <label>Estimated Severity Level</label>
+          <div class="severity-grid">
+            <label class="severity-card low">
+              <input type="radio" name="severity" value="low" required>
+              <div class="sev-content">
+                <span class="sev-dot"></span>
+                <strong>Low</strong>
+                <span>Minor debris, road clear</span>
+              </div>
+            </label>
+            
+            <label class="severity-card moderate">
+              <input type="radio" name="severity" value="moderate">
+              <div class="sev-content">
+                <span class="sev-dot"></span>
+                <strong>Moderate</strong>
+                <span>Partial blockage</span>
+              </div>
+            </label>
+
+            <label class="severity-card high">
+              <input type="radio" name="severity" value="high">
+              <div class="sev-content">
+                <span class="sev-dot"></span>
+                <strong>High</strong>
+                <span>Road blocked, risky</span>
+              </div>
+            </label>
+
+            <label class="severity-card severe">
+              <input type="radio" name="severity" value="severe">
+              <div class="sev-content">
+                <span class="sev-dot"></span>
+                <strong>Severe</strong>
+                <span>Massive collapse/danger</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- File Upload Area -->
+        <div class="form-group">
+          <label>Upload Photo / Video (Required for verification)</label>
+          <div class="file-upload-zone" id="dropZone">
+            <input type="file" id="repMedia" accept="image/*,video/*" class="file-input" onchange="handleFileSelect(this)">
+            <div class="upload-content">
+              <div class="upload-icon">📷</div>
+              <div class="upload-text">Click to upload or drag and drop</div>
+              <div class="upload-hint">SVG, PNG, JPG or MP4 (max. 10MB)</div>
+              <div id="fileNameDisplay" class="file-name-display"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Additional Description</label>
+          <textarea id="repDesc" rows="4" placeholder="Describe the situation... (Is anyone trapped? Is the traffic halted?)" required></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          Submit Field Report 🚀
+        </button>
+
+      </form>
+    </div>
+
+    <!-- RIGHT: SIDEBAR INFO -->
+    <div class="report-sidebar">
+      
+      <!-- Instructions Card -->
+      <div class="glass-card sidebar-card">
+        <h3>📋 Reporting Guidelines</h3>
+        <ul class="guideline-list">
+          <li><strong>Stay Safe:</strong> Do not approach an active landslide to take photos. Stay at a safe distance.</li>
+          <li><strong>Be Accurate:</strong> Ensure your GPS location is turned on for accurate GIS mapping.</li>
+          <li><strong>Clear Media:</strong> Try to capture the scale of the blockage and any nearby landmarks.</li>
+        </ul>
+      </div>
+
+      <!-- Emergency Contacts -->
+      <div class="glass-card emergency-card">
+        <div class="ec-icon">🆘</div>
+        <h3>Emergency Contacts</h3>
+        <p>If lives are in immediate danger, do not wait. Call emergency services immediately.</p>
+        
+        <div class="contact-links">
+          <a href="tel:112" class="ec-btn">
+            <span class="ec-phone">📞 112</span>
+            <span>National Emergency</span>
+          </a>
+          <a href="tel:1070" class="ec-btn ndrf">
+            <span class="ec-phone">📞 1070</span>
+            <span>NDRF Helpline</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Trust Badge -->
+      <div class="trust-badge-box">
+        <span class="tb-icon">🔒</span>
+        <div class="tb-text">
+          <strong>Verified by AI</strong>
+          <span>Your report will be cross-referenced with satellite data before issuing public alerts.</span>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ SUCCESS MODAL ============ -->
+<div id="successModal" class="modal-overlay hidden">
+  <div class="modal-box success-box">
+    <div class="success-icon">✅</div>
+    <h3>Report Submitted Successfully</h3>
+    <p>Thank you. Your field report has been logged and sent to the Disaster Management Control Room. Our AI engine is currently analyzing the data.</p>
+    <button class="btn-primary mt-4" onclick="closeSuccessModal()">Return to Dashboard</button>
+  </div>
+</div>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo">
+        <span>🏔️</span>
+        <div>
+          <div class="footer-name">BhoomiSuraksha</div>
+          <div class="footer-sub">AI Early Warning System</div>
+        </div>
+      </div>
+      <p class="footer-desc">
+        An AI-powered platform for real-time landslide risk monitoring,
+        early warning and emergency coordination across India's
+        North Eastern Region.
+      </p>
+    </div>
+
+    <div class="footer-links-group">
+      <div class="footer-col">
+        <div class="footer-col-title">Platform</div>
+        <a href="dashboard.html">Live Dashboard</a>
+        <a href="alerts.html">Alert Feed</a>
+        <a href="report.html">Report Incident</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Emergency</div>
+        <a href="tel:112">Call 112</a>
+        <a href="tel:1070">NDRF 1070</a>
+        <a href="dashboard.html">Rescue Teams</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>BhoomiSuraksha · Smart India Hackathon Project</p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+<script src="report.js"></script>
+<script src="config.js"></script>
+</body>
+</html>

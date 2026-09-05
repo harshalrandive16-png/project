@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test AI Risk Analysis</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0b0f1a;
+      color: #f8fafc;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 { color: #10b981; }
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin: 1rem 0;
+    }
+    button {
+      background: #10b981;
+      color: #060b11;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      margin: 0.5rem 0.5rem 0.5rem 0;
+      font-size: 0.95rem;
+    }
+    button:hover { filter: brightness(1.1); }
+    button:disabled { opacity: 0.6; cursor: wait; }
+    pre {
+      background: rgba(0,0,0,0.4);
+      padding: 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+    .risk {
+      display: inline-block;
+      padding: 0.3rem 0.9rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .Severe { background: #dc2626; }
+    .High { background: #f97316; }
+    .Moderate { background: #eab308; color: #000; }
+    .Low { background: #10b981; color: #000; }
+    .metric {
+      display: inline-block;
+      background: rgba(255,255,255,0.06);
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      margin: 0.2rem;
+      font-size: 0.85rem;
+    }
+    input {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #fff;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      width: 150px;
+      margin: 0.25rem;
+    }
+    label { font-size: 0.85rem; color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <h1>🧠 BhoomiSuraksha — AI Risk Test</h1>
+  <p>Click any button to test /api/analyze-risk with real weather + Kira AI</p>
+
+  <div class="card">
+    <h3>⚡ Quick Test — Preset Locations</h3>
+    <button onclick="analyze(19.076, 72.877, 'Mumbai', 'flood')">🌊 Mumbai (Flood)</button>
+    <button onclick="analyze(13.08, 80.27, 'Chennai', 'cyclone')">🌀 Chennai (Cyclone)</button>
+    <button onclick="analyze(26.14, 91.73, 'Guwahati', 'flood')">🌊 Guwahati (Flood)</button>
+    <button onclick="analyze(27.04, 88.26, 'Darjeeling', 'landslide')">🏔️ Darjeeling (Landslide)</button>
+    <button onclick="analyze(28.6139, 77.2090, 'Delhi', 'multi')">🌆 Delhi (Multi)</button>
+  </div>
+
+  <div class="card">
+    <h3>📍 Custom Location</h3>
+    <div>
+      <label>Lat:</label> <input type="number" id="cLat" value="19.076" step="0.001">
+      <label>Lon:</label> <input type="number" id="cLon" value="72.877" step="0.001">
+      <label>Name:</label> <input type="text" id="cName" value="Custom">
+      <label>Type:</label>
+      <select id="cType" style="padding:0.5rem;border-radius:8px;background:rgba(0,0,0,0.4);color:#fff;border:1px solid rgba(255,255,255,0.1);">
+        <option value="multi">Multi</option>
+        <option value="flood">Flood</option>
+        <option value="cyclone">Cyclone</option>
+        <option value="landslide">Landslide</option>
+        <option value="earthquake">Earthquake</option>
+      </select>
+    </div>
+    <button onclick="customAnalyze()">🚀 Analyze Custom</button>
+  </div>
+
+  <div class="card">
+    <h3>📊 Result</h3>
+    <div id="result">Click a button above to test...</div>
+  </div>
+
+  <script>
+    async function analyze(lat, lon, location, disasterType) {
+      const btns = document.querySelectorAll('button');
+      btns.forEach(b => b.disabled = true);
+      
+      document.getElementById('result').innerHTML = 
+        `⏳ Analyzing <b>${location}</b>... (fetching weather + AI reasoning)`;
+
+      try {
+        const res = await fetch('http://localhost:5000/api/analyze-risk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lat, lon, location, disasterType })
+        });
+        const d = await res.json();
+
+        if (!d.success) throw new Error(d.message || 'Failed');
+
+        document.getElementById('result').innerHTML = `
+          <div style="margin-bottom:1rem;">
+            <span class="risk ${d.riskLevel}">${d.riskLevel} — Score ${d.score}/100</span>
+            <span class="metric">🎯 ${d.primaryDisaster}</span>
+            <span class="metric">🔧 ${d.engine}</span>
+            ${d.confidence ? `<span class="metric">🎓 ${d.confidence}% confidence</span>` : ''}
+          </div>
+
+          <div style="margin-bottom:1rem;">
+            <span class="metric">🌡️ ${d.weather.temperature ?? '—'}°C</span>
+            <span class="metric">💧 ${d.weather.humidity ?? '—'}% humidity</span>
+            <span class="metric">🌧️ ${d.weather.precipitation ?? 0} mm rain</span>
+            <span class="metric">💨 ${d.weather.windSpeed ?? '—'} km/h wind</span>
+          </div>
+
+          <p><b>🇬🇧 English:</b> ${d.explanation}</p>
+          <p><b>🇮🇳 हिंदी:</b> ${d.explanationHindi}</p>
+
+          <p><b>📱 SMS English:</b><br><em style="color:#10b981;">${d.smsEnglish}</em></p>
+          <p><b>📱 SMS हिंदी:</b><br><em style="color:#10b981;">${d.smsHindi}</em></p>
+
+          <p><b>✅ Action:</b> ${d.recommendedAction}</p>
+
+          <details style="margin-top:1rem;">
+            <summary style="cursor:pointer;color:#94a3b8;">Show full JSON</summary>
+            <pre>${JSON.stringify(d, null, 2)}</pre>
+          </details>
+        `;
+      } catch (err) {
+        document.getElementById('result').innerHTML = 
+          `<p style="color:#f87171;">❌ Error: ${err.message}</p>`;
+      } finally {
+        btns.forEach(b => b.disabled = false);
+      }
+    }
+
+    function customAnalyze() {
+      analyze(
+        parseFloat(document.getElementById('cLat').value),
+        parseFloat(document.getElementById('cLon').value),
+        document.getElementById('cName').value,
+        document.getElementById('cType').value
+      );
+    }
+  </script>
+  <script src="config.js"></script>
+</body>
+</html>

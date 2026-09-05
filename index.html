@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BhoomiSuraksha – Pan-India AI Early Warning System</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- ============ NAVBAR ============ -->
+<header class="navbar" id="navbar">
+  <div class="nav-brand">
+    <div class="brand-icon">🌍</div>
+    <div class="brand-text">
+      <span class="brand-name">BhoomiSuraksha</span>
+      <span class="brand-sub">AI EARLY WARNING SYSTEM</span>
+    </div>
+  </div>
+
+  <nav class="nav-links" id="navLinks">
+    <a class="nav-link active" href="index.html">Home</a>
+    <a class="nav-link" href="dashboard.html">Dashboard</a>
+    <a class="nav-link" href="alerts.html">Alerts</a>
+    <a class="nav-link" href="report.html">Report Incident</a>
+  </nav>
+
+  <div class="nav-right" id="navRightSection">
+    <select class="lang-select" id="langSelect">
+      <option value="en">English</option>
+      <option value="hi">हिंदी</option>
+      <option value="bn">বাংলা</option>
+      <option value="mr">मराठी</option>
+      <option value="ta">தமிழ்</option>
+      <option value="as">অসমীয়া</option>
+    </select>
+
+    <!-- LOGGED OUT: Login / Signup -->
+    <div id="authButtons" class="auth-buttons">
+      <a href="auth.html?mode=login" class="btn-login">Log In</a>
+      <a href="auth.html?mode=signup" class="btn-signup">Sign Up</a>
+    </div>
+
+    <!-- LOGGED IN: Profile -->
+    <div id="userProfile" class="user-profile hidden">
+      <div class="user-avatar" id="userAvatar">U</div>
+      <div class="user-info">
+        <span class="user-greet">Welcome back,</span>
+        <span class="user-name" id="userNameDisplay">User</span>
+      </div>
+      <button type="button" class="btn-logout" onclick="logoutUser()" title="Logout">⎋</button>
+      <a href="dashboard.html" class="btn-nav-cta">Dashboard</a>
+    </div>
+
+    <button class="hamburger" id="hamburger" type="button">☰</button>
+  </div>
+</header>
+
+<!-- ============ HERO SECTION ============ -->
+<section class="hero-section">
+  <div class="hero-bg-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-left">
+      <h1 class="hero-title">
+        AI-Based Multi-Disaster<br/>
+        Early Warning System<br/>
+        <span class="hero-title-accent"></span>
+      </h1>
+      <p class="hero-desc">
+        Real-time GIS risk mapping, AI prediction, and multilingual
+        alerts to protect lives across <strong>Floods, Cyclones, Earthquakes, and Landslides</strong> — Pan-India.
+      </p>
+      <div class="hero-actions">
+        <a href="dashboard.html" class="btn-primary">
+          <span>Open Live Dashboard</span>
+          <span class="btn-arrow">→</span>
+        </a>
+        <a href="report.html" class="btn-ghost">Report an Incident</a>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div class="hero-visual">
+        <!-- LIVE MINI MAP PREVIEW -->
+        <div class="visual-card main-card map-preview-card">
+          <div class="vc-header">
+            <span class="vc-dot red"></span>
+            <span class="vc-dot yellow"></span>
+            <span class="vc-dot green"></span>
+            <span class="vc-title">Live GIS Risk Heatmap — India</span>
+            <span class="live-badge-mini">
+              <span class="live-pulse"></span> LIVE
+            </span>
+          </div>
+          <div class="vc-body" style="padding:0;">
+            <div id="heroMiniMap"></div>
+            <div class="mini-map-legend">
+              <div class="mml-row"><span class="mml-dot" style="background:#dc2626"></span>Severe</div>
+              <div class="mml-row"><span class="mml-dot" style="background:#f97316"></span>High</div>
+              <div class="mml-row"><span class="mml-dot" style="background:#eab308"></span>Moderate</div>
+              <div class="mml-row"><span class="mml-dot" style="background:#10b981"></span>Low</div>
+            </div>
+          </div>
+          <div class="vc-footer">
+            <span class="live-pulse"></span>
+            Monitoring 28 States · Updated just now
+          </div>
+        </div>
+
+        <!-- FLOATING ALERT CARD -->
+        <div class="visual-card alert-card-float">
+          <div class="acf-icon">🚨</div>
+          <div class="acf-body">
+            <div class="acf-title">Cyclone Alert Issued</div>
+            <div class="acf-sub">Chennai — SMS sent to 14,240 residents</div>
+          </div>
+        </div>
+
+        <!-- FLOATING RIVER CARD -->
+        <div class="visual-card weather-card-float">
+          <div class="wcf-icon">🌊</div>
+          <div class="wcf-body">
+            <div class="wcf-val">+2.4m</div>
+            <div class="wcf-label">River Level Rise (CWC)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ COVERAGE SECTION ============ -->
+<section class="coverage-section">
+  <div class="coverage-inner">
+    <div class="coverage-header">
+      <div>
+        <h2>Pan-India Multi-Disaster Coverage</h2>
+        <p>Continuously monitoring highly vulnerable districts across coastal, plains, and Himalayan belts.</p>
+      </div>
+      <a href="dashboard.html" class="link-btn">View full GIS dashboard →</a>
+    </div>
+    <div class="coverage-grid">
+      <div class="cov-card"><div class="cov-info"><div class="cov-name">Puri 🌀</div><div class="cov-state">Odisha (Cyclone)</div></div><div class="cov-right"><div class="cov-score">82</div><span class="risk-badge severe">Severe</span></div></div>
+      <div class="cov-card"><div class="cov-info"><div class="cov-name">Guwahati 🌊</div><div class="cov-state">Assam (Flood)</div></div><div class="cov-right"><div class="cov-score">75</div><span class="risk-badge high">High</span></div></div>
+      <div class="cov-card"><div class="cov-info"><div class="cov-name">Wayanad 🏔️</div><div class="cov-state">Kerala (Landslide)</div></div><div class="cov-right"><div class="cov-score">48</div><span class="risk-badge moderate">Moderate</span></div></div>
+      <div class="cov-card"><div class="cov-info"><div class="cov-name">Mandi 🏔️</div><div class="cov-state">Himachal (Landslide)</div></div><div class="cov-right"><div class="cov-score">42</div><span class="risk-badge moderate">Moderate</span></div></div>
+      <div class="cov-card"><div class="cov-info"><div class="cov-name">Mumbai 🌧️</div><div class="cov-state">Maharashtra (Flood)</div></div><div class="cov-right"><div class="cov-score">38</div><span class="risk-badge low">Low</span></div></div>
+      <div class="cov-card"><div class="cov-info"><div class="cov-name">Bhuj 🌍</div><div class="cov-state">Gujarat (Seismic)</div></div><div class="cov-right"><div class="cov-score">23</div><span class="risk-badge low">Low</span></div></div>
+      <div class="cov-card"><div class="cov-info"><div class="cov-name">Darjeeling 🏔️</div><div class="cov-state">West Bengal (Landslide)</div></div><div class="cov-right"><div class="cov-score">65</div><span class="risk-badge high">High</span></div></div>
+      <div class="cov-card"><div class="cov-info"><div class="cov-name">Nellore 🌀</div><div class="cov-state">Andhra Pradesh (Cyclone)</div></div><div class="cov-right"><div class="cov-score">32</div><span class="risk-badge low">Low</span></div></div>
+      <div class="cov-card"><div class="cov-info"><div class="cov-name">Chamoli 🌍</div><div class="cov-state">Uttarakhand (Seismic)</div></div><div class="cov-right"><div class="cov-score">27</div><span class="risk-badge low">Low</span></div></div>
+      <div class="cov-card"><div class="cov-info"><div class="cov-name">Koshi 🌊</div><div class="cov-state">Bihar (Flood)</div></div><div class="cov-right"><div class="cov-score">88</div><span class="risk-badge severe">Severe</span></div></div>
+      <div class="cov-card"><div class="cov-info"><div class="cov-name">Cachar 🌊</div><div class="cov-state">Assam (Flood)</div></div><div class="cov-right"><div class="cov-score">34</div><span class="risk-badge low">Low</span></div></div>
+      <div class="cov-card"><div class="cov-info"><div class="cov-name">Digha 🌀</div><div class="cov-state">West Bengal (Cyclone)</div></div><div class="cov-right"><div class="cov-score">28</div><span class="risk-badge low">Low</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section class="how-section">
+  <div class="how-inner">
+    <div class="how-header">
+      <p class="eyebrow">HOW IT WORKS</p>
+      <h2>From unified sensors to saved lives in minutes</h2>
+      <p class="how-sub">Our pipeline ingests IMD, CWC, and Seismic data, runs AI inference, and delivers automated warnings.</p>
+    </div>
+    <div class="how-pipeline">
+      <div class="pipe-step"><div class="pipe-icon">📡</div><div class="pipe-label">Data Ingestion</div><div class="pipe-sub">Weather, River, Seismic</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step"><div class="pipe-icon">⚙️</div><div class="pipe-label">AI Processing</div><div class="pipe-sub">Multi-Hazard Risk Score</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step"><div class="pipe-icon">🔍</div><div class="pipe-label">Threshold Check</div><div class="pipe-sub">Alert evaluated</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step"><div class="pipe-icon">📲</div><div class="pipe-label">Alert Broadcast</div><div class="pipe-sub">Multilingual SMS</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step"><div class="pipe-icon">🚁</div><div class="pipe-label">Rescue Response</div><div class="pipe-sub">NDMA dispatched</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FEATURES ============ -->
+<section class="features-section">
+  <div class="features-inner">
+    <div class="features-header">
+      <h2 class="features-title">A complete early warning platform</h2>
+      <p class="features-sub">Data fusion, AI prediction, GIS visualisation, field reporting and multilingual alerts.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feat-card"><div class="feat-icon-wrap blue">🛰️</div><h3>Multi-source Data Fusion</h3><p>Weather APIs, river water levels, and seismic activity in one pipeline.</p></div>
+      <div class="feat-card"><div class="feat-icon-wrap purple">🤖</div><h3>AI/ML Risk Prediction</h3><p>Gemini LLM powered risk scoring for diverse topographies.</p></div>
+      <div class="feat-card"><div class="feat-icon-wrap green">🗺️</div><h3>Pan-India GIS Map</h3><p>Live map of vulnerable coastlines, river basins, and hill stations.</p></div>
+      <div class="feat-card"><div class="feat-icon-wrap red">📢</div><h3>Real-time Early Warnings</h3><p>Auto SMS and app alerts generated 24-48 hours before disaster peaks.</p></div>
+      <div class="feat-card"><div class="feat-icon-wrap orange">📷</div><h3>Citizen Field Reporting</h3><p>Geo-tagged photos of flooded roads, cracks, and structural damage.</p></div>
+      <div class="feat-card"><div class="feat-icon-wrap teal">📊</div><h3>Unified Dashboards</h3><p>Break the silo: monitor cyclones, floods, and landslides in one view.</p></div>
+      <div class="feat-card"><div class="feat-icon-wrap indigo">🌐</div><h3>Multilingual Notifications</h3><p>English, Hindi, Marathi, Bengali, Tamil, and more regional languages.</p></div>
+      <div class="feat-card"><div class="feat-icon-wrap yellow">📶</div><h3>Offline Resilience</h3><p>SMS fallbacks that work even when internet connectivity drops.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EMERGENCY BANNER ============ -->
+<section class="emergency-section">
+  <div class="emergency-inner">
+    <div class="em-left">
+      <div class="em-icon">🆘</div>
+      <div>
+        <h3>Emergency? Need immediate help?</h3>
+        <p>Our network connects you directly to national and state rescue forces 24/7.</p>
+      </div>
+    </div>
+    <div class="em-right">
+      <a href="tel:112" class="btn-sos">📞 Call 112</a>
+      <a href="tel:1070" class="btn-sos-outline">📞 NDRF 1070</a>
+      <a href="dashboard.html" class="btn-ghost">Report on Dashboard →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo">
+        <span>🌍</span>
+        <div>
+          <div class="footer-name">BhoomiSuraksha</div>
+          <div class="footer-sub">AI Early Warning System</div>
+        </div>
+      </div>
+      <p class="footer-desc">AI-powered unified risk monitoring and early warning system across India.</p>
+    </div>
+    <div class="footer-links-group">
+      <div class="footer-col">
+        <div class="footer-col-title">Platform</div>
+        <a href="dashboard.html">Live Dashboard</a>
+        <a href="alerts.html">Alert Feed</a>
+        <a href="report.html">Report Incident</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Emergency</div>
+        <a href="tel:112">Call 112</a>
+        <a href="tel:1070">NDRF 1070</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Account</div>
+        <a href="auth.html?mode=login">Log In</a>
+        <a href="auth.html?mode=signup">Sign Up</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>BhoomiSuraksha · Smart India Hackathon · Built for Disaster Resilience</p>
+    <div class="footer-badges">
+      <span>🏆 SIH 2025</span>
+      <span>🇮🇳 Made in India</span>
+      <span>🌍 Pan-India Ready</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Floating SOS -->
+<div class="float-sos-container" id="floatSosContainer">
+  <div class="float-sos-menu" id="floatSosMenu">
+    <a href="tel:112" class="sos-option primary"><span class="sos-opt-icon">📞</span><div class="sos-opt-text"><strong>Call 112</strong><span>National Emergency</span></div></a>
+    <a href="tel:1070" class="sos-option"><span class="sos-opt-icon">🛡️</span><div class="sos-opt-text"><strong>NDRF 1070</strong><span>Disaster Response</span></div></a>
+    <a href="report.html" class="sos-option"><span class="sos-opt-icon">📷</span><div class="sos-opt-text"><strong>Report Incident</strong><span>Field Report</span></div></a>
+  </div>
+  <button type="button" class="float-sos-btn" onclick="toggleSosMenu(event)" aria-label="SOS">
+    <span class="sos-pulse-ring"></span>
+    <span class="sos-btn-icon">🆘</span>
+    <span class="sos-btn-label">SOS</span>
+  </button>
+</div>
+
+<!-- Toast -->
+<div id="authToast" class="auth-toast hidden">
+  <span id="toastIcon">✅</span>
+  <span id="toastMessage">Success!</span>
+</div>
+
+<!-- LEAFLET JS (must load before script.js) -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- HERO MINI MAP INITIALIZATION -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const mapEl = document.getElementById('heroMiniMap');
+  if (!mapEl || typeof L === 'undefined') return;
+
+  // Center on India
+  const heroMap = L.map('heroMiniMap', {
+    center: [22.5, 82.0],
+    zoom: 4,
+    zoomControl: false,
+    attributionControl: false,
+    scrollWheelZoom: false,
+    dragging: true,
+  });
+
+  // Dark tile layer (CartoDB Dark)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+  }).addTo(heroMap);
+
+  // Pan-India Multi-Disaster Risk Data
+  const zones = [
+    { name: 'Chennai Coast', state: 'Tamil Nadu', disaster: 'Cyclone', risk: 'Severe', color: '#dc2626', lat: 13.08, lng: 80.27 },
+    { name: 'Puri', state: 'Odisha', disaster: 'Cyclone', risk: 'Severe', color: '#dc2626', lat: 19.81, lng: 85.83 },
+    { name: 'Koshi Basin', state: 'Bihar', disaster: 'Flood', risk: 'Severe', color: '#dc2626', lat: 26.12, lng: 87.02 },
+    { name: 'Patna Plains', state: 'Bihar', disaster: 'Flood', risk: 'High', color: '#f97316', lat: 25.59, lng: 85.13 },
+    { name: 'Guwahati', state: 'Assam', disaster: 'Flood', risk: 'High', color: '#f97316', lat: 26.14, lng: 91.73 },
+    { name: 'Darjeeling', state: 'West Bengal', disaster: 'Landslide', risk: 'High', color: '#f97316', lat: 27.04, lng: 88.26 },
+    { name: 'Shillong Hills', state: 'Meghalaya', disaster: 'Landslide', risk: 'Moderate', color: '#eab308', lat: 25.57, lng: 91.88 },
+    { name: 'Wayanad', state: 'Kerala', disaster: 'Landslide', risk: 'Moderate', color: '#eab308', lat: 11.68, lng: 76.13 },
+    { name: 'Mandi', state: 'Himachal Pradesh', disaster: 'Landslide', risk: 'Moderate', color: '#eab308', lat: 31.70, lng: 76.93 },
+    { name: 'Mumbai', state: 'Maharashtra', disaster: 'Flood', risk: 'Low', color: '#10b981', lat: 19.07, lng: 72.87 },
+    { name: 'Bhuj', state: 'Gujarat', disaster: 'Seismic', risk: 'Low', color: '#10b981', lat: 23.25, lng: 69.66 },
+    { name: 'Uttarkashi', state: 'Uttarakhand', disaster: 'Seismic', risk: 'Low', color: '#10b981', lat: 30.72, lng: 78.44 },
+  ];
+
+  zones.forEach((zone) => {
+    const isPulse = zone.risk === 'Severe' || zone.risk === 'High';
+
+    const iconHtml = isPulse
+      ? `<div class="pulse-marker" style="background:${zone.color}"></div>`
+      : `<div style="width:10px;height:10px;border-radius:50%;background:${zone.color};border:2px solid rgba(255,255,255,0.6);box-shadow:0 0 6px ${zone.color};"></div>`;
+
+    const customIcon = L.divIcon({
+      className: 'custom-map-marker',
+      html: iconHtml,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7],
+    });
+
+    const marker = L.marker([zone.lat, zone.lng], { icon: customIcon }).addTo(heroMap);
+
+    marker.bindPopup(`
+      <div style="font-family:Inter,sans-serif;min-width:150px;">
+        <div style="font-weight:700;font-size:0.9rem;color:#0f172a;">${zone.name}</div>
+        <div style="color:#64748b;font-size:0.75rem;margin-bottom:6px;">${zone.state}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:0.75rem;color:#334155;">${zone.disaster}</span>
+          <span style="background:${zone.color};color:white;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:600;">${zone.risk}</span>
+        </div>
+      </div>
+    `);
+  });
+});
+</script>
+
+<!-- Firebase Config Script -->
+<script type="module" src="firebase-config.js"></script>
+<script src="script.js"></script>
+<script src="geofence-banner.js"></script>
+<script src="config.js"></script>
+</body>
+</html>

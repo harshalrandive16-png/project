@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Alerts – BhoomiSuraksha</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="alerts.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- ============ NAVBAR ============ -->
+<header class="navbar" id="navbar">
+  <div class="nav-brand">
+    <div class="brand-icon">🇮🇳</div>
+    <div class="brand-text">
+      <span class="brand-name">BhoomiSuraksha</span>
+      <span class="brand-sub">MULTI-DISASTER WARNING SYSTEM</span>
+    </div>
+  </div>
+
+  <nav class="nav-links" id="navLinks">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="dashboard.html">Dashboard</a>
+    <a class="nav-link active" href="alerts.html">Alerts</a>
+    <a class="nav-link" href="report.html">Report Incident</a>
+  </nav>
+
+  <div class="nav-right">
+    <select class="lang-select" id="langSelect">
+      <option value="en">English</option>
+      <option value="hi">हिंदी</option>
+      <option value="bn">বাংলা</option>
+      <option value="mr">मराठी</option>
+      <option value="ta">தமிழ்</option>
+      <option value="te">తెలుగు</option>
+      <option value="as">অসমীয়া</option>
+    </select>
+    <a href="dashboard.html" class="btn-nav-cta">Open Dashboard</a>
+    <button class="hamburger" id="hamburger" type="button">☰</button>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="alerts-hero">
+  <div class="alerts-hero-inner">
+    <div class="alerts-hero-left">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        AI Live Alert System · Active
+      </div>
+      <h1 class="alerts-title">
+        Active Multi-Disaster Alerts &amp;<br/>
+        <span class="hero-title-accent">Early Warnings</span>
+      </h1>
+      <p class="alerts-desc">
+        Real-time AI/ML threat detection for floods, cyclones, landslides and extreme weather —
+        with multilingual SMS broadcasts and GIS monitoring across India.
+      </p>
+    </div>
+    <div class="alerts-hero-right">
+      <button class="btn-ghost" type="button" onclick="syncSensors()">
+        <span id="syncIcon">🔄</span> Sync National Grid
+      </button>
+      <button class="btn-primary" type="button" onclick="openModal()">
+        📢 Emergency Broadcast
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CRITICAL BANNER ============ -->
+<section class="critical-banner-section">
+  <div class="critical-banner" id="criticalBanner">
+    <div class="cb-left">
+      <div class="cb-icon">🚨</div>
+      <div>
+        <div class="cb-tag-row">
+          <span class="cb-tag">Critical Red Alert</span>
+          <span class="cb-time">Issued 12 mins ago</span>
+        </div>
+        <h3 class="cb-title">Wayanad Belt, Kerala — Severe Landslide &amp; Debris Flow Risk</h3>
+        <p class="cb-desc">142mm heavy rainfall in 24h. High slope failure risk on hill roads. Evacuation advisory active for vulnerable settlements.</p>
+      </div>
+    </div>
+    <div class="cb-right">
+      <div class="cb-sms-info">
+        <div class="cb-sms-label">SMS DISPATCHED (5–10 km)</div>
+        <div class="cb-sms-count">3,840 Residents</div>
+      </div>
+      <button class="btn-danger" type="button" onclick="triggerToast('Opening Response GIS for Wayanad...')">
+        View Response GIS
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STATS ============ -->
+<section class="alerts-stats-section">
+  <div class="alerts-stats-grid">
+    <div class="astat-card">
+      <div class="astat-header">
+        <span class="astat-label">Total Active Alerts</span>
+        <span class="astat-icon">🔔</span>
+      </div>
+      <div class="astat-value" id="totalAlertsCount">06</div>
+      <div class="astat-sub"><span class="astat-critical">2 Critical</span> · 2 High · 1 Med · 1 Low</div>
+    </div>
+
+    <div class="astat-card">
+      <div class="astat-header">
+        <span class="astat-label">Highest Impact Zone</span>
+        <span class="astat-icon">🌧️</span>
+      </div>
+      <div class="astat-value astat-blue">142<span class="astat-unit">mm/24h</span></div>
+      <div class="astat-sub">Wayanad, Kerala (Landslide)</div>
+    </div>
+
+    <div class="astat-card">
+      <div class="astat-header">
+        <span class="astat-label">Automated SMS Alerts</span>
+        <span class="astat-icon">📱</span>
+      </div>
+      <div class="astat-value astat-green" id="smsSentCount">48,620</div>
+      <div class="astat-sub">EN · HI · BN · TA · MR · regional</div>
+    </div>
+
+    <div class="astat-card">
+      <div class="astat-header">
+        <span class="astat-label">National Sensor Grid</span>
+        <span class="astat-icon">📡</span>
+      </div>
+      <div class="astat-value">97.2%</div>
+      <div class="astat-sub astat-green-text">IMD · CWC · IoT nodes online</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FILTERS ============ -->
+<section class="filter-section">
+  <div class="filter-bar">
+    <div class="filter-tabs">
+      <button class="filter-tab active" data-level="all" onclick="filterByLevel('all')">All Alerts</button>
+      <button class="filter-tab" data-level="severe" onclick="filterByLevel('severe')">Severe</button>
+      <button class="filter-tab" data-level="high" onclick="filterByLevel('high')">High</button>
+      <button class="filter-tab" data-level="moderate" onclick="filterByLevel('moderate')">Moderate</button>
+      <button class="filter-tab" data-level="low" onclick="filterByLevel('low')">Low</button>
+    </div>
+
+    <div class="filter-controls">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" onkeyup="handleSearch()" placeholder="Search city, highway, disaster, state..." class="search-input"/>
+      </div>
+      <select id="typeSelect" onchange="handleTypeFilter()" class="state-select">
+        <option value="all">All Disaster Types</option>
+        <option value="Flood">Flood</option>
+        <option value="Cyclone">Cyclone</option>
+        <option value="Landslide">Landslide</option>
+        <option value="Earthquake">Earthquake</option>
+        <option value="Cloudburst">Cloudburst</option>
+      </select>
+      <select id="stateSelect" onchange="handleStateFilter()" class="state-select">
+        <option value="all">All India States</option>
+        <option value="Kerala">Kerala</option>
+        <option value="Odisha">Odisha</option>
+        <option value="Assam">Assam</option>
+        <option value="Maharashtra">Maharashtra</option>
+        <option value="Tamil Nadu">Tamil Nadu</option>
+        <option value="Uttarakhand">Uttarakhand</option>
+        <option value="Himachal Pradesh">Himachal Pradesh</option>
+        <option value="West Bengal">West Bengal</option>
+        <option value="Gujarat">Gujarat</option>
+        <option value="Delhi">Delhi</option>
+        <option value="Sikkim">Sikkim</option>
+        <option value="Meghalaya">Meghalaya</option>
+      </select>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ALERT LIST ============ -->
+<section class="alerts-list-section">
+  <div id="alertsContainer" class="alerts-container"></div>
+</section>
+
+<!-- ============ BROADCAST MODAL ============ -->
+<div id="broadcastModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <div class="modal-icon">📢</div>
+        <div>
+          <h3>Issue National Emergency Broadcast</h3>
+          <p>Geofenced multi-channel warning (target 5–10 km or district)</p>
+        </div>
+      </div>
+      <button class="modal-close" type="button" onclick="closeModal()">✕</button>
+    </div>
+
+    <form id="broadcastForm" class="modal-form" onsubmit="submitBroadcast(event)">
+      <div class="form-group">
+        <label>Target Zone / City</label>
+        <input type="text" id="modalZone" required placeholder="e.g. Puri Coast - Odisha"/>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Disaster Type</label>
+          <select id="modalType">
+            <option value="Flood">Flood</option>
+            <option value="Cyclone">Cyclone</option>
+            <option value="Landslide">Landslide</option>
+            <option value="Earthquake">Earthquake</option>
+            <option value="Cloudburst">Cloudburst</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Severity</label>
+          <select id="modalSeverity">
+            <option value="severe">Severe (Red)</option>
+            <option value="high">High (Orange)</option>
+            <option value="moderate">Moderate (Yellow)</option>
+            <option value="low">Low (Green)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Key Metric (Rain / Wind / Water)</label>
+          <input type="text" id="modalMetric" required placeholder="e.g. 120 mm/24h or Wind 110 km/h"/>
+        </div>
+        <div class="form-group">
+          <label>Geofence Radius</label>
+          <select id="modalRadius">
+            <option value="5">5 km</option>
+            <option value="10" selected>10 km</option>
+            <option value="25">25 km</option>
+            <option value="district">Full District</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Warning Message (English — AI can localize)</label>
+        <textarea id="modalMsg" rows="3" required placeholder="Enter evacuation / safety advisory..."></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-ghost" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn-primary">📢 Dispatch Broadcast</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast toast-hidden">
+  <span class="toast-icon">✅</span>
+  <span id="toastMsg">Action completed</span>
+</div>
+
+<!-- FLOATING SOS (optional if already global) -->
+<div class="float-sos-container" id="floatSosContainer">
+  <div class="float-sos-menu" id="floatSosMenu">
+    <a href="tel:112" class="sos-option primary"><span class="sos-opt-icon">📞</span><div class="sos-opt-text"><strong>Call 112</strong><span>National Emergency</span></div></a>
+    <a href="tel:1070" class="sos-option"><span class="sos-opt-icon">🛡️</span><div class="sos-opt-text"><strong>NDRF 1070</strong><span>Disaster Response</span></div></a>
+    <a href="report.html" class="sos-option"><span class="sos-opt-icon">📷</span><div class="sos-opt-text"><strong>Report Incident</strong><span>Field Report</span></div></a>
+  </div>
+  <button type="button" class="float-sos-btn" id="floatSosBtn" aria-label="SOS">
+    <span class="sos-pulse-ring"></span>
+    <span class="sos-btn-icon">🆘</span>
+    <span class="sos-btn-label">SOS</span>
+  </button>
+</div>
+
+<footer class="footer">
+  <div class="footer-inner" style="text-align:center;padding:24px;">
+    <p>BhoomiSuraksha · AI-Based Multi-Disaster Early Warning System · Pan-India · SIH 2025</p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+<script src="alerts.js"></script>
+<script>
+// SOS toggle if not in script.js
+(function(){
+  function init(){
+    var c=document.getElementById('floatSosContainer');
+    var b=document.getElementById('floatSosBtn');
+    var m=document.getElementById('floatSosMenu');
+    if(!c||!b||!m) return;
+    b.onclick=function(e){e.stopPropagation();c.classList.toggle('is-open');m.classList.toggle('show');};
+    document.addEventListener('click',function(e){if(!c.contains(e.target)){c.classList.remove('is-open');m.classList.remove('show');}});
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
+<script src="config.js"></script>
+</body>
+</html>

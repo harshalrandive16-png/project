@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BhoomiSuraksha – National Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+
+  <style>
+    /* ==================================================
+       DASHBOARD ADDITIONS (Profile + AI Panel + Circles)
+       ================================================== */
+
+    /* Profile chip in navbar */
+    .nav-right { display: flex; align-items: center; gap: 0.75rem; }
+
+    .auth-buttons { display: flex; gap: 0.5rem; }
+    .auth-buttons.hidden { display: none !important; }
+    .btn-login-nav {
+      background: transparent; color: #f8fafc;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 0.5rem 1rem; border-radius: 999px;
+      font-size: 0.85rem; font-weight: 600;
+      text-decoration: none;
+    }
+    .btn-signup-nav {
+      background: linear-gradient(135deg,#10b981,#059669);
+      color: #060b11;
+      padding: 0.5rem 1rem; border-radius: 999px;
+      font-size: 0.85rem; font-weight: 700;
+      text-decoration: none;
+    }
+
+    .user-chip { display: none; align-items: center; gap: 0.5rem;
+      background: rgba(15,23,42,0.6);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 999px; padding: 0.3rem 0.5rem 0.3rem 0.3rem;
+    }
+    .user-chip.show { display: flex; }
+    .user-chip .avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg,#10b981,#059669);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.95rem;
+    }
+    .user-chip .name { font-size: 0.85rem; color: #f8fafc; font-weight: 600; }
+    .user-chip .logout {
+      width: 26px; height: 26px; border-radius: 50%;
+      border: 1.5px solid rgba(220,38,38,0.5);
+      background: transparent; color: #f87171;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 12px; padding: 0;
+    }
+
+    /* ==== AI My Location Panel ==== */
+    .my-location-card {
+      background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(59,130,246,0.05));
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .mlc-header {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;
+    }
+    .mlc-title { font-size: 1.15rem; font-weight: 700; color: #f8fafc; }
+    .mlc-title .live-dot {
+      display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+      background: #10b981; margin-right: 8px; animation: pulseDot 1.5s infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    .mlc-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .btn-analyze {
+      background: linear-gradient(135deg,#10b981,#059669);
+      color: #060b11; border: none;
+      padding: 0.65rem 1.25rem; border-radius: 10px;
+      font-weight: 700; cursor: pointer; font-size: 0.88rem;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-analyze:hover { filter: brightness(1.1); }
+    .btn-analyze:disabled { opacity: 0.6; cursor: wait; }
+    .btn-geofence {
+      background: linear-gradient(135deg,#dc2626,#b91c1c);
+      color: #fff; border: none;
+      padding: 0.65rem 1.25rem; border-radius: 10px;
+      font-weight: 700; cursor: pointer; font-size: 0.88rem;
+    }
+    .btn-geofence:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-gps {
+      background: transparent; color: #10b981;
+      border: 1px solid rgba(16,185,129,0.4);
+      padding: 0.65rem 1rem; border-radius: 10px;
+      font-weight: 600; cursor: pointer; font-size: 0.85rem;
+    }
+    .mlc-body { display: none; }
+    .mlc-body.show { display: block; }
+
+    .mlc-risk-row {
+      display: flex; gap: 0.75rem; flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .risk-pill {
+      padding: 0.5rem 1rem; border-radius: 999px;
+      font-weight: 700; font-size: 0.9rem;
+    }
+    .risk-pill.Severe { background: #dc2626; color: #fff; }
+    .risk-pill.High { background: #f97316; color: #fff; }
+    .risk-pill.Moderate { background: #eab308; color: #000; }
+    .risk-pill.Low { background: #10b981; color: #000; }
+    .metric-pill {
+      background: rgba(255,255,255,0.06);
+      padding: 0.5rem 0.9rem; border-radius: 999px;
+      font-size: 0.82rem; color: #cbd5e1;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .mlc-explain {
+      background: rgba(0,0,0,0.3);
+      border-radius: 10px; padding: 1rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.9rem; color: #e2e8f0; line-height: 1.5;
+    }
+    .mlc-explain strong { color: #10b981; }
+    .mlc-sms {
+      background: rgba(16,185,129,0.08);
+      border: 1px dashed rgba(16,185,129,0.4);
+      border-radius: 10px; padding: 0.9rem 1rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.85rem; color: #a7f3d0; line-height: 1.5;
+      font-family: 'Inter', sans-serif;
+    }
+    .mlc-sms strong { color: #10b981; }
+
+    .mlc-status {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+      background: rgba(0,0,0,0.3);
+      color: #94a3b8;
+    }
+    .mlc-status.success { background: rgba(16,185,129,0.1); color: #10b981; }
+    .mlc-status.error { background: rgba(220,38,38,0.1); color: #f87171; }
+
+    /* Danger circle marker (Leaflet) */
+    .leaflet-danger-circle {
+      stroke: #dc2626 !important;
+      fill: #dc2626 !important;
+      fill-opacity: 0.15 !important;
+      stroke-opacity: 0.8 !important;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============ NAVBAR ============ -->
+<header class="navbar">
+  <div class="nav-brand">
+    <div class="brand-icon">🇮🇳</div>
+    <div class="brand-text">
+      <span class="brand-name">BhoomiSuraksha</span>
+      <span class="brand-sub">MULTI-DISASTER WARNING SYSTEM</span>
+    </div>
+  </div>
+  <nav class="nav-links">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link active" href="dashboard.html">Dashboard</a>
+    <a class="nav-link" href="alerts.html">Alerts</a>
+    <a class="nav-link" href="report.html">Report Incident</a>
+  </nav>
+  <div class="nav-right">
+    <div class="live-indicator">
+      <span class="live-dot"></span>
+      <span>LIVE</span>
+    </div>
+    <select class="lang-select" id="langSelect">
+      <option value="en">English</option>
+      <option value="hi">हिंदी</option>
+      <option value="as">অসমীয়া</option>
+      <option value="bn">বাংলা</option>
+      <option value="mr">मराठी</option>
+      <option value="ta">தமிழ்</option>
+    </select>
+
+    <!-- Auth buttons (default hidden - overridden by JS) -->
+    <div class="auth-buttons" id="authButtons">
+      <a href="auth.html?mode=login" class="btn-login-nav">Log In</a>
+      <a href="auth.html?mode=signup" class="btn-signup-nav">Sign Up</a>
+    </div>
+
+    <!-- Profile chip (shown when logged in) -->
+    <div class="user-chip" id="userChip">
+      <div class="avatar" id="userAvatarInit">U</div>
+      <span class="name" id="userNameNav">User</span>
+      <button class="logout" id="btnLogoutNav" title="Logout">✕</button>
+    </div>
+  </div>
+</header>
+
+<!-- ============ MAIN LAYOUT ============ -->
+<div class="dash-layout">
+
+  <!-- ===== LEFT SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">NAVIGATION</div>
+      <button class="sidebar-btn active" data-tab="overview">
+        <span class="sb-icon">📊</span> Overview
+      </button>
+      <button class="sidebar-btn" data-tab="riskmap">
+        <span class="sb-icon">🗺️</span> India Risk Map
+      </button>
+      <button class="sidebar-btn" data-tab="sensors">
+        <span class="sb-icon">📡</span> Sensor Data
+      </button>
+      <button class="sidebar-btn" data-tab="roads">
+        <span class="sb-icon">🛣️</span> Road & Route Status
+      </button>
+      <button class="sidebar-btn" data-tab="rescue">
+        <span class="sb-icon">🚨</span> Rescue Teams
+      </button>
+      <button class="sidebar-btn" data-tab="reports">
+        <span class="sb-icon">📸</span> Field Reports
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">QUICK ACTIONS</div>
+      <button class="sidebar-btn danger" id="sosQuickBtn">
+        <span class="sb-icon">🆘</span> Emergency SOS
+      </button>
+      <button class="sidebar-btn warning" id="simulateSideBtn">
+        <span class="sb-icon">⚡</span> Simulate Alert
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">SYSTEM STATUS</div>
+      <div class="sys-status">
+        <div class="ss-row">
+          <span>Satellite Feed (IMD)</span>
+          <span class="ss-badge online">Online</span>
+        </div>
+        <div class="ss-row">
+          <span>Flood/River CWC API</span>
+          <span class="ss-badge online">Online</span>
+        </div>
+        <div class="ss-row">
+          <span>Pan-India IoT Grid</span>
+          <span class="ss-badge warning">Partial</span>
+        </div>
+        <div class="ss-row">
+          <span>SMS Gateway</span>
+          <span class="ss-badge online">Online</span>
+        </div>
+        <div class="ss-row">
+          <span>Kira/Gemini AI</span>
+          <span class="ss-badge online" id="aiStatusBadge">Active</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="dash-main">
+
+    <!-- ======================================================
+         TAB: OVERVIEW
+         ====================================================== -->
+    <div class="tab-content active" id="tab-overview">
+
+      <!-- Header -->
+      <div class="content-header">
+        <div>
+          <h1 class="page-title">National GIS Command Dashboard</h1>
+          <p class="page-sub">
+            AI-predicted multi-hazard risks (Floods, Cyclones, Landslides) across India ·
+            <span id="lastUpdated">updated just now</span>
+          </p>
+        </div>
+        <div class="header-actions">
+          <button class="btn-outline" id="refreshBtn">↻ Refresh</button>
+          <button class="btn-primary" id="simulateBtn">
+            ⚡ Run Pan-India Scan
+          </button>
+        </div>
+      </div>
+
+      <!-- 🆕 MY LOCATION AI PANEL -->
+      <div class="my-location-card">
+        <div class="mlc-header">
+          <div class="mlc-title">
+            <span class="live-dot"></span>
+            📍 My Location AI Analysis (Live Weather + Kira AI)
+          </div>
+          <div class="mlc-actions">
+            <button class="btn-gps" id="btnGetGPS">📍 Detect My Location</button>
+            <button class="btn-analyze" id="btnAnalyzeMe" disabled>🧠 Analyze My Location</button>
+            <button class="btn-geofence" id="btnGeofenceMe" disabled>🚨 Send Geofenced Alert</button>
+          </div>
+        </div>
+
+        <div class="mlc-status" id="mlcStatus">
+          👋 Click "Detect My Location" to fetch your GPS coordinates, then "Analyze My Location" to run AI risk analysis with live weather data.
+        </div>
+
+        <div class="mlc-body" id="mlcBody">
+          <div class="mlc-risk-row" id="mlcRiskRow"></div>
+          <div class="mlc-explain" id="mlcExplainEn"></div>
+          <div class="mlc-explain" id="mlcExplainHi"></div>
+          <div class="mlc-sms" id="mlcSmsEn"></div>
+          <div class="mlc-sms" id="mlcSmsHi"></div>
+        </div>
+      </div>
+
+      <!-- KPI CARDS -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon blue">🗺️</div>
+          <div class="kpi-body">
+            <div class="kpi-label">Monitored Zones</div>
+            <div class="kpi-val" id="kpiZones">12</div>
+            <div class="kpi-change">Across all Indian States</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon red">⚠️</div>
+          <div class="kpi-body">
+            <div class="kpi-label">Severe Risk Zones</div>
+            <div class="kpi-val red" id="kpiHigh">3</div>
+            <div class="kpi-change" id="kpiHighChange">Puri, Chennai, Bihar</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon orange">🔔</div>
+          <div class="kpi-body">
+            <div class="kpi-label">Active Alerts</div>
+            <div class="kpi-val orange" id="kpiAlerts">0</div>
+            <div class="kpi-change" id="kpiAlertChange">Monitoring Live</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon yellow">🛣️</div>
+          <div class="kpi-body">
+            <div class="kpi-label">Highways Blocked</div>
+            <div class="kpi-val yellow" id="kpiRoads">4</div>
+            <div class="kpi-change">NH-66, NH-10 affected</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon green">👥</div>
+          <div class="kpi-body">
+            <div class="kpi-label">Population at Risk</div>
+            <div class="kpi-val" id="kpiPop">12K+</div>
+            <div class="kpi-change">In High/Severe zones</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon purple">🚁</div>
+          <div class="kpi-body">
+            <div class="kpi-label">NDRF/SDRF Teams</div>
+            <div class="kpi-val green" id="kpiTeams">18</div>
+            <div class="kpi-change">5 Deployed</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TOP ROW: MAP + RANKING ===== -->
+      <div class="top-row-grid">
+
+        <!-- MAP CARD -->
+        <div class="map-card-large">
+          <div class="map-card-header">
+            <span class="card-title">Pan-India Live Hazard Heatmap</span>
+            <div class="map-controls">
+              <button class="map-ctrl-btn active" id="viewAll">All Zones</button>
+              <button class="map-ctrl-btn" id="viewHigh">High Risk Only</button>
+              <button class="map-ctrl-btn" id="viewAlerts">Danger Circles</button>
+            </div>
+          </div>
+          <div class="map-container">
+            <div id="map"></div>
+            <div class="map-legend">
+              <div class="legend-title">Risk Level</div>
+              <div class="legend-row">
+                <span class="legend-dot" style="background:#dc2626"></span>Severe
+              </div>
+              <div class="legend-row">
+                <span class="legend-dot" style="background:#f97316"></span>High
+              </div>
+              <div class="legend-row">
+                <span class="legend-dot" style="background:#eab308"></span>Moderate
+              </div>
+              <div class="legend-row">
+                <span class="legend-dot" style="background:#10b981"></span>Low
+              </div>
+              <div class="legend-row">
+                <span class="legend-dot blink-dot"></span>Danger Zone
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RANKING CARD -->
+        <div class="ranking-card">
+          <div class="card-title">National Risk Ranking</div>
+          <div class="card-subtitle">Sorted by AI-predicted multi-hazard severity</div>
+          <div class="ranking-list" id="rankingList"></div>
+        </div>
+
+      </div>
+
+      <!-- ===== BOTTOM ROW: ZONE DETAIL + ROAD STATUS ===== -->
+      <div class="bottom-row-grid">
+
+        <div class="zone-detail-card" id="zoneDetailCard">
+          <div class="zd-placeholder" id="zdPlaceholder">
+            <div class="zd-icon">🗺️</div>
+            <p>Click any zone on the India map or ranking list to view detailed telemetry</p>
+          </div>
+          <div class="zd-content hidden" id="zdContent">
+            <div class="zd-header">
+              <div>
+                <div class="zd-name" id="zdName">—</div>
+                <div class="zd-pop" id="zdPop">—</div>
+              </div>
+              <div class="zd-badges">
+                <span id="zdRiskBadge"></span>
+                <span class="conf-badge" id="zdConf">—</span>
+              </div>
+            </div>
+            <div class="bar-chart" id="barChart"></div>
+            <div class="metrics-row" id="metricsRow"></div>
+            <div class="forecast-section">
+              <div class="forecast-title">48-Hour AI Risk Forecast</div>
+              <div class="forecast-bars" id="forecastBars"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="road-card">
+          <div class="card-title">National Highway Status</div>
+          <div class="road-list" id="roadList"></div>
+        </div>
+
+      </div>
+
+      <!-- ===== ALERTS + REPORTS ROW ===== -->
+      <div class="alerts-reports-grid">
+        <div class="ar-card">
+          <div class="ar-header">
+            <span class="card-title">National Emergency Live Alerts</span>
+            <a class="link-btn" href="alerts.html">View all →</a>
+          </div>
+          <div id="dashAlertsFeed">
+            <p class="empty-txt">Loading live alerts...</p>
+          </div>
+        </div>
+        <div class="ar-card">
+          <div class="ar-header">
+            <span class="card-title">Citizen &amp; Field Reports (Crowdsourced)</span>
+            <a class="link-btn" href="report.html">Submit →</a>
+          </div>
+          <div id="dashReportsFeed">
+            <p class="empty-txt">No field reports yet.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- ======================================================
+         TAB: RISK MAP (fullscreen)
+         ====================================================== -->
+    <div class="tab-content" id="tab-riskmap">
+      <div class="content-header">
+        <div>
+          <h1 class="page-title">Full India GIS Risk Map</h1>
+          <p class="page-sub">Interactive multi-hazard risk zones (Flood, Cyclone, Landslide) across India</p>
+        </div>
+        <button class="btn-primary" id="simulateMapBtn">⚡ Simulate Alert</button>
+      </div>
+      <div class="fullmap-wrap">
+        <div id="map2"></div>
+        <div class="map-legend" style="bottom:20px;left:20px;">
+          <div class="legend-title">Risk Level</div>
+          <div class="legend-row"><span class="legend-dot" style="background:#dc2626"></span>Severe</div>
+          <div class="legend-row"><span class="legend-dot" style="background:#f97316"></span>High</div>
+          <div class="legend-row"><span class="legend-dot" style="background:#eab308"></span>Moderate</div>
+          <div class="legend-row"><span class="legend-dot" style="background:#10b981"></span>Low</div>
+          <div class="legend-row"><span class="legend-dot blink-dot"></span>Danger Zone</div>
+        </div>
+      </div>
+      <div class="map-zone-chips" id="mapZoneChips"></div>
+    </div>
+
+
+    <!-- TAB: SENSOR DATA -->
+    <div class="tab-content" id="tab-sensors">
+      <div class="content-header">
+        <h1 class="page-title">Live Sensor & Satellite Data</h1>
+        <p class="page-sub">IoT sensor readings and IMD/CWC telemetry from national monitoring stations</p>
+      </div>
+      <div class="sensor-grid" id="sensorGrid"></div>
+    </div>
+
+
+    <!-- TAB: ROAD STATUS -->
+    <div class="tab-content" id="tab-roads">
+      <div class="content-header">
+        <h1 class="page-title">Route & Connectivity Status</h1>
+        <p class="page-sub">Live accessibility status of major National Highways and rail networks</p>
+      </div>
+      <div class="road-status-full" id="roadStatusFull"></div>
+    </div>
+
+
+    <!-- TAB: RESCUE TEAMS -->
+    <div class="tab-content" id="tab-rescue">
+      <div class="content-header">
+        <div>
+          <h1 class="page-title">NDRF / SDRF Rescue Management</h1>
+          <p class="page-sub">Track and assign national disaster response teams</p>
+        </div>
+        <button class="btn-primary" id="assignTeamBtn">+ Assign Team</button>
+      </div>
+      <div class="rescue-grid" id="rescueGrid"></div>
+
+      <div class="modal-bg hidden" id="assignModal">
+        <div class="modal-box">
+          <div class="modal-head">
+            <h3>Assign Rescue Team</h3>
+            <span class="modal-close" id="closeAssign">✕</span>
+          </div>
+          <form id="assignForm">
+            <label>Select Unit</label>
+            <select id="assignTeamSel"></select>
+            <label>Assign to Zone</label>
+            <select id="assignZoneSel"></select>
+            <label>Priority</label>
+            <select id="assignPriority">
+              <option>Critical</option>
+              <option>High</option>
+              <option>Medium</option>
+            </select>
+            <label>Notes / Instructions</label>
+            <textarea id="assignNotes" rows="2" placeholder="Helicopter airlift required..."></textarea>
+            <button type="submit" class="btn-primary" style="width:100%;margin-top:12px;">
+              Confirm Assignment
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- TAB: FIELD REPORTS -->
+    <div class="tab-content" id="tab-reports">
+      <div class="content-header">
+        <div>
+          <h1 class="page-title">Field &amp; Citizen Incident Reports</h1>
+          <p class="page-sub">Geo-tagged multi-disaster reports from field officers and citizens</p>
+        </div>
+        <a href="report.html" class="btn-primary">+ Submit Report</a>
+      </div>
+      <div class="reports-full" id="reportsFull">
+        <p class="empty-txt">No reports yet. Be the first to report a hazard.</p>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+
+<!-- ============ EMERGENCY SOS OVERLAY ============ -->
+<div class="sos-overlay hidden" id="sosOverlay">
+  <div class="sos-box">
+    <button class="sos-close" id="sosClose">✕</button>
+    <h2>🆘 Emergency SOS</h2>
+    <p>Send immediate geofenced alert to nearest NDRF team</p>
+
+    <button class="sos-btn" id="sosTrigger">SOS</button>
+
+    <a href="tel:112" class="btn-danger-full">📞 Call 112 — National Emergency</a>
+    <a href="tel:1070" class="btn-danger-full" style="margin-top:8px;">
+      📞 Call 1070 — NDRF Helpline
+    </a>
+
+    <form id="sosForm" style="margin-top:16px;">
+      <select id="sosType" class="sos-input">
+        <option>Flash Flood / Waterlogging</option>
+        <option>Cyclone / High Winds</option>
+        <option>Earthquake / Building Damage</option>
+        <option>Landslide / Mudslide</option>
+        <option>Road / Bridge Collapse</option>
+        <option>Medical Emergency</option>
+      </select>
+      <textarea id="sosDesc" class="sos-input" rows="2" placeholder="Describe the disaster situation..."></textarea>
+      <input id="sosLoc" class="sos-input" placeholder="Location (auto-filled via GPS)" readonly/>
+      <button type="button" class="btn-outline-sos" id="sosGeoBtn">
+        📍 Get Exact GPS Location
+      </button>
+      <button type="submit" class="btn-primary" style="width:100%;margin-top:8px;">
+        Broadcast Emergency Request
+      </button>
+    </form>
+
+    <div class="sos-result hidden" id="sosResult">
+      <div class="sos-res-icon">✅</div>
+      <h3>NDRF Dispatched!</h3>
+      <p id="sosTeamName">Team Delta-04 assigned</p>
+      <p id="sosEta">ETA: ~18 minutes via Airlift</p>
+      <div class="sos-progress">
+        <div class="sos-prog-fill" id="sosProg"></div>
+      </div>
+      <p class="sos-status-txt" id="sosStatus">Tracking unit location...</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TOAST ============ -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- LEAFLET MAPS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- AUTH NAVBAR (Login check) -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var raw = localStorage.getItem('bhoomiUser') || localStorage.getItem('landslideUser');
+  var authBtns = document.getElementById('authButtons');
+  var chip = document.getElementById('userChip');
+  if (!raw) {
+    authBtns.classList.remove('hidden');
+    chip.classList.remove('show');
+    return;
+  }
+  try {
+    var u = JSON.parse(raw);
+    if (u && u.name) {
+      authBtns.classList.add('hidden');
+      chip.classList.add('show');
+      document.getElementById('userAvatarInit').textContent = u.name.charAt(0).toUpperCase();
+      document.getElementById('userNameNav').textContent = u.name.split(' ')[0];
+    }
+  } catch (e) {}
+});
+document.getElementById('btnLogoutNav').addEventListener('click', function () {
+  if (!confirm('Logout?')) return;
+  localStorage.removeItem('bhoomiUser');
+  localStorage.removeItem('bhoomiToken');
+  localStorage.removeItem('landslideUser');
+  localStorage.removeItem('landslideToken');
+  window.location.href = 'index.html';
+});
+</script>
+
+<!-- MAIN DASHBOARD JS (map, KPIs, tabs, rescue, etc.) -->
+<script src="dashboard.js"></script>
+
+<!-- GEOFENCE BANNER + MY LOCATION AI ANALYSIS -->
+<script src="geofence-banner.js"></script>
+
+<!-- 🧠 MY LOCATION AI + GEOFENCE INTEGRATION -->
+<script>
+(function () {
+  var API = 'http://localhost:5000';
+  var myLoc = null;   // { lat, lon }
+  var lastAnalysis = null;
+
+  function token() {
+    return localStorage.getItem('bhoomiToken') || localStorage.getItem('landslideToken') || '';
+  }
+
+  function setStatus(msg, type) {
+    var s = document.getElementById('mlcStatus');
+    if (!s) return;
+    s.textContent = msg;
+    s.className = 'mlc-status ' + (type || '');
+  }
+
+  function showBody() {
+    document.getElementById('mlcBody').classList.add('show');
+  }
+
+  // ============ 1) GET GPS ============
+  document.getElementById('btnGetGPS').addEventListener('click', function () {
+    if (!navigator.geolocation) {
+      setStatus('❌ Browser me geolocation support nahi hai.', 'error');
+      return;
+    }
+    setStatus('⏳ Fetching your GPS coordinates...', '');
+
+    navigator.geolocation.getCurrentPosition(
+      function (pos) {
+        myLoc = {
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+          accuracy: pos.coords.accuracy
+        };
+        setStatus(
+          '✅ GPS locked: ' + myLoc.lat.toFixed(4) + ', ' + myLoc.lon.toFixed(4) +
+          ' (accuracy ~' + Math.round(myLoc.accuracy) + 'm). Ab "Analyze My Location" dabao.',
+          'success'
+        );
+        document.getElementById('btnAnalyzeMe').disabled = false;
+
+        // Also save to backend (for geofence targeting)
+        var t = token();
+        if (t) {
+          fetch(API + '/api/user/location', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer ' + t
+            },
+            body: JSON.stringify({
+              lat: myLoc.lat,
+              lon: myLoc.lon,
+              accuracy: myLoc.accuracy,
+              source: 'dashboard'
+            })
+          }).catch(function () {});
+        }
+      },
+      function (err) {
+        setStatus('❌ GPS error: ' + err.message, 'error');
+      },
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
+  });
+
+  // ============ 2) ANALYZE MY LOCATION ============
+  document.getElementById('btnAnalyzeMe').addEventListener('click', async function () {
+    if (!myLoc) {
+      setStatus('❌ Pehle GPS detect karo.', 'error');
+      return;
+    }
+    var btn = this;
+    btn.disabled = true;
+    btn.textContent = '⏳ Analyzing...';
+    setStatus('🧠 Fetching live weather + running Kira AI analysis...', '');
+
+    try {
+      var res = await fetch(API + '/api/analyze-risk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lat: myLoc.lat,
+          lon: myLoc.lon,
+          location: 'My GPS Location',
+          disasterType: 'multi'
+        })
+      });
+      var d = await res.json();
+      if (!d.success) throw new Error(d.message || 'Analysis failed');
+
+      lastAnalysis = d;
+      renderAnalysis(d);
+      showBody();
+
+      // Enable geofence button only for High/Severe
+      var gBtn = document.getElementById('btnGeofenceMe');
+      if (d.riskLevel === 'High' || d.riskLevel === 'Severe') {
+        gBtn.disabled = false;
+        gBtn.textContent = '🚨 Send Geofenced Alert (' + d.riskLevel + ')';
+        setStatus('✅ Analysis complete! Risk: ' + d.riskLevel + '. Danger circle map pe dikha diya.', 'success');
+      } else {
+        gBtn.disabled = true;
+        gBtn.textContent = '✅ ' + d.riskLevel + ' — No alert needed';
+        setStatus('✅ Analysis complete! Risk: ' + d.riskLevel + '. Sab safe hai.', 'success');
+      }
+
+      // Draw danger circle on map
+      drawDangerCircle(myLoc.lat, myLoc.lon, d.riskLevel, d.location);
+
+    } catch (err) {
+      setStatus('❌ ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🧠 Analyze My Location';
+    }
+  });
+
+  // ============ 3) SEND GEOFENCE ALERT ============
+  document.getElementById('btnGeofenceMe').addEventListener('click', async function () {
+    if (!lastAnalysis || !myLoc) return;
+    var btn = this;
+    btn.disabled = true;
+    btn.textContent = '⏳ Broadcasting...';
+
+    try {
+      var res = await fetch(API + '/api/alerts/geofence', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lat: myLoc.lat,
+          lon: myLoc.lon,
+          location: 'My GPS Zone',
+          radiusKm: 10,
+          riskLevel: lastAnalysis.riskLevel,
+          score: lastAnalysis.score,
+          primaryDisaster: lastAnalysis.primaryDisaster,
+          smsEnglish: lastAnalysis.smsEnglish,
+          smsHindi: lastAnalysis.smsHindi,
+          engine: 'dashboard-user'
+        })
+      });
+      var d = await res.json();
+      if (!d.success) throw new Error(d.message || 'Broadcast failed');
+
+      setStatus(
+        '📢 Geofenced alert broadcast! ' + d.userCount + ' users in 10km radius notified. Check Firestore alerts collection.',
+        'success'
+      );
+      btn.textContent = '✅ Broadcast Sent (' + d.userCount + ' users)';
+
+      // Reload user's own alerts
+      if (window.BhoomiGeofence && window.BhoomiGeofence.pullMyAlerts) {
+        window.BhoomiGeofence.pullMyAlerts();
+      }
+    } catch (err) {
+      setStatus('❌ ' + err.message, 'error');
+      btn.disabled = false;
+      btn.textContent = '🚨 Send Geofenced Alert';
+    }
+  });
+
+  // ============ RENDER analysis UI ============
+  function renderAnalysis(d) {
+    var w = d.weather || {};
+    document.getElementById('mlcRiskRow').innerHTML =
+      '<span class="risk-pill ' + d.riskLevel + '">' + d.riskLevel + ' — Score ' + d.score + '/100</span>' +
+      '<span class="metric-pill">🎯 ' + (d.primaryDisaster || 'Multi') + '</span>' +
+      '<span class="metric-pill">🔧 ' + (d.engine || 'ai') + '</span>' +
+      '<span class="metric-pill">🌡️ ' + (w.temperature != null ? w.temperature + '°C' : '—') + '</span>' +
+      '<span class="metric-pill">💧 ' + (w.humidity != null ? w.humidity + '%' : '—') + '</span>' +
+      '<span class="metric-pill">🌧️ ' + (w.precipitation != null ? w.precipitation + 'mm' : '—') + '</span>' +
+      '<span class="metric-pill">💨 ' + (w.windSpeed != null ? w.windSpeed + 'km/h' : '—') + '</span>';
+
+    document.getElementById('mlcExplainEn').innerHTML = '<strong>🇬🇧 English:</strong> ' + (d.explanation || '—');
+    document.getElementById('mlcExplainHi').innerHTML = '<strong>🇮🇳 हिंदी:</strong> ' + (d.explanationHindi || '—');
+    document.getElementById('mlcSmsEn').innerHTML = '<strong>📱 SMS English:</strong><br>' + (d.smsEnglish || '—');
+    document.getElementById('mlcSmsHi').innerHTML = '<strong>📱 SMS हिंदी:</strong><br>' + (d.smsHindi || '—');
+  }
+
+  // ============ DRAW DANGER CIRCLE on Leaflet map ============
+  var currentCircle = null;
+  var currentMarker = null;
+
+  function drawDangerCircle(lat, lon, riskLevel, name) {
+    // Try both map + map2
+    tryDraw('map', lat, lon, riskLevel, name);
+    tryDraw('map2', lat, lon, riskLevel, name);
+  }
+
+  function tryDraw(mapId, lat, lon, riskLevel, name) {
+    var mapEl = document.getElementById(mapId);
+    if (!mapEl || !mapEl._leafletMap) return; // dashboard.js should attach _leafletMap
+
+    var mapObj = mapEl._leafletMap;
+    var color = riskLevel === 'Severe' ? '#dc2626' :
+                riskLevel === 'High' ? '#f97316' :
+                riskLevel === 'Moderate' ? '#eab308' : '#10b981';
+
+    // Remove old
+    if (currentCircle && currentCircle._map) currentCircle.remove();
+    if (currentMarker && currentMarker._map) currentMarker.remove();
+
+    currentCircle = L.circle([lat, lon], {
+      radius: 10000,     // 10 km
+      color: color,
+      fillColor: color,
+      fillOpacity: 0.15,
+      weight: 2
+    }).addTo(mapObj);
+
+    currentMarker = L.marker([lat, lon]).addTo(mapObj);
+    currentMarker.bindPopup(
+      '<b>' + (name || 'My Location') + '</b><br>' +
+      'Risk: ' + riskLevel + '<br>' +
+      '10km danger radius'
+    ).openPopup();
+
+    mapObj.setView([lat, lon], 8);
+  }
+})();
+</script>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="dashboard.js"></script>          <!-- 1st: map + showUserOnMap -->
+<script src="geofence-banner.js"></script>    <!-- 2nd: banner + share loc -->
+<script>
+  // 3rd: AI panel Detect + Analyze buttons
+  // (btnGetGPS, btnAnalyzeMe, btnGeofenceMe wala IIFE)
+</script>
+<script src="config.js"></script>
+</body>
+</html>

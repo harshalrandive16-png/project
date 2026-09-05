@@ -1,0 +1,5 @@
+node_modules/
+serviceAccountKey.json
+ai.env
+tmp_uploads/
+uploads/

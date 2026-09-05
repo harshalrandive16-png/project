@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login / Signup — BhoomiSuraksha</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #060b11;
+      color: #f8fafc;
+      min-height: 100vh;
+      background-image:
+        radial-gradient(circle at 15% 20%, rgba(16,185,129,0.08) 0%, transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(59,130,246,0.06) 0%, transparent 45%);
+    }
+    .auth-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .auth-card {
+      width: 100%;
+      max-width: 460px;
+      background: rgba(11,15,26,0.9);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 2.5rem 2.25rem;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+    }
+    .back-home {
+      display: inline-flex;
+      color: #64748b;
+      text-decoration: none;
+      font-size: 0.85rem;
+      margin-bottom: 1.25rem;
+    }
+    .back-home:hover { color: #10b981; }
+    .auth-brand { text-align: center; margin-bottom: 1.5rem; }
+    .auth-brand-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 56px; height: 56px; border-radius: 16px; font-size: 1.8rem;
+      background: linear-gradient(135deg, #3b82f6, #10b981);
+      margin-bottom: 0.75rem;
+      box-shadow: 0 8px 24px rgba(16,185,129,0.3);
+    }
+    .auth-brand h1 { font-size: 1.4rem; font-weight: 800; }
+    .auth-brand p {
+      font-size: 0.7rem; color: #10b981; letter-spacing: 0.12em;
+      text-transform: uppercase; font-weight: 600; margin-top: 0.25rem;
+    }
+    .auth-tabs {
+      display: grid; grid-template-columns: 1fr 1fr;
+      background: rgba(0,0,0,0.35); border-radius: 12px; padding: 4px;
+      margin-bottom: 1.5rem;
+    }
+    .auth-tab {
+      border: none; background: transparent; color: #94a3b8;
+      padding: 0.7rem; font-weight: 600; font-size: 0.9rem;
+      border-radius: 9px; cursor: pointer; font-family: inherit;
+    }
+    .auth-tab.active {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #060b11; box-shadow: 0 4px 12px rgba(16,185,129,0.35);
+    }
+    .auth-heading { font-size: 1.45rem; font-weight: 800; margin-bottom: 0.3rem; }
+    .auth-sub { font-size: 0.85rem; color: #94a3b8; margin-bottom: 1.35rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label {
+      display: block; font-size: 0.78rem; color: #94a3b8;
+      margin-bottom: 0.4rem; font-weight: 500;
+    }
+    .form-group input {
+      width: 100%;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #f1f5f9;
+      padding: 0.85rem 1rem;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+    }
+    .form-group input:focus {
+      border-color: #10b981;
+      background: rgba(0,0,0,0.55);
+    }
+    .btn-submit {
+      width: 100%;
+      margin-top: 0.5rem;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #060b11;
+      border: none;
+      padding: 0.95rem;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 6px 18px rgba(16,185,129,0.35);
+    }
+    .btn-submit:hover { filter: brightness(1.06); }
+    .btn-submit:disabled { opacity: 0.7; cursor: wait; }
+    .auth-footer {
+      text-align: center; margin-top: 1.2rem;
+      font-size: 0.85rem; color: #94a3b8;
+    }
+    .auth-footer a {
+      color: #10b981; font-weight: 600; cursor: pointer; text-decoration: none;
+    }
+    .form-error {
+      display: none;
+      color: #f87171;
+      background: rgba(220,38,38,0.1);
+      border: 1px solid rgba(220,38,38,0.25);
+      padding: 0.7rem 1rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+    .form-error.show { display: block; }
+    .toast {
+      position: fixed; top: 24px; right: 24px;
+      background: #10b981; color: #060b11;
+      padding: 0.9rem 1.4rem; border-radius: 12px;
+      font-weight: 700; font-size: 0.9rem;
+      box-shadow: 0 12px 32px rgba(16,185,129,0.4);
+      z-index: 9999; display: none;
+    }
+    .toast.show { display: block; }
+    .server-status {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 1rem;
+      padding: 0.5rem;
+      border-radius: 8px;
+      background: rgba(0,0,0,0.3);
+    }
+    .server-status.ok { color: #10b981; }
+    .server-status.bad { color: #f87171; background: rgba(220,38,38,0.1); }
+  </style>
+</head>
+<body>
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <a href="index.html" class="back-home">← Back to Home</a>
+
+      <div class="auth-brand">
+        <div class="auth-brand-icon">🌍</div>
+        <h1>BhoomiSuraksha</h1>
+        <p>AI Early Warning System</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" id="tabLogin" onclick="switchMode('login')">Log In</button>
+        <button type="button" class="auth-tab" id="tabSignup" onclick="switchMode('signup')">Sign Up</button>
+      </div>
+
+      <div id="formErrorBox" class="form-error"></div>
+
+      <!-- LOGIN FORM -->
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <h2 class="auth-heading">Welcome back 👋</h2>
+        <p class="auth-sub">Log in to your BhoomiSuraksha account</p>
+
+        <div class="form-group">
+          <label for="loginEmail">Email Address</label>
+          <input type="email" id="loginEmail" placeholder="you@example.com" required autocomplete="email"/>
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="Enter password" required autocomplete="current-password"/>
+        </div>
+        <button type="submit" class="btn-submit" id="btnLogin">Log In →</button>
+        <div class="auth-footer">
+          New here? <a onclick="switchMode('signup')">Create an account</a>
+        </div>
+      </form>
+
+      <!-- SIGNUP FORM -->
+      <form id="signupForm" style="display:none;" onsubmit="handleSignup(event)">
+        <h2 class="auth-heading">Create account 🚀</h2>
+        <p class="auth-sub">Join India's multi-disaster alert network</p>
+
+        <div class="form-group">
+          <label for="signupName">Full Name</label>
+          <input type="text" id="signupName" placeholder="Aarav Sharma" required autocomplete="name"/>
+        </div>
+        <div class="form-group">
+          <label for="signupEmail">Email Address</label>
+          <input type="email" id="signupEmail" placeholder="you@example.com" required autocomplete="email"/>
+        </div>
+        <div class="form-group">
+          <label for="signupPhone">Phone Number</label>
+          <input type="tel" id="signupPhone" placeholder="+91 98765 43210" autocomplete="tel"/>
+        </div>
+        <div class="form-group">
+          <label for="signupState">State</label>
+          <input type="text" id="signupState" placeholder="Maharashtra"/>
+        </div>
+        <div class="form-group">
+          <label for="signupPassword">Password</label>
+          <input type="password" id="signupPassword" placeholder="Min 6 characters" minlength="6" required autocomplete="new-password"/>
+        </div>
+        <button type="submit" class="btn-submit" id="btnSignup">Create Account →</button>
+        <div class="auth-footer">
+          Already have account? <a onclick="switchMode('login')">Log in</a>
+        </div>
+      </form>
+
+      <div id="serverStatus" class="server-status">⏳ Checking backend...</div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const API = 'http://localhost:5000';
+
+    function switchMode(mode) {
+      const loginForm = document.getElementById('loginForm');
+      const signupForm = document.getElementById('signupForm');
+      const tabLogin = document.getElementById('tabLogin');
+      const tabSignup = document.getElementById('tabSignup');
+      hideError();
+
+      if (mode === 'signup') {
+        loginForm.style.display = 'none';
+        signupForm.style.display = 'block';
+        tabLogin.classList.remove('active');
+        tabSignup.classList.add('active');
+        history.replaceState(null, '', '?mode=signup');
+      } else {
+        loginForm.style.display = 'block';
+        signupForm.style.display = 'none';
+        tabLogin.classList.add('active');
+        tabSignup.classList.remove('active');
+        history.replaceState(null, '', '?mode=login');
+      }
+    }
+
+    function showError(msg) {
+      const box = document.getElementById('formErrorBox');
+      box.textContent = msg;
+      box.classList.add('show');
+    }
+    function hideError() {
+      const box = document.getElementById('formErrorBox');
+      box.classList.remove('show');
+      box.textContent = '';
+    }
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    function saveSession(user, token) {
+      localStorage.setItem('bhoomiUser', JSON.stringify(user));
+      localStorage.setItem('landslideUser', JSON.stringify(user));
+      localStorage.setItem('bhoomiToken', token);
+      localStorage.setItem('landslideToken', token);
+    }
+
+    async function handleSignup(e) {
+      e.preventDefault();
+      hideError();
+      const btn = document.getElementById('btnSignup');
+      const payload = {
+        name: document.getElementById('signupName').value.trim(),
+        email: document.getElementById('signupEmail').value.trim(),
+        phone: document.getElementById('signupPhone').value.trim(),
+        state: document.getElementById('signupState').value.trim() || 'India',
+        password: document.getElementById('signupPassword').value
+      };
+
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
+
+      try {
+        const res = await fetch(API + '/api/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || 'Signup failed');
+        }
+
+        saveSession(data.user, data.token);
+        showToast('✅ Account created!');
+        setTimeout(() => { window.location.href = 'index.html'; }, 800);
+      } catch (err) {
+        showError('❌ ' + (err.message || 'Signup failed. Is backend running?'));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create Account →';
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      hideError();
+      const btn = document.getElementById('btnLogin');
+      const payload = {
+        email: document.getElementById('loginEmail').value.trim(),
+        password: document.getElementById('loginPassword').value
+      };
+
+      btn.disabled = true;
+      btn.textContent = 'Logging in...';
+
+      try {
+        const res = await fetch(API + '/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || 'Login failed');
+        }
+
+        saveSession(data.user, data.token);
+        showToast('✅ Login successful!');
+        setTimeout(() => { window.location.href = 'index.html'; }, 800);
+      } catch (err) {
+        showError('❌ ' + (err.message || 'Login failed. Is backend running?'));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Log In →';
+      }
+    }
+
+    async function checkServer() {
+      const el = document.getElementById('serverStatus');
+      try {
+        const res = await fetch(API + '/api/health');
+        const data = await res.json();
+        if (data.success) {
+          el.textContent = '🟢 Backend connected · Firestore ready';
+          el.className = 'server-status ok';
+        } else {
+          throw new Error('Bad response');
+        }
+      } catch (e) {
+        el.textContent = '🔴 Backend OFFLINE — run: node server.js';
+        el.className = 'server-status bad';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const params = new URLSearchParams(window.location.search);
+      switchMode(params.get('mode') === 'signup' ? 'signup' : 'login');
+      checkServer();
+    });
+  </script>
+  <script src="config.js"></script>
+</body>
+</html>
