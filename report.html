@@ -4,79 +4,732 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Report Incident – BhoomiSuraksha</title>
-  
-  <!-- CSS Files -->
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🏔️%3C/text%3E%3C/svg%3E"/>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+
   <link rel="stylesheet" href="style.css"/>
   <link rel="stylesheet" href="report.css"/>
-  
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <!-- ═══════ PWA META TAGS ═══════ -->
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#10b981"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="BhoomiSuraksha"/>
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"/>
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png"/>
+
+  <script src="config.js"></script>
+
+  <!-- ═══════════════════════════════════════════
+       🎨 NEW COLOR PALETTE + REPORT OVERRIDES
+       ═══════════════════════════════════════════ -->
+  <style>
+    :root {
+      --clr-emerald: #10b981;
+      --clr-emerald-dark: #059669;
+      --clr-blue: #3b82f6;
+      --clr-crimson: #dc2626;
+      --clr-amber: #f59e0b;
+      --clr-cyan: #06b6d4;
+      --clr-violet: #8b5cf6;
+      --clr-pink: #ec4899;
+      --bg-deep: #050810;
+      --bg-card: #0d1420;
+      --bg-elevated: #141c2b;
+      --border-subtle: rgba(255,255,255,.06);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+    }
+
+    body {
+      background: var(--bg-deep) !important;
+      background-image:
+        radial-gradient(ellipse 800px 400px at 20% 10%, rgba(245,158,11,.05), transparent 60%),
+        radial-gradient(ellipse 600px 400px at 80% 30%, rgba(59,130,246,.05), transparent 60%),
+        radial-gradient(ellipse 500px 400px at 50% 80%, rgba(16,185,129,.04), transparent 60%);
+    }
+
+    /* ==== HERO ==== */
+    .report-hero {
+      padding: 60px 24px 40px !important;
+      text-align: center !important;
+      background: radial-gradient(ellipse at top, rgba(245,158,11,.1), transparent 70%) !important;
+    }
+    .report-hero-inner {
+      max-width: 780px !important;
+      margin: 0 auto !important;
+    }
+    .hero-badge {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      background: linear-gradient(135deg, rgba(245,158,11,.15), rgba(236,72,153,.15)) !important;
+      color: var(--clr-amber) !important;
+      padding: 7px 16px !important;
+      border-radius: 20px !important;
+      font-size: .75rem !important;
+      font-weight: 700 !important;
+      letter-spacing: 1px !important;
+      text-transform: uppercase !important;
+      border: 1px solid rgba(245,158,11,.3) !important;
+      margin-bottom: 16px !important;
+    }
+    .badge-dot {
+      width: 8px !important; height: 8px !important;
+      background: var(--clr-amber) !important;
+      border-radius: 50% !important;
+      animation: repPulse 1.5s infinite !important;
+    }
+    @keyframes repPulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(245,158,11,.5); }
+      50% { opacity: .7; box-shadow: 0 0 0 6px rgba(245,158,11,0); }
+    }
+    .report-title {
+      font-size: clamp(1.8rem, 4vw, 2.8rem) !important;
+      font-weight: 800 !important;
+      color: var(--text-primary) !important;
+      margin: 0 0 12px !important;
+      line-height: 1.15 !important;
+    }
+    .hero-title-accent {
+      background: linear-gradient(135deg, var(--clr-amber), var(--clr-crimson)) !important;
+      -webkit-background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      background-clip: text !important;
+    }
+    .report-desc {
+      color: var(--text-secondary) !important;
+      max-width: 640px !important;
+      margin: 0 auto !important;
+      font-size: 1rem !important;
+      line-height: 1.6 !important;
+    }
+
+    /* ==== MAIN LAYOUT ==== */
+    .report-main {
+      max-width: 1400px !important;
+      margin: 0 auto !important;
+      padding: 0 24px 60px !important;
+    }
+    .report-layout {
+      display: grid !important;
+      grid-template-columns: 1.5fr 1fr !important;
+      gap: 24px !important;
+      align-items: start !important;
+    }
+    @media (max-width: 1000px) {
+      .report-layout { grid-template-columns: 1fr !important; }
+    }
+
+    /* ==== GLASS CARDS ==== */
+    .glass-card, .report-form-container {
+      background: linear-gradient(145deg, var(--bg-card), var(--bg-elevated)) !important;
+      border: 1px solid var(--border-subtle) !important;
+      border-radius: 18px !important;
+      padding: 26px !important;
+      position: relative;
+      overflow: hidden;
+    }
+    .report-form-container::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--clr-amber), var(--clr-crimson), var(--clr-emerald));
+    }
+
+    .form-title {
+      color: var(--text-primary) !important;
+      font-size: 1.35rem !important;
+      font-weight: 800 !important;
+      margin: 0 0 22px !important;
+      padding-bottom: 14px !important;
+      border-bottom: 1px solid var(--border-subtle) !important;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .form-title::before {
+      content: '📝';
+      font-size: 1.3rem;
+    }
+
+    /* ==== FORM SECTIONS ==== */
+    .form-section-title {
+      color: var(--clr-cyan) !important;
+      font-size: .8rem !important;
+      font-weight: 700 !important;
+      letter-spacing: 1.2px !important;
+      text-transform: uppercase !important;
+      margin: 24px 0 12px !important;
+      padding: 8px 12px !important;
+      background: rgba(6,182,212,.08) !important;
+      border-left: 3px solid var(--clr-cyan) !important;
+      border-radius: 6px !important;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ==== FORM ROWS & GROUPS ==== */
+    .form-row {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 14px !important;
+      margin-bottom: 14px !important;
+    }
+    @media (max-width: 600px) {
+      .form-row { grid-template-columns: 1fr !important; }
+    }
+    .form-group {
+      display: flex !important;
+      flex-direction: column !important;
+      margin-bottom: 14px !important;
+    }
+    .form-group label {
+      font-size: .72rem !important;
+      color: var(--text-secondary) !important;
+      font-weight: 700 !important;
+      letter-spacing: .8px !important;
+      text-transform: uppercase !important;
+      margin-bottom: 7px !important;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      background: rgba(255,255,255,.04) !important;
+      border: 1px solid rgba(255,255,255,.08) !important;
+      border-radius: 10px !important;
+      padding: 12px 14px !important;
+      color: var(--text-primary) !important;
+      font-family: inherit !important;
+      font-size: .9rem !important;
+      outline: none !important;
+      transition: all .2s !important;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--clr-emerald) !important;
+      background: rgba(16,185,129,.06) !important;
+      box-shadow: 0 0 0 3px rgba(16,185,129,.1) !important;
+    }
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+      color: var(--text-muted) !important;
+    }
+    .form-group select option {
+      background: var(--bg-card) !important;
+      color: var(--text-primary) !important;
+    }
+    .form-group textarea {
+      resize: vertical !important;
+      min-height: 100px !important;
+    }
+
+    /* ==== LOCATION BOX ==== */
+    .location-box {
+      background: rgba(59,130,246,.04) !important;
+      border: 1px solid rgba(59,130,246,.15) !important;
+      border-radius: 12px !important;
+      padding: 18px !important;
+    }
+    .btn-gps {
+      width: 100% !important;
+      background: linear-gradient(135deg, var(--clr-blue), #1d4ed8) !important;
+      color: #fff !important;
+      border: none !important;
+      padding: 12px 18px !important;
+      border-radius: 10px !important;
+      font-family: inherit !important;
+      font-size: .9rem !important;
+      font-weight: 700 !important;
+      cursor: pointer !important;
+      transition: all .2s !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      box-shadow: 0 4px 12px rgba(59,130,246,.3) !important;
+    }
+    .btn-gps:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(59,130,246,.4) !important; }
+    .mt-3 { margin-top: 12px !important; }
+    .mt-4 { margin-top: 16px !important; }
+
+    /* ==== SEVERITY CARDS ==== */
+    .severity-grid {
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 10px !important;
+    }
+    .severity-card {
+      position: relative !important;
+      cursor: pointer !important;
+      display: block !important;
+    }
+    .severity-card input[type="radio"] {
+      position: absolute !important;
+      opacity: 0 !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+    .sev-content {
+      background: rgba(255,255,255,.03) !important;
+      border: 2px solid transparent !important;
+      border-radius: 12px !important;
+      padding: 14px !important;
+      transition: all .25s !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 6px !important;
+      position: relative;
+    }
+    .sev-dot {
+      width: 12px !important;
+      height: 12px !important;
+      border-radius: 50% !important;
+      display: inline-block !important;
+    }
+    .sev-content strong {
+      color: var(--text-primary) !important;
+      font-size: .95rem !important;
+      font-weight: 700 !important;
+      letter-spacing: .5px !important;
+    }
+    .sev-content span:not(.sev-dot) {
+      color: var(--text-muted) !important;
+      font-size: .72rem !important;
+      line-height: 1.3 !important;
+    }
+
+    /* Severity color variants */
+    .severity-card.low .sev-dot { background: var(--clr-emerald); }
+    .severity-card.moderate .sev-dot { background: #eab308; }
+    .severity-card.high .sev-dot { background: var(--clr-amber); }
+    .severity-card.severe .sev-dot { background: var(--clr-crimson); }
+
+    /* Selected state */
+    .severity-card input[type="radio"]:checked + .sev-content {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,.35);
+    }
+    .severity-card.low input[type="radio"]:checked + .sev-content {
+      background: rgba(16,185,129,.12) !important;
+      border-color: var(--clr-emerald) !important;
+    }
+    .severity-card.moderate input[type="radio"]:checked + .sev-content {
+      background: rgba(234,179,8,.12) !important;
+      border-color: #eab308 !important;
+    }
+    .severity-card.high input[type="radio"]:checked + .sev-content {
+      background: rgba(245,158,11,.12) !important;
+      border-color: var(--clr-amber) !important;
+    }
+    .severity-card.severe input[type="radio"]:checked + .sev-content {
+      background: rgba(220,38,38,.12) !important;
+      border-color: var(--clr-crimson) !important;
+      animation: severeShake 2s infinite;
+    }
+    @keyframes severeShake {
+      0%, 90%, 100% { transform: translateY(-2px) scale(1); }
+      92% { transform: translateY(-2px) scale(1.02) rotate(-1deg); }
+      94% { transform: translateY(-2px) scale(1.02) rotate(1deg); }
+    }
+    .severity-card:hover .sev-content {
+      background: rgba(255,255,255,.05) !important;
+      border-color: rgba(255,255,255,.15) !important;
+    }
+
+    /* ==== FILE UPLOAD ==== */
+    .file-upload-zone {
+      background: rgba(139,92,246,.04) !important;
+      border: 2px dashed rgba(139,92,246,.3) !important;
+      border-radius: 14px !important;
+      padding: 32px 20px !important;
+      text-align: center !important;
+      cursor: pointer !important;
+      position: relative !important;
+      transition: all .25s !important;
+      overflow: hidden !important;
+    }
+    .file-upload-zone:hover {
+      background: rgba(139,92,246,.1) !important;
+      border-color: var(--clr-violet) !important;
+    }
+    .file-input {
+      position: absolute !important;
+      inset: 0 !important;
+      opacity: 0 !important;
+      cursor: pointer !important;
+    }
+    .upload-icon {
+      font-size: 3rem !important;
+      margin-bottom: 8px !important;
+      display: block !important;
+      opacity: .8;
+    }
+    .upload-text {
+      color: var(--text-primary) !important;
+      font-weight: 700 !important;
+      font-size: 1rem !important;
+      margin-bottom: 4px !important;
+    }
+    .upload-hint {
+      color: var(--text-muted) !important;
+      font-size: .78rem !important;
+    }
+    .file-name-display {
+      margin-top: 12px !important;
+      color: var(--clr-emerald) !important;
+      font-weight: 700 !important;
+      font-size: .85rem !important;
+    }
+
+    /* ==== SUBMIT BUTTON ==== */
+    .btn-submit {
+      width: 100% !important;
+      background: linear-gradient(135deg, var(--clr-emerald), var(--clr-emerald-dark)) !important;
+      color: #fff !important;
+      border: none !important;
+      padding: 16px 24px !important;
+      border-radius: 12px !important;
+      font-family: inherit !important;
+      font-size: 1.05rem !important;
+      font-weight: 800 !important;
+      cursor: pointer !important;
+      transition: all .25s !important;
+      margin-top: 20px !important;
+      box-shadow: 0 8px 24px rgba(16,185,129,.35) !important;
+      letter-spacing: .5px;
+    }
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(16,185,129,.5) !important;
+    }
+    .btn-submit:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ==== SIDEBAR ==== */
+    .report-sidebar {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 18px !important;
+      position: sticky !important;
+      top: 20px !important;
+    }
+    @media (max-width: 1000px) {
+      .report-sidebar { position: static !important; }
+    }
+    .sidebar-card {
+      padding: 22px !important;
+    }
+    .sidebar-card h3 {
+      color: var(--text-primary) !important;
+      font-size: 1.05rem !important;
+      font-weight: 700 !important;
+      margin: 0 0 14px !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+    }
+    .guideline-list {
+      list-style: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 12px !important;
+    }
+    .guideline-list li {
+      color: var(--text-secondary) !important;
+      font-size: .85rem !important;
+      line-height: 1.5 !important;
+      padding-left: 22px !important;
+      position: relative !important;
+    }
+    .guideline-list li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 16px;
+      height: 16px;
+      background: var(--clr-emerald);
+      color: #000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .7rem;
+      font-weight: 800;
+    }
+    .guideline-list li strong {
+      color: var(--clr-emerald) !important;
+      font-weight: 700 !important;
+    }
+
+    /* Emergency card */
+    .emergency-card {
+      background: linear-gradient(145deg, rgba(220,38,38,.1), var(--bg-card)) !important;
+      border: 1px solid rgba(220,38,38,.3) !important;
+      position: relative;
+      overflow: hidden;
+    }
+    .emergency-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--clr-crimson), #991b1b);
+    }
+    .ec-icon {
+      font-size: 2.5rem !important;
+      margin-bottom: 8px !important;
+      animation: severeShake 2s infinite;
+    }
+    .emergency-card h3 {
+      color: var(--clr-crimson) !important;
+    }
+    .emergency-card p {
+      color: var(--text-secondary) !important;
+      font-size: .85rem !important;
+      line-height: 1.5 !important;
+      margin-bottom: 14px !important;
+    }
+    .contact-links {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 10px !important;
+    }
+    .ec-btn {
+      background: linear-gradient(135deg, var(--clr-crimson), #991b1b) !important;
+      color: #fff !important;
+      border: none !important;
+      padding: 12px 16px !important;
+      border-radius: 10px !important;
+      text-decoration: none !important;
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      font-family: inherit !important;
+      font-weight: 700 !important;
+      transition: all .2s !important;
+      box-shadow: 0 4px 12px rgba(220,38,38,.3) !important;
+    }
+    .ec-btn:hover { transform: translateY(-2px); }
+    .ec-btn.ndrf {
+      background: linear-gradient(135deg, var(--clr-blue), #1d4ed8) !important;
+      box-shadow: 0 4px 12px rgba(59,130,246,.3) !important;
+    }
+    .ec-btn .ec-phone {
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ec-btn span:last-child {
+      font-size: .75rem;
+      opacity: .9;
+    }
+
+    /* Trust Badge */
+    .trust-badge-box {
+      background: linear-gradient(135deg, rgba(139,92,246,.08), rgba(6,182,212,.08)) !important;
+      border: 1px solid rgba(139,92,246,.25) !important;
+      border-radius: 14px !important;
+      padding: 18px !important;
+      display: flex !important;
+      gap: 14px !important;
+      align-items: flex-start !important;
+    }
+    .tb-icon {
+      font-size: 2rem !important;
+      flex-shrink: 0 !important;
+    }
+    .tb-text {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 4px !important;
+    }
+    .tb-text strong {
+      color: var(--clr-violet) !important;
+      font-weight: 700 !important;
+      font-size: .95rem !important;
+    }
+    .tb-text span {
+      color: var(--text-secondary) !important;
+      font-size: .78rem !important;
+      line-height: 1.5 !important;
+    }
+
+    /* ==== SUCCESS MODAL ==== */
+    .modal-overlay {
+      position: fixed !important;
+      inset: 0 !important;
+      background: rgba(0,0,0,.8) !important;
+      backdrop-filter: blur(8px) !important;
+      z-index: 10000 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 20px !important;
+    }
+    .modal-overlay.hidden { display: none !important; }
+    .success-box {
+      background: linear-gradient(145deg, var(--bg-card), var(--bg-elevated)) !important;
+      border: 1px solid rgba(16,185,129,.4) !important;
+      border-radius: 20px !important;
+      padding: 40px 32px !important;
+      max-width: 460px !important;
+      width: 100% !important;
+      text-align: center !important;
+      box-shadow: 0 20px 60px rgba(0,0,0,.7), 0 0 40px rgba(16,185,129,.2) !important;
+      animation: modalIn .4s;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(.9) translateY(20px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .success-icon {
+      font-size: 4rem !important;
+      margin-bottom: 16px !important;
+      display: block !important;
+      animation: successPop .5s;
+    }
+    @keyframes successPop {
+      0% { transform: scale(0) rotate(0deg); }
+      50% { transform: scale(1.2) rotate(20deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+    .success-box h3 {
+      color: var(--text-primary) !important;
+      font-size: 1.4rem !important;
+      font-weight: 800 !important;
+      margin: 0 0 10px !important;
+    }
+    .success-box p {
+      color: var(--text-secondary) !important;
+      font-size: .9rem !important;
+      line-height: 1.6 !important;
+      margin: 0 0 20px !important;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--clr-emerald), var(--clr-emerald-dark)) !important;
+      color: #fff !important;
+      padding: 12px 24px !important;
+      border-radius: 10px !important;
+      border: none !important;
+      font-family: inherit !important;
+      font-size: .95rem !important;
+      font-weight: 700 !important;
+      cursor: pointer !important;
+      text-decoration: none !important;
+      display: inline-block !important;
+      transition: all .2s !important;
+      box-shadow: 0 4px 12px rgba(16,185,129,.3) !important;
+    }
+    .btn-primary:hover { transform: translateY(-2px); }
+  </style>
 </head>
 <body>
 
-<!-- ============ NAVBAR ============ -->
+<!-- ═══════════════════════════════════════════════════════════
+     📡 NAVBAR (Same as Home/Dashboard/Alerts)
+     ═══════════════════════════════════════════════════════════ -->
 <header class="navbar" id="navbar">
-  <div class="nav-brand">
-    <div class="brand-icon">🏔️</div>
+  <a href="index.html" class="nav-brand">
+    <div class="brand-icon">🌍</div>
     <div class="brand-text">
       <span class="brand-name">BhoomiSuraksha</span>
       <span class="brand-sub">AI EARLY WARNING SYSTEM</span>
     </div>
-  </div>
+  </a>
 
   <nav class="nav-links" id="navLinks">
-    <a class="nav-link" href="index.html">Home</a>
-    <a class="nav-link" href="dashboard.html">Dashboard</a>
-    <a class="nav-link" href="alerts.html">Alerts</a>
-    <!-- Active state shifted to Report Incident -->
-    <a class="nav-link active" href="report.html">Report Incident</a>
-  </nav>
-
+  <a class="nav-link" href="index.html">Home</a>
+  <a class="nav-link" href="dashboard.html">Dashboard</a>
+  <a class="nav-link" href="alerts.html">Alerts</a>
+  <a class="nav-link" href="emergency-resources.html">Resources</a>
+  <a class="nav-link" href="safe-route.html">Safe Route</a>
+  <a class="nav-link" href="family-tracker.html">Family</a>
+  <a class="nav-link" href="rss-feed.html">News</a>
+  <a class="nav-link" href="donate.html">Donate</a> <!-- NAYA LINK -->
+  <a class="nav-link" href="admin-stats.html">Stats</a>
+</nav>
   <div class="nav-right">
-    <select class="lang-select" id="langSelect">
+    <select class="lang-select" id="langSelect" aria-label="Language">
       <option value="en">English</option>
       <option value="hi">हिंदी</option>
-      <option value="as">অসমীয়া</option>
       <option value="bn">বাংলা</option>
-      <option value="mn">Meitei</option>
+      <option value="mr">मराठी</option>
+      <option value="ta">தமிழ்</option>
+      <option value="as">অসমীয়া</option>
     </select>
-    <a href="dashboard.html" class="btn-nav-cta">Open Dashboard</a>
-    <button class="hamburger" id="hamburger">☰</button>
+
+    <div id="authButtons" class="auth-buttons">
+      <a href="auth.html?mode=login" class="btn-login">Log In</a>
+      <a href="auth.html?mode=signup" class="btn-signup">Sign Up</a>
+    </div>
+
+    <div id="userProfile" class="user-profile hidden">
+      <div class="user-avatar" id="userAvatar">U</div>
+      <div class="user-info">
+        <span class="user-greet">Welcome,</span>
+        <span class="user-name" id="userNameDisplay">User</span>
+      </div>
+      <button type="button" class="btn-logout" onclick="logoutUser()" title="Logout">⎋</button>
+    </div>
+
+    <button class="hamburger" id="hamburger" type="button" aria-label="Menu">☰</button>
   </div>
 </header>
 
-<!-- ============ PAGE HEADER ============ -->
+<!-- ═══════════════════════════════════════════════════════════
+     🎯 HERO SECTION
+     ═══════════════════════════════════════════════════════════ -->
 <section class="report-hero">
   <div class="report-hero-inner">
     <div class="hero-badge">
       <span class="badge-dot"></span>
-      Citizen & Field Reporting
+      Citizen &amp; Field Reporting
     </div>
     <h1 class="report-title">
-      Report a Landslide <br/>
+      Report a Disaster<br/>
       <span class="hero-title-accent">Incident or Risk</span>
     </h1>
     <p class="report-desc">
-      Help us protect the community. Submit photos, location, and details of any slope failures, road blockages, or early warning signs (like deep cracks).
+      Help us protect the community. Submit photos, GPS location, and details of floods, cyclones, landslides, or early warning signs across India.
     </p>
   </div>
 </section>
 
-<!-- ============ MAIN CONTENT AREA ============ -->
+<!-- ═══════════════════════════════════════════════════════════
+     📝 MAIN FORM AREA
+     ═══════════════════════════════════════════════════════════ -->
 <section class="report-main">
   <div class="report-layout">
-    
+
     <!-- LEFT: THE FORM -->
-    <div class="report-form-container glass-card">
+    <div class="report-form-container">
       <h2 class="form-title">Incident Details</h2>
-      
+
       <form id="incidentForm" class="incident-form">
-        
+
         <!-- Reporter Info -->
         <div class="form-row">
           <div class="form-group">
             <label>Full Name</label>
-            <input type="text" id="repName" placeholder="Enter your name" required />
+            <input type="text" id="repName" placeholder="Enter your full name" required />
           </div>
           <div class="form-group">
             <label>Phone Number</label>
@@ -85,53 +738,78 @@
         </div>
 
         <!-- Location Group -->
-        <div class="form-section-title">Location Information</div>
+        <div class="form-section-title">📍 Location Information</div>
         <div class="location-box">
           <button type="button" class="btn-gps" onclick="getLocation()" id="gpsBtn">
             <span>📍</span> Auto-detect Current Location
           </button>
-          
+
           <div class="form-row mt-3">
             <div class="form-group">
-              <label>State / District</label>
+              <label>State / Territory</label>
               <select id="repState" required>
                 <option value="">Select State...</option>
-                <option value="Meghalaya">Meghalaya</option>
-                <option value="Nagaland">Nagaland</option>
+                <option value="Andhra Pradesh">Andhra Pradesh</option>
                 <option value="Arunachal Pradesh">Arunachal Pradesh</option>
-                <option value="Sikkim">Sikkim</option>
                 <option value="Assam">Assam</option>
-                <option value="Mizoram">Mizoram</option>
+                <option value="Bihar">Bihar</option>
+                <option value="Chhattisgarh">Chhattisgarh</option>
+                <option value="Delhi">Delhi</option>
+                <option value="Goa">Goa</option>
+                <option value="Gujarat">Gujarat</option>
+                <option value="Haryana">Haryana</option>
+                <option value="Himachal Pradesh">Himachal Pradesh</option>
+                <option value="Jammu and Kashmir">Jammu and Kashmir</option>
+                <option value="Jharkhand">Jharkhand</option>
+                <option value="Karnataka">Karnataka</option>
+                <option value="Kerala">Kerala</option>
+                <option value="Madhya Pradesh">Madhya Pradesh</option>
+                <option value="Maharashtra">Maharashtra</option>
                 <option value="Manipur">Manipur</option>
+                <option value="Meghalaya">Meghalaya</option>
+                <option value="Mizoram">Mizoram</option>
+                <option value="Nagaland">Nagaland</option>
+                <option value="Odisha">Odisha</option>
+                <option value="Punjab">Punjab</option>
+                <option value="Rajasthan">Rajasthan</option>
+                <option value="Sikkim">Sikkim</option>
+                <option value="Tamil Nadu">Tamil Nadu</option>
+                <option value="Telangana">Telangana</option>
                 <option value="Tripura">Tripura</option>
+                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                <option value="Uttarakhand">Uttarakhand</option>
+                <option value="West Bengal">West Bengal</option>
+                <option value="Other">Other (Pan-India)</option>
               </select>
             </div>
             <div class="form-group">
-              <label>Coordinates (Auto-filled or manual)</label>
-              <input type="text" id="repCoords" placeholder="e.g. 25.5788° N, 91.8933° E" />
+              <label>Coordinates (Auto-filled)</label>
+              <input type="text" id="repCoords" placeholder="e.g. 25.5788° N, 91.8933° E" readonly required />
             </div>
           </div>
           <div class="form-group mt-3">
             <label>Detailed Address / Landmark</label>
-            <input type="text" id="repAddress" placeholder="e.g. NH-6 highway near Shillong viewpoint" required />
+            <input type="text" id="repAddress" placeholder="e.g. NH-66 highway near coastal bridge" required />
           </div>
         </div>
 
         <!-- Incident Specifics -->
-        <div class="form-section-title">Incident Specifications</div>
+        <div class="form-section-title">⚠️ Incident Specifications</div>
         <div class="form-group">
           <label>Type of Incident</label>
           <select id="repType" required>
             <option value="">Select type...</option>
-            <option value="mudslide">Mudslide / Debris Flow</option>
-            <option value="rockfall">Rockfall</option>
-            <option value="cracks">Deep Cracks on Slope/Road (Warning Sign)</option>
-            <option value="blockage">Complete Road Blockage</option>
-            <option value="flooding">Flash Flood / Water Logging</option>
+            <option value="Flood">🌊 Flash Flood / Water Logging</option>
+            <option value="Cyclone">🌀 Cyclone / Storm Damage</option>
+            <option value="Landslide">⛰️ Landslide / Mudslide</option>
+            <option value="Earthquake">🌍 Earthquake / Structural Crack</option>
+            <option value="Cloudburst">💧 Cloudburst / Extreme Rain</option>
+            <option value="Heatwave">🔥 Heat Wave</option>
+            <option value="Other">⚠️ Other Blockage / Hazard</option>
           </select>
         </div>
 
-        <!-- Severity Selection (Custom Radio Buttons) -->
+        <!-- Severity Selection -->
         <div class="form-group">
           <label>Estimated Severity Level</label>
           <div class="severity-grid">
@@ -139,17 +817,17 @@
               <input type="radio" name="severity" value="low" required>
               <div class="sev-content">
                 <span class="sev-dot"></span>
-                <strong>Low</strong>
-                <span>Minor debris, road clear</span>
+                <strong>LOW</strong>
+                <span>Minor issue, passable</span>
               </div>
             </label>
-            
+
             <label class="severity-card moderate">
               <input type="radio" name="severity" value="moderate">
               <div class="sev-content">
                 <span class="sev-dot"></span>
-                <strong>Moderate</strong>
-                <span>Partial blockage</span>
+                <strong>MODERATE</strong>
+                <span>Partial disruption</span>
               </div>
             </label>
 
@@ -157,8 +835,8 @@
               <input type="radio" name="severity" value="high">
               <div class="sev-content">
                 <span class="sev-dot"></span>
-                <strong>High</strong>
-                <span>Road blocked, risky</span>
+                <strong>HIGH</strong>
+                <span>Blocked, risky</span>
               </div>
             </label>
 
@@ -166,22 +844,23 @@
               <input type="radio" name="severity" value="severe">
               <div class="sev-content">
                 <span class="sev-dot"></span>
-                <strong>Severe</strong>
-                <span>Massive collapse/danger</span>
+                <strong>SEVERE</strong>
+                <span>Massive danger/trapped</span>
               </div>
             </label>
           </div>
         </div>
 
         <!-- File Upload Area -->
+        <div class="form-section-title">📷 Evidence Upload</div>
         <div class="form-group">
-          <label>Upload Photo / Video (Required for verification)</label>
+          <label>Upload Photo / Video (Required for AI verification)</label>
           <div class="file-upload-zone" id="dropZone">
             <input type="file" id="repMedia" accept="image/*,video/*" class="file-input" onchange="handleFileSelect(this)">
             <div class="upload-content">
               <div class="upload-icon">📷</div>
               <div class="upload-text">Click to upload or drag and drop</div>
-              <div class="upload-hint">SVG, PNG, JPG or MP4 (max. 10MB)</div>
+              <div class="upload-hint">PNG, JPG or MP4 (max. 10MB)</div>
               <div id="fileNameDisplay" class="file-name-display"></div>
             </div>
           </div>
@@ -189,11 +868,11 @@
 
         <div class="form-group">
           <label>Additional Description</label>
-          <textarea id="repDesc" rows="4" placeholder="Describe the situation... (Is anyone trapped? Is the traffic halted?)" required></textarea>
+          <textarea id="repDesc" rows="4" placeholder="Describe the situation... (Is anyone trapped? Is the traffic halted? How many people affected?)" required></textarea>
         </div>
 
-        <button type="submit" class="btn-submit">
-          Submit Field Report 🚀
+        <button type="submit" class="btn-submit" id="submitBtn">
+          🚀 Submit Field Report
         </button>
 
       </form>
@@ -201,23 +880,24 @@
 
     <!-- RIGHT: SIDEBAR INFO -->
     <div class="report-sidebar">
-      
+
       <!-- Instructions Card -->
-      <div class="glass-card sidebar-card">
+      <div class="sidebar-card">
         <h3>📋 Reporting Guidelines</h3>
         <ul class="guideline-list">
-          <li><strong>Stay Safe:</strong> Do not approach an active landslide to take photos. Stay at a safe distance.</li>
+          <li><strong>Stay Safe:</strong> Do not approach an active hazard (flood water/landslide) to take photos. Stay at a safe distance.</li>
           <li><strong>Be Accurate:</strong> Ensure your GPS location is turned on for accurate GIS mapping.</li>
-          <li><strong>Clear Media:</strong> Try to capture the scale of the blockage and any nearby landmarks.</li>
+          <li><strong>Clear Media:</strong> Try to capture the scale of the blockage and any nearby landmarks for AI analysis.</li>
+          <li><strong>Verify Once:</strong> Submit only one report per incident to avoid duplication.</li>
         </ul>
       </div>
 
       <!-- Emergency Contacts -->
-      <div class="glass-card emergency-card">
+      <div class="sidebar-card emergency-card">
         <div class="ec-icon">🆘</div>
         <h3>Emergency Contacts</h3>
         <p>If lives are in immediate danger, do not wait. Call emergency services immediately.</p>
-        
+
         <div class="contact-links">
           <a href="tel:112" class="ec-btn">
             <span class="ec-phone">📞 112</span>
@@ -232,10 +912,10 @@
 
       <!-- Trust Badge -->
       <div class="trust-badge-box">
-        <span class="tb-icon">🔒</span>
+        <span class="tb-icon">🧠</span>
         <div class="tb-text">
-          <strong>Verified by AI</strong>
-          <span>Your report will be cross-referenced with satellite data before issuing public alerts.</span>
+          <strong>Verified by Kira AI</strong>
+          <span>Your report will be cross-referenced with satellite weather data before issuing public geofence alerts.</span>
         </div>
       </div>
 
@@ -244,32 +924,32 @@
   </div>
 </section>
 
-<!-- ============ SUCCESS MODAL ============ -->
+<!-- ═══════════════════════════════════════════════════════════
+     ✅ SUCCESS MODAL
+     ═══════════════════════════════════════════════════════════ -->
 <div id="successModal" class="modal-overlay hidden">
-  <div class="modal-box success-box">
+  <div class="success-box">
     <div class="success-icon">✅</div>
-    <h3>Report Submitted Successfully</h3>
-    <p>Thank you. Your field report has been logged and sent to the Disaster Management Control Room. Our AI engine is currently analyzing the data.</p>
-    <button class="btn-primary mt-4" onclick="closeSuccessModal()">Return to Dashboard</button>
+    <h3>Report Submitted Successfully!</h3>
+    <p>Thank you for your contribution. Your field report has been logged and sent to the Disaster Management Control Room. Our AI engine is currently analyzing the data.</p>
+    <button class="btn-primary mt-4" onclick="location.href='dashboard.html'">Return to Dashboard</button>
   </div>
 </div>
 
-<!-- ============ FOOTER ============ -->
+<!-- ═══════════════════════════════════════════════════════════
+     🌐 FOOTER (Same as Home/Dashboard)
+     ═══════════════════════════════════════════════════════════ -->
 <footer class="footer">
   <div class="footer-inner">
     <div class="footer-brand">
       <div class="footer-logo">
-        <span>🏔️</span>
+        <span>🌍</span>
         <div>
           <div class="footer-name">BhoomiSuraksha</div>
           <div class="footer-sub">AI Early Warning System</div>
         </div>
       </div>
-      <p class="footer-desc">
-        An AI-powered platform for real-time landslide risk monitoring,
-        early warning and emergency coordination across India's
-        North Eastern Region.
-      </p>
+      <p class="footer-desc">AI-powered unified risk monitoring and early warning system across India.</p>
     </div>
 
     <div class="footer-links-group">
@@ -278,22 +958,113 @@
         <a href="dashboard.html">Live Dashboard</a>
         <a href="alerts.html">Alert Feed</a>
         <a href="report.html">Report Incident</a>
+        <a href="emergency-resources.html">Emergency Resources</a>
+        <a href="dos-donts.html">Dos &amp; Don'ts</a>
       </div>
       <div class="footer-col">
         <div class="footer-col-title">Emergency</div>
         <a href="tel:112">Call 112</a>
         <a href="tel:1070">NDRF 1070</a>
-        <a href="dashboard.html">Rescue Teams</a>
+        <a href="tel:1078">Disaster 1078</a>
+        <a href="tel:108">Ambulance 108</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Account</div>
+        <a href="auth.html?mode=login">Log In</a>
+        <a href="auth.html?mode=signup">Sign Up</a>
+        <a href="about.html">About</a>
+        <a href="legal.html">Privacy</a>
       </div>
     </div>
   </div>
+  <div class="footer-disclaimer">
+    ⚠️ BhoomiSuraksha SIH 2025 prototype — NDMA / IMD official alerts ka substitute nahi hai.
+    Emergency: <strong>112</strong> · NDRF: <strong>1070</strong>
+  </div>
   <div class="footer-bottom">
-    <p>BhoomiSuraksha · Smart India Hackathon Project</p>
+    <p>© 2025 BhoomiSuraksha · Smart India Hackathon 2025 · Built for Disaster Resilience</p>
   </div>
 </footer>
 
-<script src="script.js"></script>
+<!-- ═══════════════════════════════════════════════════════════
+     🆘 FLOATING SOS (Only ONE — matches Home/Dashboard/Alerts)
+     ═══════════════════════════════════════════════════════════ -->
+<div class="float-sos-container" id="floatSosContainer">
+  <div class="float-sos-menu" id="floatSosMenu">
+    <a href="tel:112" class="sos-option primary">
+      <span class="sos-opt-icon">📞</span>
+      <div class="sos-opt-text"><strong>Call 112</strong><span>National Emergency</span></div>
+    </a>
+    <a href="tel:1070" class="sos-option">
+      <span class="sos-opt-icon">🛡️</span>
+      <div class="sos-opt-text"><strong>NDRF 1070</strong><span>Disaster Response</span></div>
+    </a>
+    <a href="tel:108" class="sos-option">
+      <span class="sos-opt-icon">🚑</span>
+      <div class="sos-opt-text"><strong>Ambulance 108</strong><span>Medical Emergency</span></div>
+    </a>
+  </div>
+  <button type="button" class="float-sos-btn" onclick="toggleSosMenu(event)" aria-label="SOS">
+    <span class="sos-pulse-ring"></span>
+    <span class="sos-btn-icon">🆘</span>
+    <span class="sos-btn-label">SOS</span>
+  </button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     📜 SCRIPTS
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+/* ---- SOS Menu Toggle ---- */
+function toggleSosMenu(e) {
+  e?.stopPropagation();
+  document.getElementById('floatSosMenu').classList.toggle('open');
+}
+document.addEventListener('click', (e) => {
+  const c = document.getElementById('floatSosContainer');
+  if (c && !c.contains(e.target)) {
+    document.getElementById('floatSosMenu')?.classList.remove('open');
+  }
+});
+
+/* ---- Hamburger ---- */
+document.getElementById('hamburger')?.addEventListener('click', () => {
+  document.getElementById('navLinks').classList.toggle('open');
+});
+
+/* ---- Auth chip ---- */
+(function checkAuth() {
+  try {
+    const user = JSON.parse(localStorage.getItem('bhoomiUser') || localStorage.getItem('landslideUser') || 'null');
+    if (user && user.name) {
+      document.getElementById('authButtons')?.classList.add('hidden');
+      document.getElementById('userProfile')?.classList.remove('hidden');
+      const av = document.getElementById('userAvatar');
+      const nm = document.getElementById('userNameDisplay');
+      if (av) av.textContent = user.name[0].toUpperCase();
+      if (nm) nm.textContent = user.name.split(' ')[0];
+
+      /* Auto-fill only name + phone (NOT email in name field) */
+      const nameInput = document.getElementById('repName');
+      const phoneInput = document.getElementById('repPhone');
+      if (nameInput && !nameInput.value) nameInput.value = user.name;
+      if (phoneInput && !phoneInput.value && user.phone) phoneInput.value = user.phone;
+    }
+  } catch (e) {}
+})();
+
+function logoutUser() {
+  localStorage.removeItem('bhoomiUser');
+  localStorage.removeItem('bhoomiToken');
+  localStorage.removeItem('landslideUser');
+  localStorage.removeItem('landslideToken');
+  location.reload();
+}
+</script>
+
 <script src="report.js"></script>
-<script src="config.js"></script>
+<script src="chatbot.js"></script>
+<!-- <script src="push-notify.js"></script> -->
+<script src="pwa-register.js"></script>
 </body>
-</html>
+</html> 

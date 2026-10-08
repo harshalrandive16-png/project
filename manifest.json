@@ -1,0 +1,67 @@
+{
+  "name": "BhoomiSuraksha — AI Disaster Warning System",
+  "short_name": "BhoomiSuraksha",
+  "description": "AI-based multi-disaster early warning system for India. Real-time alerts for floods, cyclones, landslides, earthquakes & cloudbursts.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#060b11",
+  "theme_color": "#10b981",
+  "lang": "en-IN",
+  "dir": "ltr",
+  "categories": ["utilities", "weather", "news", "government"],
+  "prefer_related_applications": false,
+
+  "icons": [
+    { "src": "icons/icon-72.png",  "sizes": "72x72",   "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-96.png",  "sizes": "96x96",   "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-128.png", "sizes": "128x128", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-152.png", "sizes": "152x152", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-384.png", "sizes": "384x384", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+
+  "shortcuts": [
+    {
+      "name": "Report Incident",
+      "short_name": "Report",
+      "description": "Submit a new disaster incident report",
+      "url": "./report.html",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Live Dashboard",
+      "short_name": "Dashboard",
+      "description": "View live disaster dashboard",
+      "url": "./dashboard.html",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Safe Route",
+      "short_name": "Route",
+      "description": "Find nearest safe shelter",
+      "url": "./safe-route.html",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Alerts",
+      "short_name": "Alerts",
+      "description": "View live India alerts",
+      "url": "./alerts.html",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+
+  "screenshots": [
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ]
+}

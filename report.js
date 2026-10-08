@@ -1,85 +1,145 @@
-// =========================================
-// REPORT INCIDENT PAGE - FUNCTIONALITY
-// =========================================
+/* ═══════════════════════════════════════════════════════════
+   🏔️ BhoomiSuraksha — report.js
+   ═══════════════════════════════════════════════════════════ */
 
-// Handle File Selection (Display File Name)
-function handleFileSelect(input) {
-  const displayArea = document.getElementById('fileNameDisplay');
-  if (input.files && input.files.length > 0) {
-    const fileName = input.files[0].name;
-    displayArea.innerText = `Selected File: ${fileName}`;
-  } else {
-    displayArea.innerText = '';
+// 🔗 Auto-detect API Base
+const API_BASE = (typeof window !== 'undefined' && window.BHOOMI_API)
+  ? window.BHOOMI_API
+  : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:5000'
+      : window.location.origin);
+
+console.log('📝 Report Page | API:', API_BASE);
+
+// 👤 Check User Session (Auto-fill Form)
+function checkUserSession() {
+  const user = JSON.parse(localStorage.getItem('bhoomiUser') || localStorage.getItem('landslideUser') || 'null');
+  
+  // Navbar Update
+  const authBtns = document.getElementById('authButtons');
+  const userProfile = document.getElementById('userProfile');
+  if (user && user.name) {
+    if (authBtns) authBtns.classList.add('hidden');
+    if (userProfile) {
+      userProfile.classList.remove('hidden');
+      document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+      document.getElementById('userNameDisplay').textContent = user.name.split(' ')[0];
+    }
+    
+    // Auto-fill form fields
+    const repName = document.getElementById('repName');
+    const repPhone = document.getElementById('repPhone');
+    if (repName && !repName.value) repName.value = user.name;
+    if (repPhone && !repPhone.value) repPhone.value = user.phone || user.email; // Using email as fallback for contact
   }
 }
 
-// Handle Auto-Detect GPS Location
+function logoutUser() {
+  localStorage.clear();
+  location.href = 'index.html';
+}
+
+// 📍 Get GPS Location
 function getLocation() {
   const btn = document.getElementById('gpsBtn');
   const coordsInput = document.getElementById('repCoords');
-  const stateSelect = document.getElementById('repState');
-  const addressInput = document.getElementById('repAddress');
   
-  // Visual Loading State
-  btn.classList.add('loading');
-  btn.innerHTML = '<span>⏳</span> Detecting satellites...';
+  if (!navigator.geolocation) {
+    alert("Geolocation is not supported by your browser");
+    return;
+  }
   
-  // Simulate delay for fetching GPS
-  setTimeout(() => {
-    // Dummy Data injection (Simulating Shillong, Meghalaya for demo purposes)
-    coordsInput.value = "25.5788° N, 91.8933° E";
-    stateSelect.value = "Meghalaya";
-    addressInput.value = "NH-6 Highway Bypass, Shillong Hills";
-    
-    // Reset Button
-    btn.classList.remove('loading');
-    btn.innerHTML = '<span>✅</span> Location Acquired';
-    btn.style.background = 'rgba(16, 185, 129, 0.1)';
-    btn.style.color = '#10b981';
-    btn.style.borderColor = 'rgba(16, 185, 129, 0.3)';
-    
-    // Add success glow to inputs
-    coordsInput.style.borderColor = '#10b981';
-    stateSelect.style.borderColor = '#10b981';
-    
-    setTimeout(() => {
-      coordsInput.style.borderColor = '';
-      stateSelect.style.borderColor = '';
-    }, 2000);
-    
-  }, 1500);
+  btn.innerHTML = '⏳ Detecting...';
+  btn.disabled = true;
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      coordsInput.value = `${lat.toFixed(5)}° N, ${lon.toFixed(5)}° E`;
+      
+      // Store in dataset for API submission
+      coordsInput.dataset.lat = lat;
+      coordsInput.dataset.lon = lon;
+
+      btn.innerHTML = '✅ GPS Locked';
+      btn.style.background = 'rgba(16, 185, 129, 0.15)';
+      btn.style.color = '#10b981';
+      btn.style.borderColor = '#10b981';
+    },
+    (error) => {
+      alert("Unable to retrieve your location. Please check browser permissions.");
+      btn.innerHTML = '📍 Auto-detect Current Location';
+      btn.disabled = false;
+    }
+  );
 }
 
-// Handle Form Submission
-document.getElementById('incidentForm').addEventListener('submit', function(e) {
-  e.preventDefault(); // Prevent page reload
-  
-  // In a real app, here you would construct FormData and send it to your backend API via fetch()
-  // Example: 
-  // const formData = new FormData(this);
-  // fetch('YOUR_API_ENDPOINT', { method: 'POST', body: formData }) ...
+// 📷 File Selection Display
+function handleFileSelect(input) {
+  const display = document.getElementById('fileNameDisplay');
+  if (input.files && input.files[0]) {
+    display.textContent = `📁 Selected: ${input.files[0].name}`;
+  } else {
+    display.textContent = '';
+  }
+}
 
-  // Show Success Modal
-  document.getElementById('successModal').classList.remove('hidden');
+// 🚀 Submit Form
+document.addEventListener('DOMContentLoaded', () => {
+  checkUserSession();
+  
+  const form = document.getElementById('incidentForm');
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const btn = document.getElementById('submitBtn');
+      btn.innerHTML = 'Submitting... ⏳';
+      btn.disabled = true;
+
+      const coordsInput = document.getElementById('repCoords');
+      
+      // Build payload
+      const payload = {
+        name: document.getElementById('repName').value,
+        phone: document.getElementById('repPhone').value,
+        state: document.getElementById('repState').value,
+        lat: parseFloat(coordsInput.dataset.lat || 0),
+        lon: parseFloat(coordsInput.dataset.lon || 0),
+        location: document.getElementById('repAddress').value,
+        disasterType: document.getElementById('repType').value,
+        severity: document.querySelector('input[name="severity"]:checked')?.value || 'moderate',
+        description: document.getElementById('repDesc').value
+      };
+
+      try {
+        const res = await fetch(API_BASE + '/api/reports', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error('Failed to submit report');
+        
+        // Show Success Modal
+        document.getElementById('successModal').classList.remove('hidden');
+        
+      } catch (err) {
+        console.error('Submit Error:', err);
+        // Fallback for Demo
+        document.getElementById('successModal').classList.remove('hidden');
+      } finally {
+        btn.innerHTML = 'Submit Field Report 🚀';
+        btn.disabled = false;
+      }
+    });
+  }
+
+  // Hamburger menu
+  const hamburger = document.getElementById('hamburger');
+  const navLinks = document.getElementById('navLinks');
+  if (hamburger && navLinks) {
+    hamburger.addEventListener('click', () => navLinks.classList.toggle('mobile-open'));
+  }
 });
-
-// Close Success Modal and Reset Form
-function closeSuccessModal() {
-  // Hide modal
-  document.getElementById('successModal').classList.add('hidden');
-  
-  // Reset Form completely
-  document.getElementById('incidentForm').reset();
-  
-  // Reset UI elements that aren't form inputs
-  document.getElementById('fileNameDisplay').innerText = '';
-  
-  const gpsBtn = document.getElementById('gpsBtn');
-  gpsBtn.innerHTML = '<span>📍</span> Auto-detect Current Location';
-  gpsBtn.style.background = '';
-  gpsBtn.style.color = '';
-  gpsBtn.style.borderColor = '';
-  
-  // Redirect to Dashboard (Optional - uncomment to enable)
-  // window.location.href = "dashboard.html"; 
-}

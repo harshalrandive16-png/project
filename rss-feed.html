@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Disaster News &amp; RSS Feed | BhoomiSuraksha</title>
+<meta name="description" content="Live multi-source disaster news and alerts feed for India — floods, cyclones, earthquakes and more." />
+
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🏔️%3C/text%3E%3C/svg%3E"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+<script src="config.js"></script>
+<!-- ═══════ PWA META TAGS ═══════ -->
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#10b981"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="BhoomiSuraksha"/>
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"/>
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png"/>
+
+<style>
+  :root {
+    --clr-emerald: #10b981;
+    --clr-emerald-dark: #059669;
+    --clr-blue: #3b82f6;
+    --clr-crimson: #dc2626;
+    --clr-amber: #f59e0b;
+    --clr-cyan: #06b6d4;
+    --clr-violet: #8b5cf6;
+    --clr-pink: #ec4899;
+    --bg-deep: #050810;
+    --bg-card: #0d1420;
+    --bg-elevated: #141c2b;
+    --border-subtle: rgba(255,255,255,.06);
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+  }
+  body {
+    background: var(--bg-deep) !important;
+    background-image:
+      radial-gradient(ellipse 800px 400px at 20% 10%, rgba(59,130,246,.06), transparent 60%),
+      radial-gradient(ellipse 600px 400px at 80% 40%, rgba(16,185,129,.05), transparent 60%),
+      radial-gradient(ellipse 500px 300px at 50% 90%, rgba(245,158,11,.04), transparent 60%);
+  }
+
+  .rss-hero {
+    padding: 56px 24px 28px;
+    text-align: center;
+    background: radial-gradient(ellipse at top, rgba(59,130,246,.1), transparent 70%);
+  }
+  .rss-hero .eyebrow {
+    display: inline-block;
+    background: linear-gradient(135deg, rgba(59,130,246,.15), rgba(6,182,212,.15));
+    color: var(--clr-cyan);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border: 1px solid rgba(6,182,212,.3);
+    margin-bottom: 12px;
+  }
+  .rss-hero h1 {
+    font-size: clamp(1.8rem, 4.5vw, 2.8rem);
+    font-weight: 800;
+    margin: 0 0 10px;
+    background: linear-gradient(135deg, #fff, var(--clr-cyan), var(--clr-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .rss-hero p {
+    color: var(--text-secondary);
+    max-width: 680px;
+    margin: 0 auto;
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  .rss-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+  }
+
+  /* KPI */
+  .rss-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  @media (max-width: 800px) {
+    .rss-kpis { grid-template-columns: repeat(2, 1fr); }
+  }
+  .rss-kpi {
+    background: linear-gradient(145deg, var(--bg-card), var(--bg-elevated));
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .rss-kpi::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: currentColor;
+  }
+  .rss-kpi.t1 { color: var(--clr-blue); }
+  .rss-kpi.t2 { color: var(--clr-crimson); }
+  .rss-kpi.t3 { color: var(--clr-amber); }
+  .rss-kpi.t4 { color: var(--clr-emerald); }
+  .rss-kpi .icn {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; background: rgba(255,255,255,.04);
+  }
+  .rss-kpi .val { font-size: 1.5rem; font-weight: 800; color: #fff; line-height: 1; }
+  .rss-kpi .lbl { font-size: .7rem; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .6px; font-weight: 700; }
+
+  /* Filters */
+  .rss-filters {
+    background: linear-gradient(145deg, var(--bg-card), var(--bg-elevated));
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .rss-filters::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--clr-blue), var(--clr-cyan), var(--clr-emerald));
+  }
+  .rss-filter-row {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: end;
+  }
+  @media (max-width: 900px) {
+    .rss-filter-row { grid-template-columns: 1fr 1fr; }
+  }
+  .rss-fg label {
+    display: block;
+    font-size: .7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .7px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .rss-input, .rss-select {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 10px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.1);
+    color: #fff;
+    font-family: inherit;
+    font-size: .9rem;
+    outline: none;
+    box-sizing: border-box;
+  }
+  .rss-input:focus, .rss-select:focus {
+    border-color: var(--clr-cyan);
+    background: rgba(6,182,212,.06);
+  }
+  .rss-select option { background: #0b0f1a; }
+  .rss-btn {
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: none;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: .85rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all .2s;
+  }
+  .rss-btn-primary {
+    background: linear-gradient(135deg, var(--clr-blue), #1d4ed8);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(59,130,246,.3);
+  }
+  .rss-btn-primary:hover { transform: translateY(-1px); }
+  .rss-btn-ghost {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.1);
+    color: #e2e8f0;
+  }
+  .rss-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-subtle);
+    font-size: .8rem;
+    color: var(--text-muted);
+  }
+  .rss-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--clr-emerald);
+    font-weight: 700;
+  }
+  .rss-live .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--clr-emerald);
+    animation: blink 1.4s infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+  /* Source chips */
+  .rss-sources {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .rss-chip {
+    padding: 8px 12px;
+    border-radius: 20px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.08);
+    color: var(--text-primary);
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .2s;
+  }
+  .rss-chip:hover { border-color: rgba(59,130,246,.35); }
+  .rss-chip.active {
+    background: linear-gradient(135deg, var(--clr-blue), #1d4ed8);
+    border-color: var(--clr-blue);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(59,130,246,.3);
+  }
+
+  /* Feed list */
+  .rss-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .rss-item {
+    background: linear-gradient(145deg, var(--bg-card), var(--bg-elevated));
+    border: 1px solid var(--border-subtle);
+    border-left: 4px solid var(--clr-blue);
+    border-radius: 14px;
+    padding: 16px 18px;
+    transition: all .25s;
+    animation: slide .3s ease;
+  }
+  @keyframes slide {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .rss-item:hover {
+    transform: translateY(-2px);
+    border-color: rgba(59,130,246,.3);
+    box-shadow: 0 10px 28px rgba(0,0,0,.35);
+  }
+  .rss-item.flood { border-left-color: var(--clr-cyan); }
+  .rss-item.cyclone { border-left-color: var(--clr-violet); }
+  .rss-item.earthquake { border-left-color: var(--clr-crimson); }
+  .rss-item.landslide { border-left-color: var(--clr-amber); }
+  .rss-item.weather { border-left-color: var(--clr-blue); }
+  .rss-item.general { border-left-color: var(--clr-emerald); }
+
+  .rss-item-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .rss-title {
+    color: #fff;
+    font-size: 1.02rem;
+    font-weight: 700;
+    line-height: 1.35;
+    margin: 0;
+  }
+  .rss-title a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .rss-title a:hover { color: var(--clr-cyan); }
+  .rss-time {
+    color: var(--clr-emerald);
+    font-size: .72rem;
+    font-weight: 700;
+    white-space: nowrap;
+    background: rgba(16,185,129,.1);
+    border: 1px solid rgba(16,185,129,.2);
+    padding: 4px 8px;
+    border-radius: 8px;
+  }
+  .rss-desc {
+    color: #cbd5e1;
+    font-size: .88rem;
+    line-height: 1.55;
+    margin: 0 0 10px;
+  }
+  .rss-item-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .rss-tag {
+    font-size: .7rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 8px;
+    background: rgba(255,255,255,.05);
+    color: var(--text-secondary);
+  }
+  .rss-tag.source {
+    background: rgba(59,130,246,.12);
+    color: #93c5fd;
+    border: 1px solid rgba(59,130,246,.25);
+  }
+  .rss-tag.cat {
+    background: rgba(16,185,129,.1);
+    color: #6ee7b7;
+    border: 1px solid rgba(16,185,129,.25);
+  }
+  .rss-open {
+    margin-left: auto;
+    color: var(--clr-blue);
+    font-size: .78rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .rss-open:hover { text-decoration: underline; }
+
+  .rss-loading, .rss-empty {
+    text-align: center;
+    padding: 50px 20px;
+    background: linear-gradient(145deg, var(--bg-card), var(--bg-elevated));
+    border: 1px dashed rgba(255,255,255,.1);
+    border-radius: 16px;
+    color: var(--text-muted);
+  }
+  .rss-loading .spinner {
+    width: 36px; height: 36px; margin: 0 auto 12px;
+    border: 3px solid rgba(59,130,246,.15);
+    border-top-color: var(--clr-blue);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .rss-note {
+    margin-top: 18px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: rgba(245,158,11,.08);
+    border: 1px solid rgba(245,158,11,.25);
+    color: #fde68a;
+    font-size: .82rem;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<header class="navbar" id="navbar">
+  <a href="index.html" class="nav-brand">
+    <div class="brand-icon">🌍</div>
+    <div class="brand-text">
+      <span class="brand-name">BhoomiSuraksha</span>
+      <span class="brand-sub">AI EARLY WARNING SYSTEM</span>
+    </div>
+  </a>
+  <nav class="nav-links" id="navLinks">
+  <a class="nav-link" href="index.html">Home</a>
+  <a class="nav-link" href="dashboard.html">Dashboard</a>
+  <a class="nav-link" href="alerts.html">Alerts</a>
+  <a class="nav-link" href="emergency-resources.html">Resources</a>
+  <a class="nav-link" href="safe-route.html">Safe Route</a>
+  <a class="nav-link" href="family-tracker.html">Family</a>
+  <a class="nav-link" href="rss-feed.html">News</a>
+  <a class="nav-link" href="donate.html">Donate</a> <!-- NAYA LINK -->
+  
+</nav>
+  <div class="nav-right">
+    <select class="lang-select" id="langSelect" aria-label="Language">
+      <option value="en">English</option>
+      <option value="hi">हिंदी</option>
+    </select>
+    <div id="authButtons" class="auth-buttons">
+      <a href="auth.html?mode=login" class="btn-login">Log In</a>
+      <a href="auth.html?mode=signup" class="btn-signup">Sign Up</a>
+    </div>
+    <div id="userProfile" class="user-profile hidden">
+      <div class="user-avatar" id="userAvatar">U</div>
+      <div class="user-info">
+        <span class="user-greet">Welcome,</span>
+        <span class="user-name" id="userNameDisplay">User</span>
+      </div>
+      <button type="button" class="btn-logout" onclick="logoutUser()" title="Logout">⎋</button>
+    </div>
+    <button class="hamburger" id="hamburger" type="button" aria-label="Menu">☰</button>
+  </div>
+</header>
+
+<section class="rss-hero">
+  <span class="eyebrow">📡 MULTI-SOURCE INTELLIGENCE</span>
+  <h1>📰 Live Disaster News Feed</h1>
+  <p>India-focused disaster headlines from public RSS/news sources — floods, cyclones, earthquakes, weather alerts. Auto-refresh + smart category tags.</p>
+</section>
+
+<div class="rss-container">
+
+  <div class="rss-kpis">
+    <div class="rss-kpi t1">
+      <div class="icn">📰</div>
+      <div>
+        <div class="val" id="kpiTotal">0</div>
+        <div class="lbl">Headlines</div>
+      </div>
+    </div>
+    <div class="rss-kpi t2">
+      <div class="icn">🚨</div>
+      <div>
+        <div class="val" id="kpiCritical">0</div>
+        <div class="lbl">Critical Tags</div>
+      </div>
+    </div>
+    <div class="rss-kpi t3">
+      <div class="icn">📡</div>
+      <div>
+        <div class="val" id="kpiSources">0</div>
+        <div class="lbl">Sources</div>
+      </div>
+    </div>
+    <div class="rss-kpi t4">
+      <div class="icn">⏱️</div>
+      <div>
+        <div class="val" id="kpiFresh">0</div>
+        <div class="lbl">Last 24h</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rss-filters">
+    <div class="rss-filter-row">
+      <div class="rss-fg">
+        <label>🔎 Search</label>
+        <input class="rss-input" id="searchInput" type="text" placeholder="flood, cyclone, Assam, IMD..." />
+      </div>
+      <div class="rss-fg">
+        <label>🏷️ Category</label>
+        <select class="rss-select" id="catSelect">
+          <option value="">All Categories</option>
+          <option value="flood">🌊 Flood</option>
+          <option value="cyclone">🌀 Cyclone</option>
+          <option value="earthquake">🌍 Earthquake</option>
+          <option value="landslide">⛰️ Landslide</option>
+          <option value="weather">☁️ Weather</option>
+          <option value="general">📢 General</option>
+        </select>
+      </div>
+      <div class="rss-fg">
+        <label>📡 Source</label>
+        <select class="rss-select" id="sourceSelect">
+          <option value="">All Sources</option>
+        </select>
+      </div>
+      <div class="rss-fg">
+        <label>&nbsp;</label>
+        <button class="rss-btn rss-btn-primary" id="refreshBtn" type="button">🔄 Refresh</button>
+      </div>
+    </div>
+    <div class="rss-meta">
+      <span class="rss-live"><span class="dot"></span> Auto-refresh 2 min</span>
+      <span id="statusText">Loading feeds...</span>
+      <button class="rss-btn rss-btn-ghost" id="clearBtn" type="button">✕ Clear filters</button>
+    </div>
+  </div>
+
+  <div class="rss-sources" id="sourceChips"></div>
+
+  <div id="feedList" class="rss-list">
+    <div class="rss-loading">
+      <div class="spinner"></div>
+      <div>Fetching live disaster feeds...</div>
+    </div>
+  </div>
+
+  
+</div>
+
+
+
+<button type="button" onclick="window.location.href='tel:112'" style="position:fixed;bottom:20px;right:24px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;border:2px solid #ef4444;cursor:pointer;box-shadow:0 8px 24px rgba(220,38,38,.5);z-index:9996;display:flex;flex-direction:column;align-items:center;justify-content:center">
+  <span style="font-size:1.4rem">🆘</span>
+  <span style="font-size:.6rem;font-weight:800">SOS</span>
+</button>
+
+<script>
+/* ============================================================
+   BhoomiSuraksha — RSS / Disaster News Feed (Feature #18)
+============================================================ */
+const API_BASE = window.BHOOMI_API || window.location.origin;
+
+const DEMO_FEED = [
+  {
+    id: 'd1',
+    title: 'IMD issues orange alert for heavy rainfall over coastal Odisha and West Bengal',
+    description: 'India Meteorological Department has warned of intense spells of rain with possible urban flooding in low-lying areas over the next 48 hours.',
+    link: 'https://mausam.imd.gov.in/',
+    source: 'IMD / Weather Desk',
+    category: 'weather',
+    pubDate: Date.now() - 25 * 60000
+  },
+  {
+    id: 'd2',
+    title: 'Flood situation remains critical in Assam as Brahmaputra flows above danger level',
+    description: 'Several districts report embankment pressure and relief camp activation. NDRF teams are on standby for evacuation support.',
+    link: 'https://ndma.gov.in/',
+    source: 'Disaster Wire India',
+    category: 'flood',
+    pubDate: Date.now() - 55 * 60000
+  },
+  {
+    id: 'd3',
+    title: 'Cyclonic circulation over Bay of Bengal under close watch — fishermen advised not to venture deep sea',
+    description: 'Coastal Andhra Pradesh and Odisha administrations review shelter readiness as system shows potential intensification.',
+    link: 'https://www.rsmcnewdelhi.imd.gov.in/',
+    source: 'RSMC New Delhi',
+    category: 'cyclone',
+    pubDate: Date.now() - 2 * 3600000
+  },
+  {
+    id: 'd4',
+    title: 'Mild earthquake tremor felt in Delhi-NCR, no major damage reported',
+    description: 'Seismic sensors recorded a light magnitude event. Officials urge residents to stay calm and follow Drop-Cover-Hold guidance during aftershocks.',
+    link: 'https://seismo.gov.in/',
+    source: 'National Seismology',
+    category: 'earthquake',
+    pubDate: Date.now() - 3 * 3600000
+  },
+  {
+    id: 'd5',
+    title: 'Landslide blocks highway stretch in Himachal; BRO clearance operations underway',
+    description: 'Continuous rain triggered slope failure near a major tourist route. Traffic diversions have been announced by district administration.',
+    link: 'https://ndma.gov.in/',
+    source: 'Hill State Desk',
+    category: 'landslide',
+    pubDate: Date.now() - 5 * 3600000
+  },
+  {
+    id: 'd6',
+    title: 'Urban waterlogging hits peak-hour traffic in Mumbai after intense evening showers',
+    description: 'Local trains and road corridors face delays. Civic teams deployed for pumping operations at known flood spots.',
+    link: 'https://ndma.gov.in/',
+    source: 'Metro Weather Desk',
+    category: 'flood',
+    pubDate: Date.now() - 7 * 3600000
+  },
+  {
+    id: 'd7',
+    title: 'NDRF mock drill conducted for multi-hazard response in coastal Tamil Nadu',
+    description: 'Exercise focused on cyclone evacuation, medical triage, and last-mile communication with village disaster committees.',
+    link: 'https://www.ndrf.gov.in/',
+    source: 'NDRF Updates',
+    category: 'general',
+    pubDate: Date.now() - 10 * 3600000
+  },
+  {
+    id: 'd8',
+    title: 'Cloudburst risk advisory for high-altitude valleys during active monsoon spell',
+    description: 'Tourists and trek groups advised to avoid narrow river channels and keep emergency kits ready.',
+    link: 'https://mausam.imd.gov.in/',
+    source: 'Mountain Safety Desk',
+    category: 'weather',
+    pubDate: Date.now() - 12 * 3600000
+  },
+  {
+    id: 'd9',
+    title: 'Heatwave conditions ease in central India; night temperatures still above normal',
+    description: 'Health departments continue ORS distribution advisory for vulnerable groups including elderly and outdoor workers.',
+    link: 'https://mausam.imd.gov.in/',
+    source: 'Climate Watch',
+    category: 'weather',
+    pubDate: Date.now() - 20 * 3600000
+  },
+  {
+    id: 'd10',
+    title: 'Community early-warning sirens tested across cyclone-prone blocks in Odisha',
+    description: 'Local authorities verify last-mile alert reach ahead of peak season, complementing SMS and app-based notifications.',
+    link: 'https://ndma.gov.in/',
+    source: 'Preparedness Desk',
+    category: 'cyclone',
+    pubDate: Date.now() - 26 * 3600000
+  }
+];
+
+let allItems = [];
+let activeSourceChip = '';
+
+function timeAgo(ts) {
+  const d = Date.now() - Number(ts || 0);
+  const m = Math.floor(d / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return m + 'm ago';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + 'h ago';
+  return Math.floor(h / 24) + 'd ago';
+}
+function escapeHtml(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+function stripHtml(s) {
+  return String(s || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function detectCategory(title, desc) {
+  const t = (title + ' ' + desc).toLowerCase();
+  if (/flood|waterlog|inundat|brahmaputra|embankment/.test(t)) return 'flood';
+  if (/cyclone|storm surge|bay of bengal|arabian sea|hurricane|typhoon/.test(t)) return 'cyclone';
+  if (/earthquake|seismic|tremor|magnitude/.test(t)) return 'earthquake';
+  if (/landslide|mudslide|slope failure/.test(t)) return 'landslide';
+  if (/cloudburst|rainfall|heatwave|cold wave|imd|monsoon|weather|lightning/.test(t)) return 'weather';
+  return 'general';
+}
+function isCritical(item) {
+  const t = (item.title + ' ' + item.description).toLowerCase();
+  return /severe|extreme|danger|evacuat|emergency|red alert|orange alert|catastrophic|death|missing/.test(t);
+}
+
+async function fetchFeed() {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+    const res = await fetch(API_BASE + '/api/rss?limit=40', { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const items = data.items || data.feed || [];
+    if (!Array.isArray(items) || !items.length) throw new Error('empty');
+    return items.map((it, idx) => {
+      const title = it.title || 'Untitled';
+      const description = stripHtml(it.description || it.summary || it.content || '');
+      return {
+        id: it.id || it.guid || ('r' + idx),
+        title,
+        description: description.slice(0, 280),
+        link: it.link || it.url || '#',
+        source: it.source || it.feedTitle || 'News Source',
+        category: it.category || detectCategory(title, description),
+        pubDate: it.pubDate ? new Date(it.pubDate).getTime() : (it.isoDate ? new Date(it.isoDate).getTime() : Date.now() - idx * 3600000)
+      };
+    });
+  } catch (err) {
+    console.warn('⚠️ [RSS] backend/live fetch failed, using demo:', err.message);
+    return DEMO_FEED.map(x => ({ ...x }));
+  }
+}
+
+function uniqueSources(items) {
+  return [...new Set(items.map(i => i.source).filter(Boolean))];
+}
+
+function applyFilters() {
+  const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+  const cat = document.getElementById('catSelect').value;
+  const src = document.getElementById('sourceSelect').value || activeSourceChip;
+
+  return allItems.filter(it => {
+    if (cat && it.category !== cat) return false;
+    if (src && it.source !== src) return false;
+    if (q) {
+      const hay = (it.title + ' ' + it.description + ' ' + it.source + ' ' + it.category).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  }).sort((a, b) => b.pubDate - a.pubDate);
+}
+
+function renderKPIs() {
+  document.getElementById('kpiTotal').textContent = allItems.length;
+  document.getElementById('kpiCritical').textContent = allItems.filter(isCritical).length;
+  document.getElementById('kpiSources').textContent = uniqueSources(allItems).length;
+  const day = Date.now() - 24 * 3600000;
+  document.getElementById('kpiFresh').textContent = allItems.filter(i => i.pubDate >= day).length;
+}
+
+function renderSourceSelectAndChips() {
+  const sources = uniqueSources(allItems);
+  const sel = document.getElementById('sourceSelect');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">All Sources</option>' + sources.map(s =>
+    `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`
+  ).join('');
+  if (current && sources.includes(current)) sel.value = current;
+
+  const chips = document.getElementById('sourceChips');
+  chips.innerHTML = `<button type="button" class="rss-chip ${!activeSourceChip ? 'active' : ''}" data-src="">All Sources</button>` +
+    sources.map(s => `<button type="button" class="rss-chip ${activeSourceChip === s ? 'active' : ''}" data-src="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join('');
+
+  chips.querySelectorAll('.rss-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeSourceChip = btn.getAttribute('data-src') || '';
+      document.getElementById('sourceSelect').value = activeSourceChip;
+      renderSourceSelectAndChips();
+      renderList();
+    });
+  });
+}
+
+function renderList() {
+  const list = document.getElementById('feedList');
+  const items = applyFilters();
+  document.getElementById('statusText').textContent = `Showing ${items.length} of ${allItems.length} headlines`;
+
+  if (!items.length) {
+    list.innerHTML = `<div class="rss-empty">🔍 No headlines matched your filters.<br/>Clear filters ya alag keyword try karo.</div>`;
+    return;
+  }
+
+  list.innerHTML = items.map(it => {
+    const catIcon = {
+      flood: '🌊', cyclone: '🌀', earthquake: '🌍', landslide: '⛰️', weather: '☁️', general: '📢'
+    }[it.category] || '📰';
+    return `
+      <article class="rss-item ${it.category}">
+        <div class="rss-item-top">
+          <h3 class="rss-title"><a href="${escapeHtml(it.link)}" target="_blank" rel="noopener">${escapeHtml(it.title)}</a></h3>
+          <span class="rss-time">🕐 ${timeAgo(it.pubDate)}</span>
+        </div>
+        <p class="rss-desc">${escapeHtml(it.description || 'No summary available.')}</p>
+        <div class="rss-item-meta">
+          <span class="rss-tag source">📡 ${escapeHtml(it.source)}</span>
+          <span class="rss-tag cat">${catIcon} ${escapeHtml(it.category)}</span>
+          ${isCritical(it) ? '<span class="rss-tag" style="background:rgba(220,38,38,.15);color:#fca5a5;border:1px solid rgba(220,38,38,.3)">🚨 Critical keywords</span>' : ''}
+          <a class="rss-open" href="${escapeHtml(it.link)}" target="_blank" rel="noopener">Open ↗</a>
+        </div>
+      </article>`;
+  }).join('');
+}
+
+async function loadFeed(manual) {
+  const btn = document.getElementById('refreshBtn');
+  if (manual) {
+    btn.disabled = true;
+    btn.textContent = '⏳ Loading...';
+  }
+  document.getElementById('statusText').textContent = 'Refreshing feeds...';
+
+  allItems = await fetchFeed();
+  renderKPIs();
+  renderSourceSelectAndChips();
+  renderList();
+
+  document.getElementById('statusText').textContent =
+    `Updated ${new Date().toLocaleTimeString()} · ${allItems.length} items`;
+
+  if (manual) {
+    btn.disabled = false;
+    btn.textContent = '🔄 Refresh';
+  }
+}
+
+document.getElementById('refreshBtn').addEventListener('click', () => loadFeed(true));
+document.getElementById('clearBtn').addEventListener('click', () => {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('catSelect').value = '';
+  document.getElementById('sourceSelect').value = '';
+  activeSourceChip = '';
+  renderSourceSelectAndChips();
+  renderList();
+});
+
+let searchTimer;
+document.getElementById('searchInput').addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(renderList, 250);
+});
+document.getElementById('catSelect').addEventListener('change', renderList);
+document.getElementById('sourceSelect').addEventListener('change', () => {
+  activeSourceChip = document.getElementById('sourceSelect').value;
+  renderSourceSelectAndChips();
+  renderList();
+});
+
+document.getElementById('hamburger')?.addEventListener('click', () => {
+  document.getElementById('navLinks').classList.toggle('open');
+});
+
+(function authChip() {
+  try {
+    const user = JSON.parse(localStorage.getItem('bhoomiUser') || localStorage.getItem('landslideUser') || 'null');
+    if (user && user.name) {
+      document.getElementById('authButtons')?.classList.add('hidden');
+      document.getElementById('userProfile')?.classList.remove('hidden');
+      const av = document.getElementById('userAvatar');
+      const nm = document.getElementById('userNameDisplay');
+      if (av) av.textContent = user.name[0].toUpperCase();
+      if (nm) nm.textContent = user.name.split(' ')[0];
+    }
+  } catch (e) {}
+})();
+function logoutUser() {
+  localStorage.removeItem('bhoomiUser');
+  localStorage.removeItem('bhoomiToken');
+  localStorage.removeItem('landslideUser');
+  localStorage.removeItem('landslideToken');
+  location.reload();
+}
+
+loadFeed(false);
+setInterval(() => loadFeed(false), 120000);
+
+console.log('✅ [BhoomiSuraksha] RSS Feed page loaded');
+</script>
+<script src="chatbot.js"></script>
+<script src="pwa-register.js"></script>
+</body>
+</html>

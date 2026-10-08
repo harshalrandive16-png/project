@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BhoomiSuraksha | Family Tracker</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="family-tracker.css">
+    <!-- ═══════ PWA META TAGS ═══════ -->
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#10b981"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="BhoomiSuraksha"/>
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"/>
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png"/>
+</head>
+<body>
+
+    <!-- TOP NAVBAR -->
+    <nav class="navbar">
+        <a href="index.html" class="nav-brand">
+            <div class="brand-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="brand-text">
+                <span class="brand-name">BhoomiSuraksha</span>
+                <span class="brand-sub">AI EARLY WARNING SYSTEM</span>
+            </div>
+        </a>
+
+        <ul class="nav-links">
+            <li><a href="index.html" class="nav-link">Home</a></li>
+            <li><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+            <li><a href="alerts.html" class="nav-link">Alerts</a></li>
+            <li><a href="emergency-resources.html" class="nav-link">Resources</a></li>
+            <li><a href="safe-route.html" class="nav-link">Safe Route</a></li>
+            <li><a href="family-tracker.html" class="nav-link active">Family</a></li>
+            <li><a href="donate.html" class="nav-link">Donate</a></li>
+        </ul>
+
+        <div class="nav-right">
+            <div class="user-profile">
+                <div class="user-avatar">H</div>
+                <div class="user-info">
+                    <span class="user-greet">Welcome,</span>
+                    <span class="user-name">Harshal</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="family-main">
+        
+        <!-- HEADER -->
+        <div class="page-header">
+            <div class="live-badge"><span class="pulse-dot"></span> SECURE E2E ENCRYPTED</div>
+            <h1 class="page-title">Family Live Tracker & SOS</h1>
+            <p class="page-sub">Track your loved ones in real-time during emergencies. No API keys required. Powered by OpenStreetMap & Browser Geolocation.</p>
+        </div>
+
+        <div class="family-layout">
+            
+            <!-- LEFT PANEL: CONTROLS & MEMBERS -->
+            <div class="left-panel">
+                
+                <!-- Room Controls -->
+                <div class="control-cards">
+                    <div class="card my-room">
+                        <h3><i class="fa-solid fa-users"></i> Your Family Code</h3>
+                        <div class="code-box">
+                            <span id="familyCode">BHBXSY</span>
+                            <button id="copyCodeBtn" title="Copy Code"><i class="fa-regular fa-copy"></i></button>
+                        </div>
+                        <p>Share this 6-digit code with family to let them join your private tracking room.</p>
+                    </div>
+
+                    <div class="card join-room">
+                        <h3><i class="fa-solid fa-right-to-bracket"></i> Join a Family</h3>
+                        <div class="input-group">
+                            <input type="text" id="joinCodeInput" placeholder="Enter 6-digit code" maxlength="6">
+                            <button id="joinBtn">Join</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Members List -->
+                <div class="card members-list-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-location-dot"></i> Connected Members (<span id="memberCount">1</span>)</h3>
+                        <button class="btn-refresh" id="forceSyncBtn"><i class="fa-solid fa-rotate"></i> Sync</button>
+                    </div>
+                    
+                    <div class="members-container" id="membersContainer">
+                        <!-- Members Injected via JS -->
+                        <div class="loading-state">
+                            <i class="fa-solid fa-spinner fa-spin"></i> Establishing P2P Connection...
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT PANEL: LIVE MAP -->
+            <div class="right-panel">
+                <div class="map-card" id="mapCard">
+                    <div class="map-header">
+                        <div class="status-indicator">
+                            <span class="status-dot green"></span> Live Sync Active
+                        </div>
+                        <div class="map-actions">
+                            <button class="map-btn" id="recenterBtn" title="Recenter Map"><i class="fa-solid fa-crosshairs"></i></button>
+                        </div>
+                    </div>
+                    <div class="map-container" id="familyMap"></div>
+                    
+                    <!-- SOS OVERLAY BUTTON -->
+                    <button class="giant-sos-btn" id="sosBtn">
+                        <i class="fa-solid fa-bell"></i>
+                        <span>FAMILY SOS</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast-container"></div>
+
+    <!-- Audio for SOS (Using a base64 or external beep sound) -->
+    <audio id="sosAudio" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="family-tracker.js"></script>
+    <script src="pwa-register.js"></script>
+</body>
+</html>

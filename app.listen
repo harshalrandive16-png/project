@@ -1,0 +1,21 @@
+// ── Telegram bot (polling — localhost safe) ───────────
+initTelegramBot();
+
+/* Auto realtime publisher every 10 min (optional) */
+const ENABLE_CRON = String(process.env.ENABLE_REALTIME_CRON || 'true') === 'true';
+
+if (ENABLE_CRON) {
+  console.log('⏱️ [Realtime] Cron enabled: every 10 minutes');
+  setInterval(async () => {
+    try {
+      console.log('⏱️ [Realtime] Cron tick → publish-alerts');
+      // internal call style
+      const data = await scanHotspotsRealtime();
+      const severe = (data.hotspots || []).filter(h => h.success && (h.riskLevel === 'High' || h.riskLevel === 'Severe'));
+      console.log(`⏱️ [Realtime] Hotspots high/severe: ${severe.length}`);
+      // For full publish, hit your own logic or keep manual button for SIH
+    } catch (e) {
+      console.warn('⚠️ cron failed:', e.message);
+    }
+  }, 10 * 60 * 1000);
+}

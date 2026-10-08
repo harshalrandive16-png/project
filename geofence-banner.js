@@ -63,7 +63,7 @@
     var token = getToken();
     if (!token) {
       alert('Pehle login karo');
-      window.location.href = '/auth.html?mode=login';
+      window.location.href = 'auth.html?mode=login';
       return;
     }
     if (!navigator.geolocation) {

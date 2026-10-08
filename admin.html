@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BhoomiSuraksha | NDMA Autopilot Center</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        /* =========================================================
+           BHOOMISURAKSHA NDMA AUTOPILOT - CSS
+           ========================================================= */
+        :root {
+            --bg-main: #0B0E14;
+            --bg-card: #121620;
+            --bg-panel: #1A1F2B;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --c-green: #10B981;
+            --c-red: #EF4444;
+            --c-orange: #F59E0B;
+            --c-cyan: #06B6D4;
+            --font-main: 'Inter', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            background-color: var(--bg-main); 
+            color: var(--text-main); 
+            font-family: var(--font-main); 
+            padding-bottom: 40px;
+        }
+
+        /* 1. NAVBAR */
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 24px; background: #080A0F; border-bottom: 1px solid var(--border-color);
+        }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand-icon { width: 32px; height: 32px; background: var(--c-green); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #000; font-size: 18px; }
+        .brand-text h1 { font-size: 16px; font-weight: 700; color: var(--c-green); margin: 0;}
+        .brand-text p { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 0;}
+        
+        .nav-actions { display: flex; gap: 12px; }
+        .btn-live { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: var(--c-red); padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .pulse-dot { width: 6px; height: 6px; background: var(--c-red); border-radius: 50%; animation: pulse 1s infinite alternate; }
+        .btn-audio { background: var(--c-orange); border: none; color: #000; padding: 6px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+
+        /* MAIN CONTAINER */
+        .container { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
+
+        /* 2. HEADER */
+        .header { margin-bottom: 30px; }
+        .header h1 { font-size: 28px; font-weight: 700; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+        .header p { color: var(--text-muted); font-size: 14px; }
+
+        /* 3. STATS ROW */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; }
+        .stat-title { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .stat-value { font-size: 32px; font-weight: 700; margin-bottom: 4px; }
+        .stat-card:nth-child(1) .stat-value { color: var(--c-green); }
+        .stat-card:nth-child(2) .stat-value { color: var(--c-red); }
+        .stat-card:nth-child(3) .stat-value { color: var(--c-orange); }
+        .stat-card:nth-child(4) .stat-value { color: var(--c-cyan); }
+        .stat-desc { font-size: 12px; color: var(--text-muted); }
+
+        /* 4. AUTOPILOT ENGINE PANEL */
+        .engine-panel { background: linear-gradient(90deg, rgba(239, 68, 68, 0.05) 0%, var(--bg-card) 20%); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 12px; padding: 20px; margin-bottom: 40px; }
+        .engine-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .engine-title { display: flex; align-items: center; gap: 12px; font-size: 18px; font-weight: 700; }
+        .badge-armed { background: rgba(16, 185, 129, 0.15); border: 1px solid var(--c-green); color: var(--c-green); padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
+        
+        .engine-actions { display: flex; gap: 12px; }
+        .btn-trigger { background: var(--c-red); border: none; color: #fff; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
+        .btn-trigger:hover { background: #DC2626; transform: translateY(-1px); }
+        .btn-reset { background: var(--bg-panel); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+
+        .geofence-bar { background: #0B0E14; border-radius: 8px; padding: 12px 16px; font-size: 12px; color: var(--text-muted); font-family: monospace; }
+        .geofence-bar span { color: var(--c-green); font-weight: 600; font-family: var(--font-main); }
+
+        /* 5. IOT SENSORS */
+        .section-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+        .section-title .dot { width: 8px; height: 8px; background: var(--c-green); border-radius: 50%; box-shadow: 0 0 8px var(--c-green); }
+        
+        .sensors-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .sensor-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; }
+        .sensor-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .sensor-title { display: flex; align-items: center; gap: 12px; }
+        .sensor-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .icon-blue { background: rgba(6, 182, 212, 0.15); color: var(--c-cyan); }
+        .icon-brown { background: rgba(245, 158, 11, 0.15); color: var(--c-orange); }
+        .icon-red { background: rgba(239, 68, 68, 0.15); color: var(--c-red); }
+        .sensor-title h3 { font-size: 15px; margin-bottom: 2px; }
+        .sensor-title p { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;}
+        .badge-low { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--c-green); padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+
+        .sensor-data { display: flex; gap: 10px; margin-bottom: 20px; }
+        .data-box { flex: 1; background: var(--bg-panel); border-radius: 8px; padding: 12px; }
+        .data-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; display: block; }
+        .data-val { font-size: 18px; font-weight: 700; }
+        
+        .sensor-footer { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 12px; }
+
+        /* 6. BOTTOM GRID (MAP + FEED) */
+        .bottom-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        
+        .map-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+        .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border-color); font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .map-container { height: 400px; width: 100%; background: #0A0A0A; z-index: 1;}
+
+        .feed-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column; }
+        .feed-content { padding: 20px; flex: 1; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; max-height: 400px; }
+        .feed-empty { margin: auto; font-size: 13px; color: var(--text-muted); text-align: center; }
+        
+        .feed-item { background: var(--bg-panel); border-left: 3px solid var(--c-red); padding: 12px; border-radius: 6px; font-size: 12px; animation: slideIn 0.3s ease; }
+        .feed-item strong { color: var(--c-red); display: block; margin-bottom: 4px; font-size: 13px;}
+
+        /* CSS HACK FOR DARK LEAFLET MAP (Replaces CartoDB Need) */
+        .leaflet-layer,
+        .leaflet-control-zoom-in,
+        .leaflet-control-zoom-out,
+        .leaflet-control-attribution {
+            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+        }
+
+        /* Leaflet Glowing Dot */
+        .glowing-dot {
+            width: 14px; height: 14px; background: var(--c-green); border-radius: 50%;
+            box-shadow: 0 0 15px var(--c-green), 0 0 30px var(--c-green);
+            animation: pulse 1s infinite alternate; border: 2px solid #fff;
+        }
+
+        @keyframes pulse { from { opacity: 0.5; transform: scale(0.9); } to { opacity: 1; transform: scale(1.1); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* Flash Red Animation for Trigger */
+        .flash-red { animation: emergencyRed 1s 3; }
+        @keyframes emergencyRed { 0% { box-shadow: inset 0 0 0px transparent; } 50% { box-shadow: inset 0 0 150px rgba(239,68,68,0.3); } 100% { box-shadow: inset 0 0 0px transparent; } }
+
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="brand">
+            <div class="brand-icon"><i class="fa-solid fa-leaf"></i></div>
+            <div class="brand-text">
+                <h1>BhoomiSuraksha</h1>
+                <p>NDMA COMMAND CENTER V5.0</p>
+            </div>
+        </div>
+        <div class="nav-actions">
+            <div class="btn-live"><span class="pulse-dot"></span> LIVE MONITORING</div>
+            <button class="btn-audio" onclick="alert('Audio Unlocked!')"><i class="fa-solid fa-volume-high"></i> Unlock Audio</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1><i class="fa-solid fa-tower-broadcast"></i> NDMA Autopilot Command Center</h1>
+            <p>Zero-touch AI disaster response • IoT sensor network • Auto-SMS to geofenced numbers • Multi-hazard early warning</p>
+        </div>
+
+        <!-- STATS -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">ACTIVE SENSORS</div>
+                <div class="stat-value">3</div>
+                <div class="stat-desc">Jal • Bhumi • Van nodes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">SEVERE ALERTS (24H)</div>
+                <div class="stat-value" id="countAlerts">0</div>
+                <div class="stat-desc">Autopilot triggered</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">SMS SENT TODAY</div>
+                <div class="stat-value" id="countSms">0</div>
+                <div class="stat-desc">Fast2SMS TRAI route</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">GEOFENCE NUMBERS</div>
+                <div class="stat-value">7</div>
+                <div class="stat-desc">Auto-alert recipients</div>
+            </div>
+        </div>
+
+        <!-- AUTOPILOT ENGINE -->
+        <div class="engine-panel">
+            <div class="engine-top">
+                <div class="engine-title">
+                    <i class="fa-solid fa-robot"></i> AI Autopilot Engine
+                    <span class="badge-armed">ARMED</span>
+                </div>
+                <div class="engine-actions">
+                    <button class="btn-trigger" id="triggerBtn"><i class="fa-solid fa-bolt"></i> Manual Trigger Test</button>
+                    <button class="btn-reset" id="resetBtn"><i class="fa-solid fa-rotate-right"></i> Reset Cooldown</button>
+                </div>
+            </div>
+            <div class="geofence-bar">
+                <span>Default Geofence Recipients (5-10km):</span> 8237107646 • 9359010933 • 9209428310 • 9529593994 • 9322719902 • 8262948340 • 8766028491
+            </div>
+        </div>
+
+        <!-- IOT SENSORS -->
+        <div class="section-title"><span class="dot"></span> Live IoT Sensor Network</div>
+        
+        <div class="sensors-grid">
+            <!-- Sensor 1: Jal -->
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <div class="sensor-title">
+                        <div class="sensor-icon icon-blue"><i class="fa-solid fa-water"></i></div>
+                        <div>
+                            <h3>Jal-Shuraksha</h3>
+                            <p>FLOOD SENSOR • NODE #01</p>
+                        </div>
+                    </div>
+                    <span class="badge-low" id="jalBadge">LOW</span>
+                </div>
+                <div class="sensor-data">
+                    <div class="data-box">
+                        <span class="data-label">WATER LEVEL</span>
+                        <span class="data-val" id="jalVal1">42 <small>cm</small></span>
+                    </div>
+                    <div class="data-box">
+                        <span class="data-label">TREND</span>
+                        <span class="data-val">Stable</span>
+                    </div>
+                </div>
+                <div class="sensor-footer">
+                    <span>ESP32 + JSN-SR04T</span>
+                    <span id="jalTime">Just now</span>
+                </div>
+            </div>
+
+            <!-- Sensor 2: Bhumi -->
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <div class="sensor-title">
+                        <div class="sensor-icon icon-brown"><i class="fa-solid fa-mountain"></i></div>
+                        <div>
+                            <h3>Bhumi-Shuraksha</h3>
+                            <p>LANDSLIDE SENSOR • NODE #02</p>
+                        </div>
+                    </div>
+                    <span class="badge-low" id="bhumiBadge">LOW</span>
+                </div>
+                <div class="sensor-data">
+                    <div class="data-box">
+                        <span class="data-label">SLOPE TILT</span>
+                        <span class="data-val" id="bhumiVal1">2.4 <small>°</small></span>
+                    </div>
+                    <div class="data-box">
+                        <span class="data-label">VIBRATION</span>
+                        <span class="data-val" id="bhumiVal2">12 <small>Hz</small></span>
+                    </div>
+                </div>
+                <div class="sensor-footer">
+                    <span>ESP32-S3 + MPU6050</span>
+                    <span id="bhumiTime">Just now</span>
+                </div>
+            </div>
+
+            <!-- Sensor 3: Van -->
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <div class="sensor-title">
+                        <div class="sensor-icon icon-red"><i class="fa-solid fa-fire"></i></div>
+                        <div>
+                            <h3>Van-Shuraksha</h3>
+                            <p>FOREST FIRE SENSOR • NODE #03</p>
+                        </div>
+                    </div>
+                    <span class="badge-low" id="vanBadge">LOW</span>
+                </div>
+                <div class="sensor-data">
+                    <div class="data-box">
+                        <span class="data-label">TEMPERATURE</span>
+                        <span class="data-val" id="vanVal1">32 <small>°C</small></span>
+                    </div>
+                    <div class="data-box">
+                        <span class="data-label">CO LEVEL</span>
+                        <span class="data-val" id="vanVal2">45 <small>ppm</small></span>
+                    </div>
+                </div>
+                <div class="sensor-footer">
+                    <span>ESP32 + BME280 + MQ-7</span>
+                    <span id="vanTime">Just now</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTTOM GRID -->
+        <div class="bottom-grid">
+            <!-- Map -->
+            <div class="map-card">
+                <div class="card-header"><i class="fa-solid fa-map"></i> India Live Disaster Map</div>
+                <div class="map-container" id="leafletMap"></div>
+            </div>
+
+            <!-- Event Feed -->
+            <div class="feed-card">
+                <div class="card-header"><i class="fa-solid fa-satellite-dish"></i> Autopilot Event Feed</div>
+                <div class="feed-content" id="eventFeed">
+                    <div class="feed-empty" id="emptyFeed">No autopilot events yet. Waiting for sensor triggers...</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        /* =========================================================
+           BHOOMISURAKSHA NDMA AUTOPILOT - JS LOGIC
+           ========================================================= */
+
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. INITIALIZE LEAFLET MAP (Keyless Dark Mode via CSS Filter)
+            const map = L.map('leafletMap', { zoomControl: false }).setView([21.1458, 79.0882], 5); // Centered on India (Nagpur)
+            L.control.zoom({ position: 'topleft' }).addTo(map);
+
+            // STANDARD OPENSTREETMAP TILES (100% Free & No API Key)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap | BhoomiSuraksha'
+            }).addTo(map);
+
+            // Add Glowing Marker
+            const glowIcon = L.divIcon({
+                className: 'glowing-dot',
+                iconSize: [14, 14]
+            });
+            L.marker([21.1458, 79.0882], { icon: glowIcon }).addTo(map).bindPopup("<b>Nagpur Node Active</b>").openPopup();
+
+            // 2. MOCK SENSOR DATA UPDATES
+            setInterval(() => {
+                document.getElementById('jalVal1').innerHTML = (Math.floor(Math.random() * 5) + 40) + ' <small>cm</small>';
+                document.getElementById('bhumiVal1').innerHTML = (Math.random() * 2 + 1).toFixed(1) + ' <small>°</small>';
+                document.getElementById('bhumiVal2').innerHTML = (Math.floor(Math.random() * 5) + 10) + ' <small>Hz</small>';
+                document.getElementById('vanVal1').innerHTML = (Math.floor(Math.random() * 3) + 31) + ' <small>°C</small>';
+                document.getElementById('vanVal2').innerHTML = (Math.floor(Math.random() * 10) + 40) + ' <small>ppm</small>';
+            }, 3000);
+
+            // 3. MANUAL TRIGGER TEST LOGIC
+            let alertsCount = 0;
+            let smsCount = 0;
+            const triggerBtn = document.getElementById('triggerBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const eventFeed = document.getElementById('eventFeed');
+            const emptyFeed = document.getElementById('emptyFeed');
+
+            triggerBtn.addEventListener('click', () => {
+                // Screen Flash
+                document.body.classList.add('flash-red');
+                setTimeout(() => document.body.classList.remove('flash-red'), 3000);
+
+                // Update Stats
+                alertsCount++;
+                smsCount += 7; // 7 numbers in geofence
+                document.getElementById('countAlerts').innerText = alertsCount;
+                document.getElementById('countSms').innerText = smsCount;
+
+                // Update UI Badges to CRITICAL
+                document.querySelectorAll('.badge-low').forEach(b => {
+                    b.innerText = 'CRITICAL';
+                    b.style.background = 'rgba(239, 68, 68, 0.2)';
+                    b.style.borderColor = 'var(--c-red)';
+                    b.style.color = 'var(--c-red)';
+                });
+
+                // Add to Feed
+                if(emptyFeed) emptyFeed.style.display = 'none';
+                
+                const time = new Date().toLocaleTimeString();
+                const feedHtml = `
+                    <div class="feed-item">
+                        <strong><i class="fa-solid fa-triangle-exclamation"></i> MANUAL TRIGGER EXECUTED</strong>
+                        Time: ${time} <br>
+                        Action: Dispatched SMS to 7 recipients via Fast2SMS.<br>
+                        System: All local sirens activated.
+                    </div>
+                `;
+                eventFeed.insertAdjacentHTML('afterbegin', feedHtml);
+                
+                // Audio Beep (Needs user interaction first, which the click provides)
+                const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+                audio.play().catch(e => console.log('Audio play prevented'));
+            });
+
+            // 4. RESET COOLDOWN
+            resetBtn.addEventListener('click', () => {
+                document.querySelectorAll('.badge-low').forEach(b => {
+                    b.innerText = 'LOW';
+                    b.style.background = 'rgba(16, 185, 129, 0.15)';
+                    b.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+                    b.style.color = 'var(--c-green)';
+                });
+                alert('System Reset to Normal Status.');
+            });
+
+        });
+    </script>
+    <script src="pwa-register.js"></script>
+</body>
+</html>

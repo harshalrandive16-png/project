@@ -5,6 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Login / Signup — BhoomiSuraksha</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  
+  <!-- 🔗 API Config MUST load first -->
+  <script src="config.js"></script>
+  <!-- ═══════ PWA META TAGS ═══════ -->
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#10b981"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="BhoomiSuraksha"/>
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"/>
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png"/>
+
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -103,9 +116,10 @@
       cursor: pointer;
       font-family: inherit;
       box-shadow: 0 6px 18px rgba(16,185,129,0.35);
+      transition: all 0.2s;
     }
-    .btn-submit:hover { filter: brightness(1.06); }
-    .btn-submit:disabled { opacity: 0.7; cursor: wait; }
+    .btn-submit:hover { filter: brightness(1.06); transform: translateY(-1px); }
+    .btn-submit:disabled { opacity: 0.7; cursor: wait; transform: none; }
     .auth-footer {
       text-align: center; margin-top: 1.2rem;
       font-size: 0.85rem; color: #94a3b8;
@@ -132,7 +146,11 @@
       box-shadow: 0 12px 32px rgba(16,185,129,0.4);
       z-index: 9999; display: none;
     }
-    .toast.show { display: block; }
+    .toast.show { display: block; animation: toastIn 0.3s; }
+    @keyframes toastIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
     .server-status {
       text-align: center;
       font-size: 0.75rem;
@@ -142,7 +160,7 @@
       border-radius: 8px;
       background: rgba(0,0,0,0.3);
     }
-    .server-status.ok { color: #10b981; }
+    .server-status.ok { color: #10b981; background: rgba(16,185,129,0.1); }
     .server-status.bad { color: #f87171; background: rgba(220,38,38,0.1); }
   </style>
 </head>
@@ -190,7 +208,7 @@
 
         <div class="form-group">
           <label for="signupName">Full Name</label>
-          <input type="text" id="signupName" placeholder="Aarav Sharma" required autocomplete="name"/>
+          <input type="text" id="signupName" placeholder="e.g. Aarav Sharma" required autocomplete="name"/>
         </div>
         <div class="form-group">
           <label for="signupEmail">Email Address</label>
@@ -201,8 +219,8 @@
           <input type="tel" id="signupPhone" placeholder="+91 98765 43210" autocomplete="tel"/>
         </div>
         <div class="form-group">
-          <label for="signupState">State</label>
-          <input type="text" id="signupState" placeholder="Maharashtra"/>
+          <label for="signupState">State / UT</label>
+          <input type="text" id="signupState" placeholder="e.g. Maharashtra"/>
         </div>
         <div class="form-group">
           <label for="signupPassword">Password</label>
@@ -210,19 +228,27 @@
         </div>
         <button type="submit" class="btn-submit" id="btnSignup">Create Account →</button>
         <div class="auth-footer">
-          Already have account? <a onclick="switchMode('login')">Log in</a>
+          Already have an account? <a onclick="switchMode('login')">Log in</a>
         </div>
       </form>
 
-      <div id="serverStatus" class="server-status">⏳ Checking backend...</div>
+      <div id="serverStatus" class="server-status">⏳ Checking backend connection...</div>
     </div>
   </div>
 
   <div id="toast" class="toast"></div>
 
   <script>
-    const API = 'http://localhost:5000';
+    // 🔗 Auto-Detect API Base from config.js
+    const API = (typeof window !== 'undefined' && window.BHOOMI_API) 
+      ? window.BHOOMI_API 
+      : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+          ? 'http://localhost:5000' 
+          : window.location.origin);
 
+    console.log('🔐 Auth API Base:', API);
+
+    // ─── UI Handlers ───
     function switchMode(mode) {
       const loginForm = document.getElementById('loginForm');
       const signupForm = document.getElementById('signupForm');
@@ -247,7 +273,7 @@
 
     function showError(msg) {
       const box = document.getElementById('formErrorBox');
-      box.textContent = msg;
+      box.innerHTML = `<strong>Error:</strong> ${msg}`;
       box.classList.add('show');
     }
     function hideError() {
@@ -259,20 +285,22 @@
       const t = document.getElementById('toast');
       t.textContent = msg;
       t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 2200);
+      setTimeout(() => t.classList.remove('show'), 2500);
     }
 
     function saveSession(user, token) {
       localStorage.setItem('bhoomiUser', JSON.stringify(user));
-      localStorage.setItem('landslideUser', JSON.stringify(user));
+      localStorage.setItem('landslideUser', JSON.stringify(user)); // Backward compatibility
       localStorage.setItem('bhoomiToken', token);
       localStorage.setItem('landslideToken', token);
     }
 
+    // ─── Handle Signup ───
     async function handleSignup(e) {
       e.preventDefault();
       hideError();
       const btn = document.getElementById('btnSignup');
+      
       const payload = {
         name: document.getElementById('signupName').value.trim(),
         email: document.getElementById('signupEmail').value.trim(),
@@ -282,7 +310,7 @@
       };
 
       btn.disabled = true;
-      btn.textContent = 'Creating account...';
+      btn.textContent = 'Creating account... ⏳';
 
       try {
         const res = await fetch(API + '/api/signup', {
@@ -290,34 +318,43 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
+        
         const data = await res.json();
-
-        if (!res.ok || !data.success) {
-          throw new Error(data.message || 'Signup failed');
-        }
+        if (!res.ok) throw new Error(data.error || 'Signup failed');
 
         saveSession(data.user, data.token);
-        showToast('✅ Account created!');
-        setTimeout(() => { window.location.href = 'index.html'; }, 800);
+        showToast('✅ Account created successfully!');
+        setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+
       } catch (err) {
-        showError('❌ ' + (err.message || 'Signup failed. Is backend running?'));
+        console.error('Signup Error:', err);
+        // Fallback demo mode login if backend is completely unreachable
+        if (err.message === 'Failed to fetch') {
+          saveSession({ name: payload.name, email: payload.email, role: 'citizen', uid: 'demo' }, 'demo-token');
+          showToast('⚠️ Offline Mode: Demo Account Created');
+          setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+        } else {
+          showError(err.message);
+        }
       } finally {
         btn.disabled = false;
         btn.textContent = 'Create Account →';
       }
     }
 
+    // ─── Handle Login ───
     async function handleLogin(e) {
       e.preventDefault();
       hideError();
       const btn = document.getElementById('btnLogin');
+      
       const payload = {
         email: document.getElementById('loginEmail').value.trim(),
         password: document.getElementById('loginPassword').value
       };
 
       btn.disabled = true;
-      btn.textContent = 'Logging in...';
+      btn.textContent = 'Logging in... ⏳';
 
       try {
         const res = await fetch(API + '/api/login', {
@@ -325,46 +362,53 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
+        
         const data = await res.json();
-
-        if (!res.ok || !data.success) {
-          throw new Error(data.message || 'Login failed');
-        }
+        if (!res.ok) throw new Error(data.error || 'Invalid credentials');
 
         saveSession(data.user, data.token);
         showToast('✅ Login successful!');
-        setTimeout(() => { window.location.href = 'index.html'; }, 800);
+        setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+
       } catch (err) {
-        showError('❌ ' + (err.message || 'Login failed. Is backend running?'));
+        console.error('Login Error:', err);
+        // Fallback demo mode login
+        if (err.message === 'Failed to fetch') {
+          saveSession({ name: 'Demo User', email: payload.email, role: 'citizen', uid: 'demo' }, 'demo-token');
+          showToast('⚠️ Offline Mode: Demo Login Successful');
+          setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+        } else {
+          showError(err.message);
+        }
       } finally {
         btn.disabled = false;
         btn.textContent = 'Log In →';
       }
     }
 
+    // ─── Check Server Status ───
     async function checkServer() {
       const el = document.getElementById('serverStatus');
       try {
         const res = await fetch(API + '/api/health');
+        if (!res.ok) throw new Error('Bad response');
+        
         const data = await res.json();
-        if (data.success) {
-          el.textContent = '🟢 Backend connected · Firestore ready';
-          el.className = 'server-status ok';
-        } else {
-          throw new Error('Bad response');
-        }
+        el.innerHTML = `🟢 <strong>Live:</strong> Netlify Cloud API Online`;
+        el.className = 'server-status ok';
       } catch (e) {
-        el.textContent = '🔴 Backend OFFLINE — run: node server.js';
+        el.innerHTML = `🟡 <strong>Offline Mode:</strong> Demo fallback active`;
         el.className = 'server-status bad';
       }
     }
 
+    // ─── Init ───
     document.addEventListener('DOMContentLoaded', function () {
       const params = new URLSearchParams(window.location.search);
       switchMode(params.get('mode') === 'signup' ? 'signup' : 'login');
       checkServer();
     });
   </script>
-  <script src="config.js"></script>
+  <script src="pwa-register.js"></script>
 </body>
 </html>

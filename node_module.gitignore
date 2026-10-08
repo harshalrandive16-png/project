@@ -1,5 +1,5 @@
-node_modules/
-serviceAccountKey.json
+node_modules
+.env
 ai.env
-tmp_uploads/
-uploads/
+serviceAccountKey.json
+firebase-debug.log

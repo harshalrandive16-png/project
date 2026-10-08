@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BhoomiSuraksha | Donate & Support</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="donate.css">
+    <!-- ═══════ PWA META TAGS ═══════ -->
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#10b981"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="BhoomiSuraksha"/>
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"/>
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png"/>
+</head>
+<body>
+
+    <!-- TOP NAVBAR -->
+    <nav class="navbar">
+        <a href="index.html" class="nav-brand">
+            <div class="brand-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="brand-text">
+                <span class="brand-name">BhoomiSuraksha</span>
+                <span class="brand-sub">AI EARLY WARNING SYSTEM</span>
+            </div>
+        </a>
+
+        <ul class="nav-links">
+            <li><a href="index.html" class="nav-link">Home</a></li>
+            <li><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+            <li><a href="alerts.html" class="nav-link">Alerts</a></li>
+            <li><a href="#" class="nav-link">Resources</a></li>
+            <li><a href="#" class="nav-link">Safe Route</a></li>
+            <li><a href="#" class="nav-link">Family</a></li>
+            <li><a href="#" class="nav-link">News</a></li>
+            <li><a href="donate.html" class="nav-link active">Donate</a></li>
+        </ul>
+
+        <div class="nav-right">
+            <div class="user-profile">
+                <div class="user-avatar">H</div>
+                <div class="user-info">
+                    <span class="user-greet">Welcome,</span>
+                    <span class="user-name">Harshal</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="donate-main">
+        
+        <!-- HEADER -->
+        <div class="page-header">
+            <div class="live-badge"><i class="fa-solid fa-hand-holding-heart"></i> 100% SECURE DONATION</div>
+            <h1 class="page-title">Support Disaster Relief Funds</h1>
+            <p class="page-sub">Your contribution directly helps affected families. All donations are eligible for 80G Tax Exemption under the Income Tax Act.</p>
+        </div>
+
+        <div class="donate-grid">
+            
+            <!-- LEFT: ACTIVE CAMPAIGNS (PROGRESS BARS) -->
+            <div class="campaigns-section">
+                <h2 class="section-title">Verified Active Campaigns</h2>
+                
+                <!-- Campaign 1 -->
+                <div class="campaign-card">
+                    <div class="camp-header">
+                        <h3>Assam Flood Relief Fund</h3>
+                        <span class="badge badge-urgent">URGENT</span>
+                    </div>
+                    <p class="camp-desc">Thousands displaced in Kamrup. Funds needed for clean water, medical camps, and temporary shelters.</p>
+                    
+                    <div class="progress-container">
+                        <div class="progress-stats">
+                            <span class="raised" id="assamRaised">Raised: ₹0</span>
+                            <span class="goal">Goal: ₹5 Cr</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill fill-cyan" id="assamBar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                    <div class="camp-footer">
+                        <span><i class="fa-solid fa-check-circle text-green"></i> Verified by GiveIndia</span>
+                    </div>
+                </div>
+
+                <!-- Campaign 2 -->
+                <div class="campaign-card">
+                    <div class="camp-header">
+                        <h3>Wayanad Landslide Rehab</h3>
+                        <span class="badge badge-high">HIGH PRIORITY</span>
+                    </div>
+                    <p class="camp-desc">Rebuilding homes and providing psychological support to families affected by the massive landslide.</p>
+                    
+                    <div class="progress-container">
+                        <div class="progress-stats">
+                            <span class="raised" id="wayanadRaised">Raised: ₹0</span>
+                            <span class="goal">Goal: ₹2 Cr</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill fill-orange" id="wayanadBar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                    <div class="camp-footer">
+                        <span><i class="fa-solid fa-check-circle text-green"></i> CMRF Kerala Official</span>
+                    </div>
+                </div>
+
+                <!-- Campaign 3 (PMNRF) -->
+                <div class="campaign-card official-fund">
+                    <div class="camp-header">
+                        <h3>Prime Minister's National Relief Fund (PMNRF)</h3>
+                        <i class="fa-solid fa-landmark text-gold"></i>
+                    </div>
+                    <p class="camp-desc">Centralized government fund utilized entirely to render immediate relief to families of those killed in natural calamities.</p>
+                    <div class="camp-footer">
+                        <span class="text-gold"><i class="fa-solid fa-certificate"></i> 100% Tax Exemption</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: DONATION FORM -->
+            <div class="form-section">
+                <div class="form-card">
+                    <h2>Make a Contribution</h2>
+                    <form id="donationForm">
+                        
+                        <!-- Fund Selection -->
+                        <div class="form-group">
+                            <label>Select Relief Fund</label>
+                            <select id="fundSelect" required>
+                                <option value="assam">Assam Flood Relief Fund</option>
+                                <option value="wayanad">Wayanad Landslide Rehab</option>
+                                <option value="pmnrf">PMNRF (General Disaster Relief)</option>
+                            </select>
+                        </div>
+
+                        <!-- Amount Selection -->
+                        <div class="form-group">
+                            <label>Select Amount (₹)</label>
+                            <div class="amount-grid">
+                                <button type="button" class="amt-btn active" data-val="500">₹500</button>
+                                <button type="button" class="amt-btn" data-val="1000">₹1,000</button>
+                                <button type="button" class="amt-btn" data-val="5000">₹5,000</button>
+                                <button type="button" class="amt-btn" data-val="10000">₹10,000</button>
+                            </div>
+                            <input type="number" id="customAmount" placeholder="Enter custom amount" value="500" min="1" required>
+                        </div>
+
+                        <!-- Personal Details -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="donorName" placeholder="Enter your name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="email" id="donorEmail" placeholder="For tax receipt" required>
+                            </div>
+                        </div>
+
+                        <!-- PAN Validation (80G) -->
+                        <div class="form-group tax-group">
+                            <label>PAN Number <span class="opt-text">(For 80G Tax Exemption)</span></label>
+                            <input type="text" id="donorPan" placeholder="ABCDE1234F" maxlength="10">
+                            <div class="tax-note">
+                                <i class="fa-solid fa-circle-info"></i> Entering a valid PAN is mandatory to receive an 80G tax exemption certificate.
+                            </div>
+                        </div>
+
+                        <!-- Payment Method -->
+                        <div class="form-group">
+                            <label>Payment Method</label>
+                            <div class="payment-methods">
+                                <label class="pay-radio active">
+                                    <input type="radio" name="payMethod" value="razorpay" checked>
+                                    <i class="fa-solid fa-credit-card"></i> Cards / NetBanking
+                                </label>
+                                <label class="pay-radio">
+                                    <input type="radio" name="payMethod" value="upi">
+                                    <i class="fa-solid fa-qrcode"></i> Direct UPI (Zero Fee)
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-submit" id="payBtn">
+                            <i class="fa-solid fa-lock"></i> Proceed to Pay Securely
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast-container"></div>
+
+    <!-- Razorpay Checkout Script (Mock integration) -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="donate.js"></script>
+    <script src="pwa-register.js"></script>
+</body>
+</html>

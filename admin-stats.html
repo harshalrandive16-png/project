@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BhoomiSuraksha — System Stats</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#050810;--panel:rgba(16,24,40,.66);--line:rgba(16,185,129,.2);--text:#e5e7eb;--muted:#94a3b8;
+    --accent:#10b981;--accent2:#34d399;--severe:#ef4444;--high:#f97316;--moderate:#eab308;--low:#10b981;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 22px;
+    border-bottom:1px solid var(--line);background:rgba(5,8,16,.85);position:sticky;top:0;z-index:10;backdrop-filter:blur(12px)}
+  .brand{font-weight:800;font-size:18px;display:flex;align-items:center;gap:10px}
+  .brand i{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+  nav{display:flex;gap:6px;flex-wrap:wrap}
+  nav a{color:var(--muted);text-decoration:none;font-size:13px;font-weight:600;padding:7px 12px;border-radius:10px}
+  nav a:hover,nav a.on{color:var(--accent2);background:rgba(16,185,129,.12)}
+  main{padding:18px 22px 32px;max-width:1280px;margin:0 auto}
+  .head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  h1{font-size:26px;font-weight:800}
+  .upd{font-size:13px;color:var(--muted)}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:16px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;backdrop-filter:blur(14px)}
+  .kpi b{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:8px}
+  .kpi span{font-size:30px;font-weight:800;line-height:1}
+  .kpi small{display:block;margin-top:8px;font-size:12px;color:var(--muted)}
+  .grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px}
+  @media(max-width:900px){.grid{grid-template-columns:1fr}}
+  h2{font-size:15px;font-weight:700;margin-bottom:12px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;color:var(--muted);font-weight:600;padding:8px 6px;border-bottom:1px solid var(--line)}
+  td{padding:9px 6px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle}
+  .led{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;background:#64748b}
+  .led.ok{background:var(--low);box-shadow:0 0 8px var(--low)}.led.bad{background:var(--severe)}.led.warn{background:var(--moderate)}
+  .badge{font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px;color:#04130d;background:var(--low)}
+  .badge.MODERATE{background:var(--moderate)}.badge.HIGH{background:var(--high)}.badge.SEVERE{background:var(--severe);color:#fff}
+  .dist{display:grid;gap:10px}
+  .row{display:grid;grid-template-columns:90px 1fr 34px;align-items:center;gap:10px;font-size:13px}
+  .track{height:12px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+  .fill{height:100%;border-radius:99px;transition:width .5s}
+  .scroll{overflow-x:auto}
+  .note{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5}
+  .err{color:#fca5a5;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><i></i>BhoomiSuraksha <span style="font-weight:500;color:var(--muted);font-size:13px">System Stats</span></div>
+  <nav>
+    <a href="index.html">Home</a><a href="dashboard.html">Dashboard</a><a href="admin.html">Admin</a>
+    <a href="live-alert-demo.html">Live Demo</a><a href="admin-stats.html" class="on">System Stats</a>
+    <a href="govt-data-map.html">Govt Data Map</a>
+  </nav>
+</header>
+<main>
+  <div class="head">
+    <div><h1>System aur live data ki sthiti</h1><div class="upd" id="upd">Load ho raha hai…</div></div>
+  </div>
+
+  <section class="kpis">
+    <div class="panel kpi"><b>System status</b><span id="kStatus">—</span><small id="kStatusSub">Health check chal raha hai</small></div>
+    <div class="panel kpi"><b>Siren par connected phones</b><span id="kSirens">—</span><small>mobile-siren.html khule hue</small></div>
+    <div class="panel kpi"><b>Sensor nodes alert mein</b><span id="kNodes">—</span><small id="kNodesSub">—</small></div>
+    <div class="panel kpi"><b>Zones HIGH ya SEVERE</b><span id="kZones">—</span><small id="kZonesSub">—</small></div>
+    <div class="panel kpi"><b>India mein earthquakes</b><span id="kQuakes">—</span><small>USGS live feed</small></div>
+  </section>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>Services ka health</h2>
+      <div class="scroll"><table>
+        <thead><tr><th>Service</th><th>Status</th><th>Response</th></tr></thead>
+        <tbody id="services"><tr><td colspan="3" class="err" style="color:var(--muted)">Load ho raha hai…</td></tr></tbody>
+      </table></div>
+      <div class="note">Health check Open-Meteo, USGS aur Firestore ko sach mein ping karta hai, isliye ye har 30 second mein refresh hota hai.</div>
+    </section>
+
+    <div style="display:grid;gap:16px;align-content:start">
+      <section class="panel">
+        <h2>Zones ka risk distribution</h2>
+        <div class="dist" id="dist"><div class="upd">Load ho raha hai…</div></div>
+        <div class="note" id="zoneEngine"></div>
+      </section>
+      <section class="panel">
+        <h2>IoT sensor nodes</h2>
+        <div class="scroll"><table>
+          <thead><tr><th>Node</th><th>Risk</th><th>Last update</th></tr></thead>
+          <tbody id="sensors"><tr><td colspan="3" class="upd">Load ho raha hai…</td></tr></tbody>
+        </table></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script>
+(function(){
+  'use strict';
+  const API = window.BHOOMI_API || (['localhost','127.0.0.1'].includes(location.hostname) ? 'http://localhost:5000' : location.origin);
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const LV = ['SEVERE','HIGH','MODERATE','LOW'];
+  const LVCOL = {SEVERE:'#ef4444',HIGH:'#f97316',MODERATE:'#eab308',LOW:'#10b981'};
+  async function getJSON(p, ms=25000){
+    const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),ms);
+    try{ const r=await fetch(API+p,{signal:ctl.signal}); if(!r.ok) throw new Error('HTTP '+r.status); return await r.json(); }
+    finally{ clearTimeout(t); }
+  }
+  function stamp(){ $('upd').textContent='Last refresh: '+new Date().toLocaleTimeString('en-IN'); }
+
+  async function loadHealth(){
+    try{
+      const h=await getJSON('/api/health');
+      $('kStatus').textContent = h.status==='healthy' ? 'Healthy' : 'Degraded';
+      $('kStatus').style.color = h.status==='healthy' ? 'var(--low)' : 'var(--moderate)';
+      const bad=h.services.filter(s=>!s.ok).length;
+      $('kStatusSub').textContent = bad ? bad+' service ko dhyan chahiye' : 'Saari services theek hain';
+      $('kSirens').textContent = h.connectedSirens ?? 0;
+      $('services').innerHTML = h.services.map(s=>{
+        const cls = s.ok ? 'ok' : (/pending|not set|missing|mock|fallback/i.test(s.status) ? 'warn' : 'bad');
+        return '<tr><td>'+esc(s.name)+'</td><td><span class="led '+cls+'"></span>'+esc(s.status)+'</td><td>'+(s.ms!=null?s.ms+' ms':'—')+'</td></tr>';
+      }).join('');
+    }catch(e){
+      $('kStatus').textContent='Offline'; $('kStatus').style.color='var(--severe)';
+      $('kStatusSub').textContent='Backend se jawab nahi aaya';
+      $('services').innerHTML='<tr><td colspan="3" class="err">Health API nahi chali ('+esc(e.message)+')</td></tr>';
+    }
+  }
+  async function loadSensors(){
+    try{
+      const j=await getJSON('/api/sensors/live',8000);
+      const list=Object.values((j.data&&j.data.sensors)||{});
+      const hot=list.filter(n=>n.risk==='HIGH'||n.risk==='SEVERE').length;
+      $('kNodes').textContent=hot; $('kNodes').style.color=hot?'var(--severe)':'var(--low)';
+      $('kNodesSub').textContent=list.length+' mein se '+list.filter(n=>n.timestamp).length+' ne data bheja';
+      $('sensors').innerHTML=list.map(n=>'<tr><td>'+esc(n.name)+'</td><td><span class="badge '+esc(n.risk)+'">'+esc(n.risk)+'</span></td><td>'+
+        (n.timestamp?new Date(n.timestamp).toLocaleTimeString('en-IN'):'data nahi')+'</td></tr>').join('') || '<tr><td colspan="3" class="upd">Koi node nahi</td></tr>';
+    }catch(e){ $('sensors').innerHTML='<tr><td colspan="3" class="err">Sensor API nahi chali</td></tr>'; $('kNodes').textContent='—'; }
+  }
+  async function loadZones(){
+    try{
+      const j=await getJSON('/api/zones/live-risk');
+      const zones=j.zones||[]; const counts={SEVERE:0,HIGH:0,MODERATE:0,LOW:0};
+      zones.forEach(z=>{ if(counts[z.level]!=null) counts[z.level]++; });
+      const hot=counts.SEVERE+counts.HIGH;
+      $('kZones').textContent=hot; $('kZones').style.color=hot?'var(--high)':'var(--low)';
+      $('kZonesSub').textContent=zones.length+' zones monitor ho rahe hain';
+      const max=Math.max(1,...Object.values(counts));
+      $('dist').innerHTML=LV.map(l=>'<div class="row"><span>'+l+'</span><div class="track"><div class="fill" style="width:'+(counts[l]/max*100)+'%;background:'+LVCOL[l]+'"></div></div><b>'+counts[l]+'</b></div>').join('');
+      const fb=zones.filter(z=>z.engine==='fallback').length;
+      $('zoneEngine').textContent = fb ? fb+' zone ka score estimate hai kyunki weather fetch fail hua tha.' : 'Saare zone scores live Open-Meteo weather se bane hain.';
+    }catch(e){ $('dist').innerHTML='<div class="err">Zone API nahi chali</div>'; $('kZones').textContent='—'; }
+  }
+  async function loadQuakes(){
+    try{ const j=await getJSON('/api/earthquakes/india'); $('kQuakes').textContent=j.count??0; }
+    catch(e){ $('kQuakes').textContent='—'; }
+  }
+
+  function fast(){ loadSensors(); stamp(); }
+  function slow(){ loadHealth(); loadZones(); loadQuakes(); }
+  fast(); slow();
+  setInterval(fast,5000); setInterval(slow,30000);
+})();
+</script>
+</body>
+</html>

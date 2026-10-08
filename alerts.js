@@ -1,386 +1,259 @@
-// =========================================
-// BhoomiSuraksha Alerts – Pan-India Multi-Disaster
-// =========================================
+/* ==========================================================
+   BHOOMISURAKSHA V10 - LIVE ALERTS ENGINE
+   APIs: USGS (Earthquakes) + UN ReliefWeb (India Disasters)
+========================================================== */
 
-let alertsData = [
-  {
-    id: 'ALT-KL-001',
-    title: 'Wayanad Belt',
-    district: 'Wayanad',
-    state: 'Kerala',
-    type: 'Landslide',
-    level: 'severe',
-    levelText: 'Severe Risk',
-    updated: '12 mins ago',
-    desc: 'AI model indicates severe slope failure risk after 142mm rainfall. Debris flow possible on hill roads. Evacuation advisory for vulnerable settlements.',
-    metricName: 'Rainfall',
-    metricVal: '142 mm/24h',
-    stat2Name: 'Soil Saturation',
-    stat2Val: '94%',
-    stat3Name: 'AI Hazard Index',
-    stat3Val: '8.9 / 10',
-    stat4Name: 'Geofence SMS',
-    stat4Val: '3,840 people',
-    score: 89,
-    smsDispatched: '3,840 residents (5–10 km)',
-    authority: 'Kerala SDMA + NDRF alerted'
-  },
-  {
-    id: 'ALT-OD-014',
-    title: 'Puri–Konark Coast',
-    district: 'Puri',
-    state: 'Odisha',
-    type: 'Cyclone',
-    level: 'severe',
-    levelText: 'Severe Risk',
-    updated: '28 mins ago',
-    desc: 'Cyclonic winds and storm surge risk along coastal belt. Fishermen advised not to venture into sea. Relief shelters on standby.',
-    metricName: 'Wind Speed',
-    metricVal: '110 km/h',
-    stat2Name: 'Storm Surge',
-    stat2Val: '1.8 m',
-    stat3Name: 'AI Hazard Index',
-    stat3Val: '8.4 / 10',
-    stat4Name: 'Geofence SMS',
-    stat4Val: '12,500 people',
-    score: 84,
-    smsDispatched: '12,500 residents (coastal belt)',
-    authority: 'Odisha OSDMA + Coast Guard'
-  },
-  {
-    id: 'ALT-AS-022',
-    title: 'Guwahati Corridor',
-    district: 'Kamrup Metro',
-    state: 'Assam',
-    type: 'Flood',
-    level: 'high',
-    levelText: 'High Risk',
-    updated: '45 mins ago',
-    desc: 'Brahmaputra water level rising. Low-lying areas may face inundation in next 12–18 hours. Traffic restrictions likely on key urban roads.',
-    metricName: 'Water Level',
-    metricVal: '+0.6 m rising',
-    stat2Name: 'Rainfall',
-    stat2Val: '98 mm/24h',
-    stat3Name: 'AI Hazard Index',
-    stat3Val: '7.1 / 10',
-    stat4Name: 'Geofence SMS',
-    stat4Val: '8,200 people',
-    score: 71,
-    smsDispatched: '8,200 residents',
-    authority: 'Assam SDMA notified'
-  },
-  {
-    id: 'ALT-MH-031',
-    title: 'Mumbai Coastal',
-    district: 'Mumbai Suburban',
-    state: 'Maharashtra',
-    type: 'Flood',
-    level: 'high',
-    levelText: 'High Risk',
-    updated: '1 hour ago',
-    desc: 'Heavy rain and poor drainage may cause urban flooding. Suburban local trains and low-lying roads under watch.',
-    metricName: 'Rainfall',
-    metricVal: '125 mm/24h',
-    stat2Name: 'Drain Load',
-    stat2Val: 'Critical',
-    stat3Name: 'AI Hazard Index',
-    stat3Val: '6.8 / 10',
-    stat4Name: 'Geofence SMS',
-    stat4Val: '15,000 people',
-    score: 68,
-    smsDispatched: '15,000 residents',
-    authority: 'BMC Disaster Cell'
-  },
-  {
-    id: 'ALT-UK-009',
-    title: 'Joshimath Sector',
-    district: 'Chamoli',
-    state: 'Uttarakhand',
-    type: 'Landslide',
-    level: 'moderate',
-    levelText: 'Moderate Watch',
-    updated: '2 hours ago',
-    desc: 'Ground movement sensors show elevated readings. Continuous monitoring active. Tourist movement advisory issued.',
-    metricName: 'Displacement',
-    metricVal: '4.2 mm/day',
-    stat2Name: 'Rainfall',
-    stat2Val: '40 mm/24h',
-    stat3Name: 'AI Hazard Index',
-    stat3Val: '4.6 / 10',
-    stat4Name: 'Status',
-    stat4Val: 'Monitoring',
-    score: 46,
-    smsDispatched: '1,100 residents',
-    authority: 'Uttarakhand SDMA'
-  },
-  {
-    id: 'ALT-DL-003',
-    title: 'Delhi NCR Yamuna Belt',
-    district: 'East Delhi',
-    state: 'Delhi',
-    type: 'Flood',
-    level: 'low',
-    levelText: 'Low / Watch',
-    updated: '5 hours ago',
-    desc: 'Yamuna level within watch band. No immediate overflow risk. Monitoring continues through night.',
-    metricName: 'River Level',
-    metricVal: 'Safe band',
-    stat2Name: 'Rainfall',
-    metricVal2: '18 mm/24h',
-    stat2Val: '18 mm/24h',
-    stat3Name: 'AI Hazard Index',
-    stat3Val: '2.1 / 10',
-    stat4Name: 'Road Status',
-    stat4Val: 'Open',
-    score: 21,
-    smsDispatched: 'Advisory only',
-    authority: 'Delhi DDMA'
-  }
+// --- GLOBAL VARIABLES ---
+let allAlerts = [];
+let filteredAlerts = [];
+let refreshTimer = 30;
+let timerInterval;
+
+// --- FALLBACK MOCK DATA ---
+// Taki UI khali na lage agar APIs me currently alert na ho (Hackathon standard practice)
+const mockData = [
+    { id: 'm1', title: 'IMD Yellow Warning — Coastal Odisha', desc: 'IMD issues yellow warnings for 3 days; western and coastal Odisha on alert for intense precipitation.', state: 'Odisha', severity: 'HIGH', type: 'weather', source: 'Pragativadi News', time: '3h ago', lat: 19.8, lng: 85.8, location: 'Coastal Odisha' },
+    { id: 'm2', title: 'Heavy Rainfall Advisory — South India', desc: 'IMD Heavy Rain Alert: South India braces for storms, waterlogging, and coastal squalls.', state: 'Tamil Nadu', severity: 'HIGH', type: 'weather', source: 'Urban Acres / IMD', time: '2d ago', lat: 11.1, lng: 78.6, location: 'South India' },
+    { id: 'm3', title: 'Flash Flood Alert — Bihar & UP', desc: 'Heavy Nepal rains trigger flash floods in Bihar and UP downstream river basins.', state: 'Bihar', severity: 'SEVERE', type: 'flood', source: 'Jagranjosh / NDTV', time: '6d ago', lat: 25.6, lng: 85.1, location: 'Patna / Gorakhpur' },
+    { id: 'm4', title: 'Red Alert Gujarat — Monsoon Extreme', desc: 'Red alert in Gujarat for extreme monsoon rain and flood risk. Local administration on high alert.', state: 'Gujarat', severity: 'SEVERE', type: 'flood', source: 'India Today', time: '12h ago', lat: 23.0, lng: 72.5, location: 'Ahmedabad / Surat' },
+    { id: 'm5', title: 'Heavy Flood Warning — Guwahati', desc: 'Brahmaputra water level 3.2m above danger mark. Immediate evacuation advised for low-lying areas.', state: 'Assam', severity: 'SEVERE', type: 'flood', source: 'Assam SDMA', time: '30m ago', lat: 26.1, lng: 91.7, location: 'Guwahati' },
+    { id: 'm6', title: 'Cyclone Alert — Puri Coast', desc: 'Severe Cyclonic Storm approaching Odisha coast with wind speed 130km/h. IMD issues red alert.', state: 'Odisha', severity: 'SEVERE', type: 'cyclone', source: 'IMD Bulletin', time: '1h ago', lat: 19.8, lng: 85.8, location: 'Puri' },
+    { id: 'm7', title: 'Cloudburst — Kishtwar', desc: 'Sudden cloudburst reported in Kishtwar district. Flash flood warning issued for downstream river.', state: 'J&K', severity: 'SEVERE', type: 'weather', source: 'J&K SDMA', time: '2h ago', lat: 33.3, lng: 75.7, location: 'Kishtwar' },
+    { id: 'm8', title: 'Landslide Risk — Wayanad', desc: 'Continuous rainfall for 72 hours. Slope instability detected by Geological Survey of India.', state: 'Kerala', severity: 'HIGH', type: 'landslide', source: 'GSI Advisory', time: '1h ago', lat: 11.6, lng: 76.1, location: 'Wayanad' },
+    { id: 'm9', title: 'Heat Wave Alert — Nagpur', desc: 'Temperature crossed 46°C in Vidarbha region. Red alert issued by IMD.', state: 'Maharashtra', severity: 'HIGH', type: 'heatwave', source: 'IMD Nagpur', time: '3h ago', lat: 21.1, lng: 79.0, location: 'Nagpur' },
+    { id: 'm10', title: 'Landslide — Mandi Highway', desc: 'NH-3 Mandi to Manali highway blocked due to massive rockfall near Pandoh Dam.', state: 'Himachal Pradesh', severity: 'MODERATE', type: 'landslide', source: 'HP Traffic Police', time: '5h ago', lat: 31.5, lng: 76.9, location: 'Mandi' },
+    { id: 'm11', title: 'Flood Watch — Patna', desc: 'Ganga river flowing near warning level at Gandhi Ghat. District administration alerts Diara areas.', state: 'Bihar', severity: 'MODERATE', type: 'flood', source: 'Central Water Commission', time: '6h ago', lat: 25.6, lng: 85.1, location: 'Patna' },
+    { id: 'm12', title: 'Cold Wave — Srinagar', desc: 'Temperature dropped to -8°C in Srinagar. Chilla-i-Kalan freeze causes pipe disruption.', state: 'J&K', severity: 'MODERATE', type: 'heatwave', source: 'MeT Srinagar', time: '10h ago', lat: 34.0, lng: 74.7, location: 'Srinagar' },
+    { id: 'm13', title: 'Earthquake M3.5 — Delhi NCR', desc: 'Mild earthquake tremors felt in Delhi, Gurgaon, and Rohtak. No loss of life reported.', state: 'Delhi', severity: 'LOW', type: 'earthquake', source: 'NCS India', time: '8h ago', lat: 28.6, lng: 77.2, location: 'Delhi' },
+    { id: 'm14', title: 'Flood Update — Bhubaneswar', desc: 'Mahanadi water level receding in Hirakud downstream. Relief material dispatched.', state: 'Odisha', severity: 'LOW', type: 'flood', source: 'Odisha SDMA', time: '14h ago', lat: 20.2, lng: 85.8, location: 'Bhubaneswar' }
 ];
 
-// fix accidental key if any
-alertsData = alertsData.map(a => {
-  if (a.metricVal2) delete a.metricVal2;
-  return a;
+// --- HELPER DICTIONARY FOR STATES ---
+const STATE_MATCH = ["Uttarakhand", "Odisha", "Assam", "Gujarat", "Maharashtra", "Kerala", "Tamil Nadu", "Bihar", "Himachal Pradesh", "Delhi", "J&K"];
+
+function guessState(title) {
+    let t = title.toLowerCase();
+    if(t.includes('delhi') || t.includes('ncr')) return 'Delhi';
+    if(t.includes('kashmir') || t.includes('srinagar')) return 'J&K';
+    if(t.includes('gujarat') || t.includes('surat')) return 'Gujarat';
+    if(t.includes('assam') || t.includes('guwahati') || t.includes('tezpur')) return 'Assam';
+    for (let s of STATE_MATCH) {
+        if (t.includes(s.toLowerCase())) return s;
+    }
+    return "India (General)";
+}
+
+// --- INIT APP ---
+document.addEventListener('DOMContentLoaded', () => {
+    fetchLiveAlerts();
+    setupFilters();
+    startTimer();
+
+    document.getElementById('btnRefresh').addEventListener('click', () => {
+        resetTimer();
+        fetchLiveAlerts();
+    });
 });
 
-let currentFilter = 'all';
-let currentStateFilter = 'all';
-let currentTypeFilter = 'all';
+// --- API FETCHING LOGIC ---
+async function fetchLiveAlerts() {
+    const listEl = document.getElementById('alertsList');
+    listEl.innerHTML = `
+        <div class="loading-state">
+            <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+            <p>Syncing live APIs (USGS, ReliefWeb)...</p>
+        </div>`;
 
-const levelStyles = {
-  severe: {
-    border: 'border-red-500/30',
-    badge: 'severe',
-    text: 'text-red',
-    bar: 'bg-red'
-  },
-  high: {
-    border: 'border-orange-500/30',
-    badge: 'high',
-    text: 'text-orange',
-    bar: 'bg-orange'
-  },
-  moderate: {
-    border: 'border-yellow-500/30',
-    badge: 'moderate',
-    text: 'text-yellow',
-    bar: 'bg-yellow'
-  },
-  low: {
-    border: 'border-emerald-500/20',
-    badge: 'low',
-    text: 'text-green',
-    bar: 'bg-green'
-  }
-};
+    try {
+        // 1. USGS Seismic API (India Bounding Box)
+        const usgsUrl = 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=6.0&maxlatitude=37.0&minlongitude=68.0&maxlongitude=98.0&limit=10&minmagnitude=3.0';
+        
+        // 2. UN ReliefWeb API (India Specific)
+        const rwUrl = 'https://api.reliefweb.int/v1/disasters?appname=bhoomi&filter[field]=country.iso3&filter[value]=ind&sort[]=date:desc&limit=5&profile=list';
 
-function renderAlerts(data) {
-  const container = document.getElementById('alertsContainer');
-  if (!container) return;
-  container.innerHTML = '';
+        const [usgsRes, rwRes] = await Promise.all([fetch(usgsUrl), fetch(rwUrl)]);
+        const usgsData = await usgsRes.json();
+        const rwData = await rwRes.json();
 
-  if (!data.length) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">🛡️</div>
-        <div class="empty-title">No Active Alerts Found</div>
-        <div class="empty-desc">Try changing disaster type, state or search filters.</div>
-      </div>`;
-    return;
-  }
+        let fetchedAlerts = [];
 
-  data.forEach(item => {
-    const card = document.createElement('div');
-    card.className = `alert-card ${item.level}`;
-    card.innerHTML = `
-      <div class="alert-card-inner">
-        <div class="alert-left">
-          <div class="alert-meta-row">
-            <span class="alert-badge ${item.level}">
-              <span class="alert-badge-dot"></span> ${item.levelText}
-            </span>
-            <span class="alert-time">🕒 ${item.updated}</span>
-            <span class="alert-id">#${item.id}</span>
-            <span class="alert-id">${item.type}</span>
-          </div>
-          <div>
-            <h2 class="alert-title">
-              ${item.title}
-              <span class="alert-title-sub">• ${item.district}, ${item.state}</span>
-            </h2>
-            <p class="alert-desc">${item.desc}</p>
-          </div>
-          <div class="alert-stats-grid">
-            <div class="alert-stat">
-              <div class="alert-stat-label">${item.metricName || 'Metric'}</div>
-              <div class="alert-stat-value ${item.level}">${item.metricVal}</div>
-            </div>
-            <div class="alert-stat">
-              <div class="alert-stat-label">${item.stat2Name}</div>
-              <div class="alert-stat-value ${item.level}">${item.stat2Val}</div>
-            </div>
-            <div class="alert-stat">
-              <div class="alert-stat-label">${item.stat3Name}</div>
-              <div class="alert-stat-value ${item.level}">${item.stat3Val}</div>
-            </div>
-            <div class="alert-stat">
-              <div class="alert-stat-label">${item.stat4Name}</div>
-              <div class="alert-stat-value">${item.stat4Val}</div>
-            </div>
-          </div>
-        </div>
-        <div class="alert-right">
-          <div class="alert-score-block">
-            <div class="alert-score-header">
-              <span class="alert-score-label">Threat Score</span>
-              <span class="alert-score-value ${item.level}">${item.score}%</span>
-            </div>
-            <div class="alert-progress">
-              <div class="alert-progress-bar ${item.level}" style="width:${item.score}%"></div>
-            </div>
-          </div>
-          <div class="alert-info-list">
-            <div class="alert-info-item">✅ SMS: ${item.smsDispatched}</div>
-            <div class="alert-info-item">🛡️ ${item.authority}</div>
-          </div>
-          <div class="alert-actions">
-            <button class="alert-btn alert-btn-broadcast ${item.level}" type="button"
-              onclick="triggerToast('Re-broadcasting ${item.type} alert for ${item.title} (5–10 km)...')">
-              📡 Re-Broadcast
-            </button>
-            <button class="alert-btn alert-btn-map" type="button"
-              onclick="triggerToast('Opening GIS layer for ${item.title}...')">
-              📍 Map
-            </button>
-          </div>
-        </div>
-      </div>`;
-    container.appendChild(card);
-  });
+        // Parse USGS
+        if (usgsData.features) {
+            usgsData.features.forEach(f => {
+                let mag = f.properties.mag;
+                let severity = mag >= 5.0 ? 'SEVERE' : (mag >= 4.5 ? 'HIGH' : (mag >= 4.0 ? 'MODERATE' : 'LOW'));
+                
+                fetchedAlerts.push({
+                    id: f.id,
+                    title: `Earthquake M${mag.toFixed(1)} — ${f.properties.place}`,
+                    desc: `Live Seismic Event detected inside Indian Territory. Depth: ${f.geometry.coordinates[2]}km. IMD & National Seismology Center monitoring.`,
+                    state: guessState(f.properties.place),
+                    severity: severity,
+                    type: 'earthquake',
+                    source: 'USGS Live API',
+                    time: 'Just now',
+                    lat: f.geometry.coordinates[1],
+                    lng: f.geometry.coordinates[0],
+                    location: f.properties.place.split(' of ').pop()
+                });
+            });
+        }
 
-  const countEl = document.getElementById('totalAlertsCount');
-  if (countEl) countEl.textContent = String(data.length).padStart(2, '0');
+        // Parse ReliefWeb
+        if (rwData.data) {
+            rwData.data.forEach(d => {
+                let title = d.fields.name;
+                let typeRaw = (d.fields.primary_type.name || "").toLowerCase();
+                let type = 'weather';
+                if(typeRaw.includes('flood')) type = 'flood';
+                else if(typeRaw.includes('cyclone') || typeRaw.includes('storm')) type = 'cyclone';
+                else if(typeRaw.includes('landslide')) type = 'landslide';
+
+                fetchedAlerts.push({
+                    id: d.id,
+                    title: title,
+                    desc: `Official disaster report via UN ReliefWeb and Indian Authorities. Ongoing monitoring required.`,
+                    state: guessState(title),
+                    severity: 'HIGH', // Default for RW active disasters
+                    type: type,
+                    source: 'ReliefWeb / NDMA',
+                    time: '1h ago',
+                    lat: 22.5, lng: 78.9, location: guessState(title)
+                });
+            });
+        }
+
+        // Merge Live Data with Mock Data (To fill the UI like the screenshot)
+        allAlerts = [...fetchedAlerts, ...mockData];
+        applyFilters(); // Renders the list and updates stats
+
+    } catch (error) {
+        console.error("API Fetch Error:", error);
+        allAlerts = [...mockData]; // Fallback purely to mock data
+        applyFilters();
+    }
+}
+
+// --- FILTERING & SEARCH ---
+function setupFilters() {
+    const filters = ['filterState', 'filterSeverity', 'filterType', 'searchInput'];
+    filters.forEach(id => {
+        document.getElementById(id).addEventListener('input', applyFilters);
+    });
+
+    document.getElementById('btnClear').addEventListener('click', () => {
+        document.getElementById('filterState').value = 'all';
+        document.getElementById('filterSeverity').value = 'all';
+        document.getElementById('filterType').value = 'all';
+        document.getElementById('searchInput').value = '';
+        applyFilters();
+    });
 }
 
 function applyFilters() {
-  const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
-  const filtered = alertsData.filter(item => {
-    const okLevel = currentFilter === 'all' || item.level === currentFilter;
-    const okState = currentStateFilter === 'all' || item.state === currentStateFilter;
-    const okType = currentTypeFilter === 'all' || item.type === currentTypeFilter;
-    const okSearch =
-      item.title.toLowerCase().includes(q) ||
-      item.state.toLowerCase().includes(q) ||
-      item.district.toLowerCase().includes(q) ||
-      item.type.toLowerCase().includes(q) ||
-      item.desc.toLowerCase().includes(q);
-    return okLevel && okState && okType && okSearch;
-  });
-  renderAlerts(filtered);
+    const stateVal = document.getElementById('filterState').value;
+    const sevVal = document.getElementById('filterSeverity').value;
+    const typeVal = document.getElementById('filterType').value;
+    const searchVal = document.getElementById('searchInput').value.toLowerCase();
+
+    filteredAlerts = allAlerts.filter(a => {
+        const matchState = stateVal === 'all' || a.state === stateVal;
+        const matchSev = sevVal === 'all' || a.severity === sevVal;
+        const matchType = typeVal === 'all' || a.type === typeVal;
+        const matchSearch = a.title.toLowerCase().includes(searchVal) || a.desc.toLowerCase().includes(searchVal) || a.location.toLowerCase().includes(searchVal);
+        return matchState && matchSev && matchType && matchSearch;
+    });
+
+    updateStats();
+    renderAlertList();
 }
 
-function filterByLevel(level) {
-  currentFilter = level;
-  document.querySelectorAll('.filter-tab').forEach(btn => btn.classList.remove('active'));
-  document.querySelector(`.filter-tab[data-level="${level}"]`)?.classList.add('active');
-  applyFilters();
+// --- UPDATING UI ---
+function updateStats() {
+    let severeCount = filteredAlerts.filter(a => a.severity === 'SEVERE').length;
+    let highCount = filteredAlerts.filter(a => a.severity === 'HIGH').length;
+    
+    // Unique States count
+    let statesSet = new Set();
+    filteredAlerts.forEach(a => {
+        if(a.state && a.state !== "India (General)") statesSet.add(a.state);
+    });
+
+    document.getElementById('statTotal').innerText = filteredAlerts.length;
+    document.getElementById('statSevere').innerText = severeCount;
+    document.getElementById('statHigh').innerText = highCount;
+    document.getElementById('statStates').innerText = statesSet.size;
+
+    document.getElementById('showingText').innerHTML = `Showing <b>${filteredAlerts.length}</b> of <b>${allAlerts.length}</b> alerts`;
 }
 
-function handleSearch() { applyFilters(); }
-function handleStateFilter() {
-  currentStateFilter = document.getElementById('stateSelect').value;
-  applyFilters();
-}
-function handleTypeFilter() {
-  currentTypeFilter = document.getElementById('typeSelect').value;
-  applyFilters();
-}
+function renderAlertList() {
+    const listEl = document.getElementById('alertsList');
+    
+    if (filteredAlerts.length === 0) {
+        listEl.innerHTML = `<div class="loading-state"><i class="fa-solid fa-folder-open fa-2x"></i><p>No alerts match your filters.</p></div>`;
+        return;
+    }
 
-function syncSensors() {
-  const icon = document.getElementById('syncIcon');
-  if (icon) icon.style.animation = 'spin 1s linear';
-  if (!document.getElementById('spinKey')) {
-    const s = document.createElement('style');
-    s.id = 'spinKey';
-    s.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
-    document.head.appendChild(s);
-  }
-  setTimeout(() => {
-    if (icon) icon.style.animation = '';
-    triggerToast('National grid synced · IMD/CWC/IoT feeds updated');
-  }, 900);
-}
+    let html = "";
+    filteredAlerts.forEach(a => {
+        // Icon mapping
+        let icon = 'fa-circle-exclamation';
+        if(a.type === 'earthquake') icon = 'fa-house-crack';
+        if(a.type === 'flood') icon = 'fa-water';
+        if(a.type === 'cyclone') icon = 'fa-hurricane';
+        if(a.type === 'landslide') icon = 'fa-mountain';
+        if(a.type === 'weather') icon = 'fa-cloud-showers-heavy';
+        if(a.type === 'heatwave') icon = 'fa-temperature-arrow-up';
 
-function openModal() {
-  document.getElementById('broadcastModal')?.classList.remove('hidden');
-}
-function closeModal() {
-  document.getElementById('broadcastModal')?.classList.add('hidden');
-}
+        // CSS class mappings
+        let sevClass = a.severity.toLowerCase();
 
-function submitBroadcast(e) {
-  e.preventDefault();
-  const zone = document.getElementById('modalZone').value.trim();
-  const type = document.getElementById('modalType').value;
-  const severity = document.getElementById('modalSeverity').value;
-  const metric = document.getElementById('modalMetric').value.trim();
-  const radius = document.getElementById('modalRadius').value;
-  const msg = document.getElementById('modalMsg').value.trim();
+        html += `
+        <div class="alert-card ${sevClass}">
+            <div class="card-icon"><i class="fa-solid ${icon}"></i></div>
+            
+            <div class="card-content">
+                <div class="card-title-row">
+                    <h3>${a.title}</h3>
+                    <span class="sev-badge">${a.severity}</span>
+                </div>
+                <p class="card-desc">${a.desc}</p>
+                
+                <div class="card-meta">
+                    <span class="meta-item"><i class="fa-solid fa-location-dot"></i> ${a.location}</span>
+                    <span class="meta-item"><i class="fa-regular fa-flag"></i> ${a.state !== 'India (General)' ? a.state : 'India'}</span>
+                    <span class="meta-item"><i class="fa-solid fa-tag"></i> ${a.type}</span>
+                    <span class="meta-item"><i class="fa-solid fa-satellite-dish"></i> ${a.source}</span>
+                </div>
+            </div>
 
-  const scoreMap = { severe: 90, high: 72, moderate: 48, low: 22 };
-  const parts = zone.split('-');
-  const title = (parts[0] || zone).trim();
-  const state = (parts[1] || 'India').trim();
+            <div class="card-right">
+                <span class="time-badge ${a.time.includes('now') ? 'recent' : ''}">
+                    <i class="fa-regular fa-clock"></i> ${a.time}
+                </span>
+            </div>
+        </div>
+        `;
+    });
 
-  alertsData.unshift({
-    id: 'ALT-IN-' + Math.floor(100 + Math.random() * 900),
-    title,
-    district: 'Target Sector',
-    state,
-    type,
-    level: severity,
-    levelText: severity.charAt(0).toUpperCase() + severity.slice(1) + ' Risk',
-    updated: 'Just now',
-    desc: msg,
-    metricName: 'Key Metric',
-    metricVal: metric,
-    stat2Name: 'Geofence',
-    stat2Val: radius === 'district' ? 'Full district' : radius + ' km',
-    stat3Name: 'AI Hazard Index',
-    stat3Val: (scoreMap[severity] / 10).toFixed(1) + ' / 10',
-    stat4Name: 'Status',
-    stat4Val: 'Broadcasted',
-    score: scoreMap[severity],
-    smsDispatched: 'Geofenced residents notified',
-    authority: 'National Emergency Ops'
-  });
-
-  closeModal();
-  e.target.reset();
-  applyFilters();
-  triggerToast(`${type} broadcast dispatched for ${title}`);
-
-  const smsEl = document.getElementById('smsSentCount');
-  if (smsEl) {
-    const n = parseInt(String(smsEl.textContent).replace(/,/g, ''), 10) || 0;
-    smsEl.textContent = (n + 2500).toLocaleString('en-IN');
-  }
+    listEl.innerHTML = html;
 }
 
-function triggerToast(message) {
-  const toast = document.getElementById('toast');
-  const msg = document.getElementById('toastMsg');
-  if (!toast || !msg) return;
-  msg.textContent = message;
-  toast.classList.remove('toast-hidden');
-  setTimeout(() => toast.classList.add('toast-hidden'), 3000);
+// --- TIMER LOGIC ---
+function startTimer() {
+    timerInterval = setInterval(() => {
+        refreshTimer--;
+        document.getElementById('countdownTimer').innerText = refreshTimer + 's';
+        
+        if(refreshTimer <= 0) {
+            resetTimer();
+            fetchLiveAlerts();
+        }
+    }, 1000);
 }
 
-document.addEventListener('click', (e) => {
-  if (e.target.id === 'broadcastModal') closeModal();
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-  renderAlerts(alertsData);
-});
+function resetTimer() {
+    refreshTimer = 30;
+    document.getElementById('countdownTimer').innerText = refreshTimer + 's';
+}

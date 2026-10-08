@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BhoomiSuraksha — Live Alert Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  :root{
+    --bg:#050810;--panel:rgba(16,24,40,.66);--line:rgba(16,185,129,.2);--text:#e5e7eb;--muted:#94a3b8;
+    --accent:#10b981;--accent2:#34d399;--severe:#ef4444;--high:#f97316;--moderate:#eab308;--low:#10b981;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    padding:14px 22px;border-bottom:1px solid var(--line);background:rgba(5,8,16,.85);position:sticky;top:0;z-index:20;backdrop-filter:blur(12px)}
+  .brand{font-weight:800;font-size:18px;display:flex;align-items:center;gap:10px}
+  .brand i{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+  nav{display:flex;gap:6px;flex-wrap:wrap}
+  nav a{color:var(--muted);text-decoration:none;font-size:13px;font-weight:600;padding:7px 12px;border-radius:10px}
+  nav a:hover,nav a.on{color:var(--accent2);background:rgba(16,185,129,.12)}
+  .wrap{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);gap:16px;padding:16px 22px 28px}
+  @media(max-width:980px){.wrap{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;backdrop-filter:blur(14px)}
+  .panel h2{font-size:15px;font-weight:700;margin-bottom:12px}
+  #map{height:520px;border-radius:14px;border:1px solid var(--line);background:#0b0f1a}
+  @media(max-width:980px){#map{height:380px}}
+  .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  button,select{font:600 13px 'Inter',sans-serif;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--text);padding:9px 14px;cursor:pointer}
+  button.primary{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#04130d;border:0}
+  button:focus-visible,select:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+  .loc{font-size:13px;color:var(--muted)}
+  .pipe{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+  .step{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px}
+  .step b{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px}
+  .step span{font-size:13px;font-weight:700}
+  .step.low{border-color:rgba(16,185,129,.4)}.step.moderate{border-color:rgba(234,179,8,.5)}
+  .step.high{border-color:rgba(249,115,22,.6)}.step.severe{border-color:var(--severe);background:rgba(239,68,68,.12)}
+  .nodes{display:grid;gap:10px}
+  .node{border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:12px;background:rgba(255,255,255,.03)}
+  .node .top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+  .node .name{font-weight:700;font-size:14px}
+  .badge{font-size:11px;font-weight:800;padding:4px 10px;border-radius:99px;color:#04130d;background:var(--low)}
+  .badge.MODERATE{background:var(--moderate)}.badge.HIGH{background:var(--high)}
+  .badge.SEVERE{background:var(--severe);color:#fff;animation:pulse 1s infinite}
+  @keyframes pulse{50%{opacity:.55}}
+  @media(prefers-reduced-motion:reduce){.badge.SEVERE{animation:none}}
+  .vals{font-size:22px;font-weight:800;margin:4px 0}
+  .vals small{font-size:12px;color:var(--muted);font-weight:500;margin-left:6px}
+  .sub{font-size:12px;color:var(--muted);line-height:1.5}
+  .log{max-height:190px;overflow:auto;font-size:12px;line-height:1.6;color:var(--muted)}
+  .log div{padding:3px 0;border-bottom:1px dashed rgba(255,255,255,.06)}
+  .log b{color:var(--text);font-weight:600}
+  .col{display:flex;flex-direction:column;gap:16px}
+  .empty{color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><i></i>BhoomiSuraksha <span style="font-weight:500;color:var(--muted);font-size:13px">Live Alert Demo</span></div>
+  <nav>
+    <a href="index.html">Home</a><a href="dashboard.html">Dashboard</a>
+    <a href="live-alert-demo.html" class="on">Live Demo</a><a href="admin-stats.html">System Stats</a>
+    <a href="govt-data-map.html">Govt Data Map</a><a href="mobile-siren.html">Mobile Siren</a>
+  </nav>
+</header>
+
+<div class="wrap">
+  <section class="panel">
+    <h2>Meri location aur sensor nodes</h2>
+    <div class="bar">
+      <button class="primary" id="locBtn">Meri location detect karo</button>
+      <label class="loc">Alert radius
+        <select id="radius"><option value="5">5 km</option><option value="10">10 km</option><option value="15" selected>15 km</option></select>
+      </label>
+      <span class="loc" id="locText">Location abhi detect nahi hui.</span>
+    </div>
+    <div id="map" role="application" aria-label="Sensor nodes ka map"></div>
+  </section>
+
+  <aside class="col">
+    <section class="panel">
+      <h2>Sense → Predict → Alert → Respond</h2>
+      <div class="pipe" id="pipe">
+        <div class="step" id="pSense"><b>Sense</b><span>—</span></div>
+        <div class="step" id="pPredict"><b>Predict</b><span>—</span></div>
+        <div class="step" id="pAlert"><b>Alert</b><span>—</span></div>
+        <div class="step" id="pRespond"><b>Respond</b><span>—</span></div>
+      </div>
+      <div class="nodes" id="nodes"><div class="empty">Sensor data load ho raha hai…</div></div>
+    </section>
+    <section class="panel">
+      <h2>Live event log</h2>
+      <div class="log" id="log"><div class="empty">Abhi koi event nahi.</div></div>
+    </section>
+  </aside>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function(){
+  'use strict';
+  const API = window.BHOOMI_API || (['localhost','127.0.0.1'].includes(location.hostname) ? 'http://localhost:5000' : location.origin);
+  const $ = id => document.getElementById(id);
+  const COLORS = {LOW:'#10b981',MODERATE:'#eab308',HIGH:'#f97316',SEVERE:'#ef4444'};
+  const ICONS = {jalNode:'🌊',bhumiNode:'⛰️',vanNode:'🔥',vayuNode:'🌫️'};
+  const RANK = {LOW:0,MODERATE:1,HIGH:2,SEVERE:3};
+
+  const map = L.map('map',{zoomControl:true}).setView([21.1524,79.0805],10);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+    attribution:'&copy; OpenStreetMap &copy; CARTO',maxZoom:19}).addTo(map);
+
+  let me=null, meMarker=null, meCircle=null;
+  const nodeMarkers={}, nodeCircles={};
+  const lastRisk={}; let lastSirenActive=false, firstLoad=true;
+
+  const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function haversine(a,b,c,d){
+    const R=6371,r=x=>x*Math.PI/180,dLat=r(c-a),dLon=r(d-b);
+    const h=Math.sin(dLat/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dLon/2)**2;
+    return 2*R*Math.asin(Math.sqrt(h));
+  }
+  function log(msg){
+    const box=$('log'); if(box.querySelector('.empty')) box.innerHTML='';
+    const t=new Date().toLocaleTimeString('en-IN');
+    const div=document.createElement('div'); div.innerHTML='<b>'+t+'</b> &nbsp;'+esc(msg);
+    box.prepend(div); while(box.children.length>60) box.removeChild(box.lastChild);
+  }
+  function radiusKm(){ return Number($('radius').value); }
+
+  /* ---------- Location (koi fake fallback nahi) ---------- */
+  function setMe(lat,lon,acc){
+    me={lat,lon};
+    $('locText').textContent='Aapki location: '+lat.toFixed(4)+', '+lon.toFixed(4)+(acc?' (±'+Math.round(acc)+' m)':'');
+    if(meMarker) map.removeLayer(meMarker); if(meCircle) map.removeLayer(meCircle);
+    meMarker=L.circleMarker([lat,lon],{radius:8,color:'#fff',weight:2,fillColor:'#38bdf8',fillOpacity:1}).addTo(map).bindTooltip('Aap yahan ho');
+    meCircle=L.circle([lat,lon],{radius:radiusKm()*1000,color:'#38bdf8',weight:1.5,fillOpacity:.07,dashArray:'6 6'}).addTo(map);
+    map.fitBounds(meCircle.getBounds(),{padding:[30,30]});
+    log('Location mili — '+radiusKm()+' km alert radius set');
+    if(lastSensors) renderNodes(lastSensors);
+  }
+  $('locBtn').addEventListener('click',()=>{
+    if(!navigator.geolocation){ $('locText').textContent='Is browser mein GPS support nahi hai.'; return; }
+    $('locText').textContent='Location detect ho rahi hai…';
+    navigator.geolocation.getCurrentPosition(
+      p=>setMe(p.coords.latitude,p.coords.longitude,p.coords.accuracy),
+      e=>{ $('locText').textContent = e.code===1 ? 'Location permission deny hui. Browser settings mein allow karo.' : 'Location nahi mil paayi. Dobara try karo.'; },
+      {enableHighAccuracy:true,timeout:15000,maximumAge:60000}
+    );
+  });
+  $('radius').addEventListener('change',()=>{ if(meCircle) meCircle.setRadius(radiusKm()*1000); if(lastSensors) renderNodes(lastSensors); });
+
+  /* ---------- Sensors ---------- */
+  let lastSensors=null;
+  function valueText(n){
+    const d=n.data||{};
+    if(n.nodeId==='jalNode') return {v:(d.waterLevel??0)+' cm',s:'Paani ka level • trend: '+(d.trend||'—')};
+    if(n.nodeId==='bhumiNode') return {v:(d.slopeTilt??0)+'°',s:'Slope tilt • vibration: '+(d.vibration??0)};
+    if(n.nodeId==='vanNode') return {v:(d.temperature??0)+' °C',s:'CO: '+(d.co??0)+' ppm • humidity: '+(d.humidity??0)+'%'};
+    return {v:'—',s:Object.entries(d).map(([k,v])=>k+': '+v).join(' • ')};
+  }
+  function renderNodes(sensors){
+    const list=Object.values(sensors);
+    $('nodes').innerHTML=list.map(n=>{
+      const t=valueText(n), loc=n.location||{};
+      let dist='';
+      if(me && loc.lat!=null){
+        const km=haversine(me.lat,me.lon,loc.lat,loc.lng);
+        dist='<br>Aapse '+km.toFixed(1)+' km door — '+(km<=radiusKm()?'<b style="color:#fca5a5">radius ke andar</b>':'radius ke bahar');
+      }
+      return '<div class="node"><div class="top"><span class="name">'+(ICONS[n.nodeId]||'📡')+' '+esc(n.name)+'</span>'+
+        '<span class="badge '+esc(n.risk)+'">'+esc(n.risk)+'</span></div>'+
+        '<div class="vals">'+esc(t.v)+'<small>'+esc(t.s)+'</small></div>'+
+        '<div class="sub">'+esc(n.hardware||'')+' • '+esc(loc.label||'')+
+        '<br>Last update: '+(n.timestamp?new Date(n.timestamp).toLocaleTimeString('en-IN'):'abhi tak data nahi')+dist+'</div></div>';
+    }).join('');
+
+    list.forEach(n=>{
+      const loc=n.location; if(!loc||loc.lat==null) return;
+      const c=COLORS[n.risk]||COLORS.LOW;
+      if(!nodeMarkers[n.nodeId]){
+        nodeMarkers[n.nodeId]=L.circleMarker([loc.lat,loc.lng],{radius:10,weight:2,color:'#fff',fillOpacity:1}).addTo(map);
+        nodeCircles[n.nodeId]=L.circle([loc.lat,loc.lng],{radius:radiusKm()*1000,weight:1,fillOpacity:.05}).addTo(map);
+      }
+      nodeMarkers[n.nodeId].setStyle({fillColor:c}).bindTooltip(n.name+' — '+n.risk);
+      nodeCircles[n.nodeId].setStyle({color:c,fillColor:c}).setRadius(radiusKm()*1000);
+      if(!firstLoad && lastRisk[n.nodeId] && lastRisk[n.nodeId]!==n.risk) log(n.name+': risk '+lastRisk[n.nodeId]+' → '+n.risk);
+      lastRisk[n.nodeId]=n.risk;
+    });
+    if(firstLoad && !me && list[0] && list[0].location) map.setView([list[0].location.lat,list[0].location.lng],11);
+    firstLoad=false;
+  }
+  function setStep(id,cls,text){ const e=$(id); e.className='step '+cls; e.querySelector('span').textContent=text; }
+
+  async function pollSensors(){
+    try{
+      const r=await fetch(API+'/api/sensors/live'); const j=await r.json();
+      const sensors=(j.data&&j.data.sensors)||{};
+      lastSensors=sensors; renderNodes(sensors);
+      const list=Object.values(sensors);
+      const active=list.filter(n=>n.timestamp).length;
+      setStep('pSense',active?'low':'moderate',active?active+'/'+list.length+' node live':'Data ka intezaar');
+      const top=list.reduce((m,n)=>RANK[n.risk]>RANK[m]?n.risk:m,'LOW');
+      setStep('pPredict',top.toLowerCase(),'Sabse upar risk: '+top);
+    }catch(e){
+      setStep('pSense','severe','Server offline'); $('nodes').innerHTML='<div class="empty">Backend se connect nahi ho paa raha. node server.js chalu hai?</div>';
+    }
+  }
+  async function pollSiren(){
+    try{
+      const r=await fetch(API+'/api/siren/status'); const s=await r.json();
+      setStep('pAlert',s.alertActive?'severe':'low',s.alertActive?'Siren ACTIVE':'Standby');
+      setStep('pRespond',s.connectedDevices?'low':'moderate',s.connectedDevices+' device siren par');
+      if(s.alertActive && !lastSirenActive) log('🚨 Siren fire hui: '+(s.message||'emergency alert'));
+      if(!s.alertActive && lastSirenActive) log('Siren state reset ho gayi');
+      lastSirenActive=!!s.alertActive;
+    }catch(e){ setStep('pAlert','moderate','Unknown'); setStep('pRespond','moderate','Unknown'); }
+  }
+  pollSensors(); pollSiren();
+  setInterval(pollSensors,3000); setInterval(pollSiren,3000);
+  log('Demo page connect ho gaya — live polling chalu (har 3 sec)');
+})();
+</script>
+</body>
+</html>

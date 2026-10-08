@@ -1,25 +1,38 @@
 {
   "name": "bhoomisuraksha",
-  "version": "2.0.0",
-  "description": "AI-Based Multi-Disaster Early Warning and Risk Monitoring System - SIH 2025",
+  "version": "5.1.0",
+  "description": "AI-Based Multi-Disaster Early Warning and Risk Monitoring System for India",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "sim": "node iot-simulator.js"
+  },
+  "keywords": [
+    "disaster",
+    "early-warning",
+    "AI",
+    "geofence",
+    "iot",
+    "india",
+    "BhoomiSuraksha"
+  ],
+  "author": "Team CodeFlow",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.20.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.3",
+    "express-rate-limit": "^8.7.0",
+    "firebase-admin": "^13.10.0",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^1.4.5-lts.2",
+    "openai": "^4.104.0",
+    "serverless-http": "^4.0.0"
   },
   "engines": {
-    "node": ">=18.0.0"
-  },
-  "dependencies": {
-    "axios": "^1.7.7",
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.0",
-    "firebase-admin": "^12.6.0",
-    "jsonwebtoken": "^9.0.2",
-    "multer": "^1.4.5-lts.1",
-    "openai": "^4.67.0",
-    "serverless-http": "^3.2.0"
+    "node": ">=18"
   }
 }

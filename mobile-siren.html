@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050810">
+<title>BhoomiSuraksha — Mobile Siren</title>
+<style>
+  :root { --bg:#050810; --card:rgba(15,23,42,.75); --line:rgba(255,255,255,.08); --txt:#e2e8f0; --mut:#94a3b8; --ok:#10b981; --warn:#f59e0b; --bad:#ef4444; }
+  * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; }
+  body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--txt);
+         padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom); min-height:100%; }
+  .wrap { max-width:480px; margin:0 auto; padding:20px 0 32px; }
+  h1 { font-size:22px; font-weight:800; display:flex; align-items:center; gap:10px; }
+  .sub { color:var(--mut); font-size:13px; margin:6px 0 18px; line-height:1.5; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:14px; }
+  .row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; font-size:14px; }
+  .row + .row { border-top:1px solid var(--line); }
+  .pill { font-size:11px; font-weight:800; padding:3px 10px; border-radius:999px; letter-spacing:.4px; }
+  .pill.ok { background:rgba(16,185,129,.15); color:var(--ok); }
+  .pill.warn { background:rgba(245,158,11,.15); color:var(--warn); }
+  .pill.bad { background:rgba(239,68,68,.15); color:var(--bad); }
+  .pill.off { background:rgba(148,163,184,.15); color:var(--mut); }
+  button { font:inherit; cursor:pointer; border:none; border-radius:14px; padding:15px 18px; font-weight:800; font-size:16px; width:100%; }
+  .btn-main { background:linear-gradient(135deg,#10b981,#059669); color:#fff; }
+  .btn-ghost { background:transparent; color:var(--txt); border:1px solid var(--line); font-size:14px; padding:12px; margin-top:10px; }
+  .hint { font-size:12px; color:var(--mut); line-height:1.55; margin-top:10px; }
+  .hist { list-style:none; font-size:13px; }
+  .hist li { padding:8px 0; border-top:1px solid var(--line); }
+  .hist li:first-child { border-top:none; }
+  .hist .t { color:var(--mut); font-size:11px; }
+  .empty { color:var(--mut); font-size:13px; }
+
+  /* ===== FULLSCREEN ALARM ===== */
+  #alarm { display:none; position:fixed; inset:0; z-index:9999; flex-direction:column; align-items:center; justify-content:center;
+           text-align:center; padding:24px; background:#b91c1c; color:#fff; animation:flash 0.8s steps(1) infinite; }
+  @keyframes flash { 0%{background:#b91c1c;} 50%{background:#450a0a;} }
+  #alarm .ic { font-size:84px; animation:shake .4s infinite; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+  #alarm h2 { font-size:34px; font-weight:900; letter-spacing:2px; margin:10px 0; }
+  #alarmMsg { font-size:18px; line-height:1.45; margin-bottom:10px; word-break:break-word; }
+  #alarmMeta { font-size:14px; opacity:.9; margin-bottom:26px; }
+  #alarm button { background:#fff; color:#b91c1c; max-width:340px; letter-spacing:1px; text-transform:uppercase; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🔔 Mobile Siren</h1>
+  <p class="sub">Ye page kholke rakho — emergency alert aate hi phone siren bajayega, vibrate karega aur screen flash karegi.</p>
+
+  <div class="card" id="setup">
+    <button class="btn-main" id="enableBtn">🛡️ Siren Protection ON karo</button>
+    <p class="hint">Browser ki policy ki wajah se siren ke liye ek baar button dabana zaroori hai. Iske saath location permission bhi maangi jayegi taaki sirf aapke ilaake ke alerts bajein.</p>
+  </div>
+
+  <div class="card">
+    <div class="row"><span>Server connection</span><span class="pill off" id="stConn">OFF</span></div>
+    <div class="row"><span>Siren audio</span><span class="pill off" id="stAudio">LOCKED</span></div>
+    <div class="row"><span>Aapki location</span><span class="pill off" id="stLoc">NOT SET</span></div>
+    <div class="row"><span>Screen awake</span><span class="pill off" id="stWake">NO</span></div>
+  </div>
+
+  <div class="card">
+    <div style="font-weight:800;margin-bottom:8px">Recent alerts</div>
+    <ul class="hist" id="hist"><li class="empty">Abhi tak koi alert nahi aaya.</li></ul>
+  </div>
+
+  <button class="btn-ghost" id="testBtn" disabled>🧪 3-second test siren</button>
+  <p class="hint">Dhyan do: phone lock ho ya browser background mein ho to browsers connection rok dete hain, isliye alert late ya miss ho sakta hai. Is page ko screen on rakhke kholo (hum screen-awake lock lene ki koshish karte hain). Har phone tak guaranteed pahunchne ke liye Cell Broadcast chahiye, jo telecom/NDMA ke through hota hai.</p>
+</div>
+
+<div id="alarm" role="alertdialog" aria-live="assertive">
+  <div class="ic">🚨</div>
+  <h2>EMERGENCY ALERT</h2>
+  <div id="alarmMsg"></div>
+  <div id="alarmMeta"></div>
+  <button id="ackBtn">Acknowledge & Silence</button>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var API = (['localhost', '127.0.0.1'].indexOf(location.hostname) !== -1) ? 'http://localhost:5000' : location.origin;
+  var ALERT_VALID_MS = 90 * 1000;       // server state bhi 90s me reset hota hai
+  var $ = function (id) { return document.getElementById(id); };
+
+  var audioCtx = null, osc = null, gain = null;
+  var es = null, retryTimer = null, retryMs = 2000;
+  var myPos = null, watchId = null;
+  var wakeLock = null;
+  var seen = {};                         // payload.time dedupe
+  var enabled = false, alarmOn = false, testTimer = null;
+  var history = [];
+  var cid = sessionStorage.getItem('sirenCid');
+  if (!cid) { cid = 'phone-' + Math.random().toString(36).slice(2, 12) + Math.random().toString(36).slice(2, 6); sessionStorage.setItem('sirenCid', cid); }
+  var demoEs = null, demoRetryT = null, demoRetryMs = 2000, lastLocPost = 0;
+
+  function setPill(id, text, cls) { var el = $(id); el.textContent = text; el.className = 'pill ' + cls; }
+
+  /* ---------- distance ---------- */
+  function km(a, b, c, d) {
+    var R = 6371, r = Math.PI / 180;
+    var dLat = (c - a) * r, dLon = (d - b) * r;
+    var x = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(a * r) * Math.cos(c * r) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return 2 * R * Math.asin(Math.sqrt(x));
+  }
+
+  /* ---------- audio ---------- */
+  function unlockAudio() {
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!audioCtx) audioCtx = new AC();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      var b = audioCtx.createBuffer(1, 1, 22050), s = audioCtx.createBufferSource();
+      s.buffer = b; s.connect(audioCtx.destination); s.start(0);
+      setPill('stAudio', 'READY', 'ok');
+      return true;
+    } catch (e) { setPill('stAudio', 'FAILED', 'bad'); return false; }
+  }
+
+  function startSiren(seconds) {
+    if (!audioCtx) return;
+    stopSiren();
+    try {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      osc = audioCtx.createOscillator(); gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      gain.gain.setValueAtTime(0.9, audioCtx.currentTime);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      var now = audioCtx.currentTime, n = seconds || 120;
+      for (var i = 0; i < n; i++) {
+        osc.frequency.setValueAtTime(800, now + i);
+        osc.frequency.linearRampToValueAtTime(1600, now + i + 0.5);
+        osc.frequency.linearRampToValueAtTime(800, now + i + 1);
+      }
+      osc.start();
+      osc.stop(now + n);
+    } catch (e) { console.error('siren error', e); }
+  }
+
+  function stopSiren() {
+    try { if (osc) { osc.stop(); osc.disconnect(); } } catch (e) {}
+    try { if (gain) gain.disconnect(); } catch (e) {}
+    osc = null; gain = null;
+  }
+
+  var vibTimer = null;
+  function startVibrate() {
+    if (!navigator.vibrate) return;
+    navigator.vibrate([600, 250, 600, 250, 600]);
+    vibTimer = setInterval(function () { navigator.vibrate([600, 250, 600, 250, 600]); }, 3000);
+  }
+  function stopVibrate() { if (vibTimer) clearInterval(vibTimer); vibTimer = null; if (navigator.vibrate) navigator.vibrate(0); }
+
+  /* ---------- alarm UI ---------- */
+  function showAlarm(msg, meta) {
+    alarmOn = true;
+    $('alarmMsg').textContent = msg;          // textContent: XSS safe
+    $('alarmMeta').textContent = meta || '';
+    $('alarm').style.display = 'flex';
+    startSiren(120);
+    startVibrate();
+  }
+  function ack() {
+    alarmOn = false;
+    $('alarm').style.display = 'none';
+    stopSiren(); stopVibrate();
+  }
+
+  function addHistory(msg, note) {
+    history.unshift({ msg: msg, note: note, at: new Date() });
+    history = history.slice(0, 8);
+    var ul = $('hist');
+    ul.innerHTML = '';
+    history.forEach(function (h) {
+      var li = document.createElement('li');
+      var m = document.createElement('div'); m.textContent = h.msg;
+      var t = document.createElement('div'); t.className = 't';
+      t.textContent = h.at.toLocaleTimeString('en-IN') + (h.note ? ' · ' + h.note : '');
+      li.appendChild(m); li.appendChild(t); ul.appendChild(li);
+    });
+  }
+
+  /* ---------- alert handling ---------- */
+  function originOf(p) {
+    var lat = p.lat, lon = p.lon, rad = p.radiusKm;
+    if (p.origin && typeof p.origin === 'object') { lat = p.origin.lat; lon = p.origin.lon; rad = p.radiusKm || p.origin.radiusKm; }
+    if (p.location && typeof p.location === 'object') { lat = p.location.lat; lon = p.location.lon; rad = p.radiusKm || p.location.radiusKm; }
+    lat = Number(lat); lon = Number(lon); rad = Number(rad);
+    if (!isFinite(lat) || !isFinite(lon)) return null;
+    return { lat: lat, lon: lon, radiusKm: isFinite(rad) && rad > 0 ? rad : 15 };
+  }
+
+  function handleAlert(p, fromStatus) {
+    if (!p || !p.alertActive) return;
+    var id = String(p.time || p.triggeredAt || '');
+    if (id && seen[id]) return;
+    if (id) seen[id] = true;
+
+    var t = Number(p.time || p.triggeredAt);
+    if (isFinite(t) && Date.now() - t > ALERT_VALID_MS) return;   // purana alert dobara nahi bajega
+
+    var msg = String(p.message || 'EMERGENCY ALERT — BhoomiSuraksha').slice(0, 220);
+    var o = originOf(p);
+    var meta = '';
+
+    if (o && myPos) {
+      var d = km(myPos.lat, myPos.lon, o.lat, o.lon);
+      if (d > o.radiusKm) {
+        addHistory(msg, 'aapse ' + d.toFixed(1) + ' km door — siren nahi bajaya');
+        return;                                                    // radius ke bahar
+      }
+      meta = 'Alert area se ' + d.toFixed(1) + ' km door (radius ' + o.radiusKm + ' km)';
+    } else if (o && !myPos) {
+      // location pata nahi: safety-first — siren bajao, par bata do
+      meta = 'Aapki location unknown hai, isliye alert bajaya gaya';
+    } else {
+      meta = 'Area-wide alert';
+    }
+
+    addHistory(msg, meta);
+    showAlarm(msg, meta);
+  }
+
+  /* ---------- SSE with backoff ---------- */
+  function connect() {
+    if (!enabled) return;
+    connectDemo();
+    if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
+    if (es) { es.close(); es = null; }
+    setPill('stConn', 'CONNECTING', 'warn');
+    try { es = new EventSource(API + '/api/siren/stream'); } catch (e) { return scheduleRetry(); }
+
+    es.onopen = function () {
+      retryMs = 2000;
+      setPill('stConn', 'LIVE', 'ok');
+      // reconnect ke baad agar alert chal raha tha to pakdo
+      fetch(API + '/api/siren/status').then(function (r) { return r.json(); })
+        .then(function (s) { if (s && s.alertActive) handleAlert({ alertActive: true, message: s.message, time: s.triggeredAt }, true); })
+        .catch(function () {});
+    };
+    es.onmessage = function (ev) {
+      try { handleAlert(JSON.parse(ev.data)); } catch (e) {}
+    };
+    es.onerror = function () {
+      if (es) { es.close(); es = null; }     // browser ka auto-retry band, hum khud karte hain
+      setPill('stConn', 'OFFLINE', 'bad');
+      scheduleRetry();
+    };
+  }
+  function scheduleRetry() {
+    if (retryTimer || !enabled) return;
+    retryTimer = setTimeout(function () { retryTimer = null; connect(); }, retryMs);
+    retryMs = Math.min(retryMs * 2, 30000);
+  }
+
+  /* ---------- Demo / targeted stream (server radius check) ---------- */
+  function postLocation() {
+    if (!myPos || Date.now() - lastLocPost < 4000) return;
+    lastLocPost = Date.now();
+    fetch(API + '/api/demo/location', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cid: cid, lat: myPos.lat, lon: myPos.lon })
+    }).catch(function () {});
+  }
+
+  function connectDemo() {
+    if (!enabled) return;
+    if (demoRetryT) { clearTimeout(demoRetryT); demoRetryT = null; }
+    if (demoEs) { demoEs.close(); demoEs = null; }
+    var url = API + '/api/demo/stream?role=phone&cid=' + encodeURIComponent(cid);
+    if (myPos) url += '&lat=' + myPos.lat + '&lon=' + myPos.lon;
+    try { demoEs = new EventSource(url); } catch (e) { return scheduleDemoRetry(); }
+
+    demoEs.addEventListener('hello', function () { demoRetryMs = 2000; lastLocPost = 0; postLocation(); });
+    demoEs.addEventListener('alert', function (ev) {
+      try {
+        var p = JSON.parse(ev.data);
+        if (p.id && seen[p.id]) return;
+        if (p.id) seen[p.id] = true;
+        var meta = (p.demo ? 'DEMO SIMULATION · ' : '') +
+          (p.distanceKm != null ? 'Alert area se ' + p.distanceKm + ' km door (radius ' + p.radiusKm + ' km)' : 'Aapki location unknown hai, isliye alert bajaya gaya');
+        addHistory(String(p.message || 'ALERT'), meta);
+        showAlarm(String(p.message || 'EMERGENCY ALERT').slice(0, 220), meta);
+      } catch (e) {}
+    });
+    demoEs.addEventListener('skipped', function (ev) {
+      try {
+        var p = JSON.parse(ev.data);
+        if (p.id && seen[p.id]) return;
+        if (p.id) seen[p.id] = true;
+        addHistory(String(p.message || 'Alert'), 'aap radius ke bahar ho' + (p.distanceKm != null ? ' (' + p.distanceKm + ' km door)' : '') + ' — siren nahi bajaya');
+      } catch (e) {}
+    });
+    demoEs.addEventListener('stop', function () { ack(); });
+    demoEs.onerror = function () {
+      if (demoEs) { demoEs.close(); demoEs = null; }
+      scheduleDemoRetry();
+    };
+  }
+  function scheduleDemoRetry() {
+    if (demoRetryT || !enabled) return;
+    demoRetryT = setTimeout(function () { demoRetryT = null; connectDemo(); }, demoRetryMs);
+    demoRetryMs = Math.min(demoRetryMs * 2, 30000);
+  }
+
+  /* ---------- location ---------- */
+  function startLocation() {
+    if (!navigator.geolocation) { setPill('stLoc', 'UNSUPPORTED', 'warn'); return; }
+    setPill('stLoc', 'ASKING…', 'warn');
+    watchId = navigator.geolocation.watchPosition(function (p) {
+      myPos = { lat: p.coords.latitude, lon: p.coords.longitude };
+      setPill('stLoc', 'ON', 'ok');
+      postLocation();
+    }, function (err) {
+      setPill('stLoc', err.code === 1 ? 'DENIED' : 'UNAVAILABLE', 'warn');
+    }, { enableHighAccuracy: false, maximumAge: 60000, timeout: 15000 });
+  }
+
+  /* ---------- wake lock ---------- */
+  async function takeWakeLock() {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLock = await navigator.wakeLock.request('screen');
+        setPill('stWake', 'YES', 'ok');
+        wakeLock.addEventListener('release', function () { setPill('stWake', 'NO', 'off'); });
+      } else { setPill('stWake', 'UNSUPPORTED', 'warn'); }
+    } catch (e) { setPill('stWake', 'NO', 'off'); }
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible' && enabled) {
+      takeWakeLock();
+      if (!es) connect();
+      if (!demoEs) connectDemo();
+    }
+  });
+
+  /* ---------- buttons ---------- */
+  $('enableBtn').addEventListener('click', function () {
+    if (!unlockAudio()) return;
+    enabled = true;
+    $('setup').style.display = 'none';
+    $('testBtn').disabled = false;
+    startLocation();
+    takeWakeLock();
+    connect();
+  });
+
+  $('ackBtn').addEventListener('click', ack);
+
+  $('testBtn').addEventListener('click', function () {
+    if (alarmOn) return;
+    startSiren(3);
+    if (navigator.vibrate) navigator.vibrate([400, 150, 400]);
+    clearTimeout(testTimer);
+    testTimer = setTimeout(stopSiren, 3000);
+  });
+})();
+</script>
+</body>
+</html>

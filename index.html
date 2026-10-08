@@ -3,32 +3,528 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>BhoomiSuraksha – Pan-India AI Early Warning System</title>
-  <link rel="stylesheet" href="style.css"/>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <meta name="description" content="BhoomiSuraksha — AI-Based Multi-Disaster Early Warning and Risk Monitoring System for Pan-India"/>
+  <title>BhoomiSuraksha — AI Early Warning System | Pan-India Disaster Safety</title>
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🏔️%3C/text%3E%3C/svg%3E"/>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="logo" href="WhatsApp Image 2026-10-03 at 10.43.15 AM.jpeg">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="style.css"/>
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#10b981" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="BhoomiSuraksha" />
+<link rel="apple-touch-icon" href="icons/icon-192.svg" />
+<!-- ═══════ PWA META TAGS ═══════ -->
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#10b981"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="BhoomiSuraksha"/>
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"/>
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png"/>
+  <!-- 🔗 API Config MUST load first -->
+  <script src="config.js"></script>
+
+  <!-- ═══════════════════════════════════════════
+       🎨 NEW COLOR PALETTE + LAYOUT OVERRIDES
+       ═══════════════════════════════════════════ -->
+  <style>
+    :root {
+      --clr-emerald: #10b981;
+      --clr-emerald-dark: #059669;
+      --clr-blue: #3b82f6;
+      --clr-blue-dark: #1d4ed8;
+      --clr-crimson: #dc2626;
+      --clr-crimson-dark: #991b1b;
+      --clr-amber: #f59e0b;
+      --clr-cyan: #06b6d4;
+      --clr-violet: #8b5cf6;
+      --clr-pink: #ec4899;
+      --bg-deep: #050810;
+      --bg-card: #0d1420;
+      --bg-elevated: #141c2b;
+      --border-subtle: rgba(255,255,255,.06);
+      --border-emerald: rgba(16,185,129,.25);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+    }
+
+    body {
+      background: var(--bg-deep);
+      background-image:
+        radial-gradient(ellipse 800px 400px at 20% 10%, rgba(16,185,129,.08), transparent 60%),
+        radial-gradient(ellipse 600px 400px at 80% 30%, rgba(59,130,246,.06), transparent 60%),
+        radial-gradient(ellipse 500px 400px at 50% 80%, rgba(139,92,246,.05), transparent 60%);
+    }
+
+    /* ============ SECTION: Live Data Grid (Weather + Earthquake) ============ */
+    .live-data-section {
+      max-width: 1400px;
+      margin: 60px auto 40px;
+      padding: 0 24px;
+    }
+    .live-data-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .live-data-header .eyebrow {
+      display: inline-block;
+      background: linear-gradient(135deg, rgba(59,130,246,.15), rgba(6,182,212,.15));
+      color: var(--clr-cyan);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      border: 1px solid rgba(6,182,212,.25);
+      margin-bottom: 12px;
+    }
+    .live-data-header h2 {
+      font-size: clamp(1.5rem, 3vw, 2.2rem);
+      color: var(--text-primary);
+      font-weight: 800;
+      margin: 8px 0 6px;
+      background: linear-gradient(135deg, #fff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .live-data-header p {
+      color: var(--text-secondary);
+      max-width: 640px;
+      margin: 0 auto;
+      font-size: .95rem;
+    }
+
+    .live-data-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .live-data-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Custom wrapper for the widgets */
+    .widget-wrap {
+      background: transparent;
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+    }
+    .widget-wrap::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(59,130,246,.3), rgba(16,185,129,.2), rgba(139,92,246,.2));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ============ HOW IT WORKS — Enhanced ============ */
+    .how-section {
+      background: linear-gradient(180deg, transparent, rgba(59,130,246,.03), transparent);
+      padding: 80px 24px;
+      position: relative;
+    }
+    .how-inner { max-width: 1400px; margin: 0 auto; }
+    .how-header { text-align: center; margin-bottom: 48px; }
+    .how-header .eyebrow {
+      display: inline-block;
+      background: linear-gradient(135deg, rgba(139,92,246,.15), rgba(236,72,153,.15));
+      color: var(--clr-violet);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      border: 1px solid rgba(139,92,246,.25);
+      margin-bottom: 12px;
+    }
+    .how-header h2 {
+      font-size: clamp(1.6rem, 3.2vw, 2.3rem);
+      color: var(--text-primary);
+      font-weight: 800;
+      margin: 8px 0 8px;
+    }
+    .how-header .how-sub {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    .how-pipeline {
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .pipe-step {
+      background: linear-gradient(145deg, var(--bg-card), var(--bg-elevated));
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 20px 18px;
+      text-align: center;
+      min-width: 140px;
+      flex: 0 1 160px;
+      transition: all .3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .pipe-step::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent, rgba(16,185,129,.05));
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .pipe-step:hover::before { opacity: 1; }
+    .pipe-step:hover {
+      transform: translateY(-4px);
+      border-color: var(--clr-emerald);
+      box-shadow: 0 12px 32px rgba(16,185,129,.15);
+    }
+    .pipe-step:nth-child(1) { border-top: 3px solid var(--clr-blue); }
+    .pipe-step:nth-child(3) { border-top: 3px solid var(--clr-violet); }
+    .pipe-step:nth-child(5) { border-top: 3px solid var(--clr-emerald); }
+    .pipe-step:nth-child(7) { border-top: 3px solid var(--clr-cyan); }
+    .pipe-step:nth-child(9) { border-top: 3px solid var(--clr-crimson); }
+    .pipe-icon {
+      font-size: 2.2rem;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .pipe-label {
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .pipe-sub {
+      font-size: .72rem;
+      color: var(--text-muted);
+    }
+    .pipe-arrow {
+      align-self: center;
+      font-size: 1.5rem;
+      color: var(--clr-emerald);
+      font-weight: 800;
+      opacity: .5;
+    }
+    @media (max-width: 640px) {
+      .pipe-arrow { transform: rotate(90deg); }
+      .pipe-step { flex: 0 1 100%; }
+    }
+
+    /* ============ FEATURES — Colorful ============ */
+    .features-section {
+      padding: 80px 24px;
+      background: linear-gradient(180deg, transparent, rgba(16,185,129,.02), transparent);
+    }
+    .features-inner { max-width: 1400px; margin: 0 auto; }
+    .features-header { text-align: center; margin-bottom: 48px; }
+    .features-header .eyebrow {
+      display: inline-block;
+      background: linear-gradient(135deg, rgba(16,185,129,.15), rgba(6,182,212,.15));
+      color: var(--clr-emerald);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      border: 1px solid var(--border-emerald);
+      margin-bottom: 12px;
+    }
+    .features-title {
+      font-size: clamp(1.6rem, 3.2vw, 2.3rem);
+      color: var(--text-primary);
+      font-weight: 800;
+      margin: 8px 0 8px;
+    }
+    .features-sub {
+      color: var(--text-secondary);
+      max-width: 640px;
+      margin: 0 auto;
+      font-size: 1rem;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px;
+    }
+    .feat-card {
+      background: linear-gradient(145deg, var(--bg-card), var(--bg-elevated));
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 24px 20px;
+      transition: all .3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .feat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: currentColor;
+      opacity: .8;
+    }
+    .feat-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 40px rgba(0,0,0,.4);
+    }
+    .feat-card:nth-child(1) { color: var(--clr-blue); }
+    .feat-card:nth-child(2) { color: var(--clr-violet); }
+    .feat-card:nth-child(3) { color: var(--clr-emerald); }
+    .feat-card:nth-child(4) { color: var(--clr-crimson); }
+    .feat-card:nth-child(5) { color: var(--clr-amber); }
+    .feat-card:nth-child(6) { color: var(--clr-cyan); }
+    .feat-card:nth-child(7) { color: var(--clr-pink); }
+    .feat-card:nth-child(8) { color: var(--clr-emerald); }
+    .feat-icon-wrap {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 14px;
+    }
+    .feat-icon-wrap.blue { background: rgba(59,130,246,.15); color: var(--clr-blue); }
+    .feat-icon-wrap.purple { background: rgba(139,92,246,.15); color: var(--clr-violet); }
+    .feat-icon-wrap.green { background: rgba(16,185,129,.15); color: var(--clr-emerald); }
+    .feat-icon-wrap.red { background: rgba(220,38,38,.15); color: var(--clr-crimson); }
+    .feat-icon-wrap.orange { background: rgba(245,158,11,.15); color: var(--clr-amber); }
+    .feat-icon-wrap.teal { background: rgba(6,182,212,.15); color: var(--clr-cyan); }
+    .feat-icon-wrap.indigo { background: rgba(139,92,246,.15); color: var(--clr-violet); }
+    .feat-icon-wrap.yellow { background: rgba(245,158,11,.15); color: var(--clr-amber); }
+    .feat-card h3 {
+      color: var(--text-primary);
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin: 0 0 8px;
+    }
+    .feat-card p {
+      color: var(--text-secondary);
+      font-size: .85rem;
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    /* ============ STATS STRIP (New) ============ */
+    .stats-strip {
+      max-width: 1400px;
+      margin: 40px auto 0;
+      padding: 0 24px;
+    }
+    .stats-strip-inner {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      background: linear-gradient(135deg, rgba(16,185,129,.05), rgba(59,130,246,.05), rgba(139,92,246,.05));
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      padding: 28px 24px;
+    }
+    .stat-item {
+      text-align: center;
+      padding: 12px;
+      border-right: 1px solid var(--border-subtle);
+    }
+    .stat-item:last-child { border-right: none; }
+    @media (max-width: 640px) {
+      .stat-item { border-right: none; border-bottom: 1px solid var(--border-subtle); }
+      .stat-item:last-child { border-bottom: none; }
+    }
+    .stat-item .val {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--clr-emerald), var(--clr-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+    .stat-item .lbl {
+      color: var(--text-secondary);
+      font-size: .78rem;
+      margin-top: 6px;
+      font-weight: 600;
+      letter-spacing: .3px;
+    }
+    .stat-item .icn {
+      font-size: 1.2rem;
+      margin-bottom: 6px;
+      display: block;
+      opacity: .8;
+    }
+
+    /* ============ EMERGENCY — More Impactful ============ */
+    .emergency-section {
+      background: linear-gradient(135deg, rgba(220,38,38,.08), rgba(153,27,27,.05));
+      border-top: 1px solid rgba(220,38,38,.2);
+      border-bottom: 1px solid rgba(220,38,38,.2);
+      padding: 50px 24px;
+      margin: 60px 0 0;
+    }
+    .emergency-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .em-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .em-icon {
+      font-size: 3rem;
+      animation: emShake 2s infinite;
+    }
+    @keyframes emShake {
+      0%, 90%, 100% { transform: scale(1); }
+      92%, 96% { transform: scale(1.15) rotate(-8deg); }
+      94%, 98% { transform: scale(1.15) rotate(8deg); }
+    }
+    .em-left h3 {
+      color: var(--text-primary);
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin: 0 0 4px;
+    }
+    .em-left p {
+      color: var(--text-secondary);
+      font-size: .9rem;
+      margin: 0;
+    }
+    .em-right {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn-sos {
+      background: linear-gradient(135deg, var(--clr-crimson), var(--clr-crimson-dark));
+      color: #fff;
+      padding: 12px 22px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: .95rem;
+      box-shadow: 0 8px 20px rgba(220,38,38,.4);
+      transition: all .2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-sos:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(220,38,38,.6); }
+    .btn-sos-outline {
+      background: rgba(220,38,38,.1);
+      border: 1.5px solid var(--clr-crimson);
+      color: #fca5a5;
+      padding: 12px 22px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: .95rem;
+      transition: all .2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-sos-outline:hover { background: var(--clr-crimson); color: #fff; }
+
+    /* ============ Fix stray arrow ============ */
+    body > br + span, body > span:only-child { display: none; }
+  </style>
+
+
+
 </head>
 <body>
 
-<!-- ============ NAVBAR ============ -->
+<!-- ═══════════════════════════════════════════════════════════
+     🚨 LIVE DANGER BANNER
+     ═══════════════════════════════════════════════════════════ -->
+<div class="danger-banner" id="dangerBanner">
+  <span class="db-icon">⚠️</span>
+  <span id="dangerBannerText">CHECKING YOUR AREA...</span>
+  <button type="button" class="db-close" onclick="closeDangerBanner()">✕ Dismiss</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     🔔 ALERT POPUP MODAL
+     ═══════════════════════════════════════════════════════════ -->
+<div class="alert-popup-overlay" id="alertPopupOverlay">
+  <div class="alert-popup">
+    <div class="alert-popup-header">
+      <div class="alert-popup-icon">🚨</div>
+      <div>
+        <div class="alert-popup-title" id="alertPopupTitle">DANGER ALERT!</div>
+        <div class="alert-popup-sub" id="alertPopupSub">Your location is in a high-risk zone</div>
+      </div>
+    </div>
+    <div class="alert-msg-en" id="alertMsgEn">Loading alert message...</div>
+    <div class="alert-msg-hi" id="alertMsgHi">अलर्ट संदेश लोड हो रहा है...</div>
+    <div class="alert-actions">
+      <a href="tel:112" class="alert-btn call">📞 Call 112</a>
+      <a href="tel:1070" class="alert-btn ndrf">🛡️ NDRF 1070</a>
+      <a href="dashboard.html" class="alert-btn dashboard">📊 Dashboard</a>
+      <button type="button" class="alert-btn close" onclick="closeAlertPopup()">✕ Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     📡 NAVBAR
+     ═══════════════════════════════════════════════════════════ -->
 <header class="navbar" id="navbar">
-  <div class="nav-brand">
-    <div class="brand-icon">🌍</div>
+  <a href="index.html" class="nav-brand">
+    <div class="brand-icon"><img src="WhatsApp Image 2026-10-03 at 10.43.15 AM.jpeg" alt=""></div>
     <div class="brand-text">
       <span class="brand-name">BhoomiSuraksha</span>
       <span class="brand-sub">AI EARLY WARNING SYSTEM</span>
     </div>
-  </div>
+  </a>
 
   <nav class="nav-links" id="navLinks">
-    <a class="nav-link active" href="index.html">Home</a>
-    <a class="nav-link" href="dashboard.html">Dashboard</a>
-    <a class="nav-link" href="alerts.html">Alerts</a>
-    <a class="nav-link" href="report.html">Report Incident</a>
-  </nav>
+  <a class="nav-link" href="index.html">Home</a>
+  <a class="nav-link" href="dashboard.html">Dashboard</a>
+  <a class="nav-link" href="alerts.html">Alerts</a>
+  <a class="nav-link" href="emergency-resources.html">Resources</a>
+  <a class="nav-link" href="safe-route.html">Safe Route</a>
+  <a class="nav-link" href="family-tracker.html">Family</a>
+  <a class="nav-link" href="rss-feed.html">News</a>
+  <a class="nav-link" href="donate.html">Donate</a> <!-- NAYA LINK -->
+  
+  
+</nav>
 
-  <div class="nav-right" id="navRightSection">
-    <select class="lang-select" id="langSelect">
+  <div class="nav-right">
+    <select class="lang-select" id="langSelect" aria-label="Language">
       <option value="en">English</option>
       <option value="hi">हिंदी</option>
       <option value="bn">বাংলা</option>
@@ -37,41 +533,47 @@
       <option value="as">অসমীয়া</option>
     </select>
 
-    <!-- LOGGED OUT: Login / Signup -->
     <div id="authButtons" class="auth-buttons">
       <a href="auth.html?mode=login" class="btn-login">Log In</a>
       <a href="auth.html?mode=signup" class="btn-signup">Sign Up</a>
     </div>
 
-    <!-- LOGGED IN: Profile -->
     <div id="userProfile" class="user-profile hidden">
       <div class="user-avatar" id="userAvatar">U</div>
       <div class="user-info">
-        <span class="user-greet">Welcome back,</span>
+        <span class="user-greet">Welcome,</span>
         <span class="user-name" id="userNameDisplay">User</span>
       </div>
       <button type="button" class="btn-logout" onclick="logoutUser()" title="Logout">⎋</button>
-      <a href="dashboard.html" class="btn-nav-cta">Dashboard</a>
     </div>
 
-    <button class="hamburger" id="hamburger" type="button">☰</button>
+    <button class="hamburger" id="hamburger" type="button" aria-label="Menu">☰</button>
   </div>
 </header>
 
-<!-- ============ HERO SECTION ============ -->
+<!-- ═══════════════════════════════════════════════════════════
+     🎯 HERO SECTION
+     ═══════════════════════════════════════════════════════════ -->
 <section class="hero-section">
   <div class="hero-bg-overlay"></div>
   <div class="hero-content">
     <div class="hero-left">
+      <div class="hero-badge">
+        <span class="hb-dot"></span>
+        <span>AI LIVE ALERT SYSTEM · PAN-INDIA ACTIVE</span>
+      </div>
+
       <h1 class="hero-title">
         AI-Based Multi-Disaster<br/>
         Early Warning System<br/>
-        <span class="hero-title-accent"></span>
+        <span class="hero-title-accent">for Pan-India Safety</span>
       </h1>
+
       <p class="hero-desc">
-        Real-time GIS risk mapping, AI prediction, and multilingual
-        alerts to protect lives across <strong>Floods, Cyclones, Earthquakes, and Landslides</strong> — Pan-India.
+        Real-time GIS risk mapping, AI prediction, and multilingual alerts to protect lives across
+        <strong>Floods, Cyclones, Earthquakes, Landslides &amp; Cloudbursts</strong> — Pan-India.
       </p>
+
       <div class="hero-actions">
         <a href="dashboard.html" class="btn-primary">
           <span>Open Live Dashboard</span>
@@ -79,20 +581,29 @@
         </a>
         <a href="report.html" class="btn-ghost">Report an Incident</a>
       </div>
+
+      <!-- 📍 Live Location Card -->
+      <div class="location-live-card" id="locationLiveCard">
+        <div class="loc-icon-big" id="locIconBig">📍</div>
+        <div class="loc-info">
+          <div class="loc-title">Your Live Location Safety</div>
+          <div class="loc-name" id="locName">Requesting location access...</div>
+          <div class="loc-coords" id="locCoords">GPS coordinates will appear here</div>
+        </div>
+        <div class="loc-risk-badge low" id="locRiskBadge">CHECKING</div>
+        <button type="button" class="loc-btn primary" onclick="fetchUserLocationAndAnalyze()">🔄 Recheck</button>
+      </div>
     </div>
 
     <div class="hero-right">
       <div class="hero-visual">
-        <!-- LIVE MINI MAP PREVIEW -->
         <div class="visual-card main-card map-preview-card">
           <div class="vc-header">
             <span class="vc-dot red"></span>
             <span class="vc-dot yellow"></span>
             <span class="vc-dot green"></span>
             <span class="vc-title">Live GIS Risk Heatmap — India</span>
-            <span class="live-badge-mini">
-              <span class="live-pulse"></span> LIVE
-            </span>
+            <span class="live-badge-mini"><span class="live-pulse"></span> LIVE</span>
           </div>
           <div class="vc-body" style="padding:0;">
             <div id="heroMiniMap"></div>
@@ -109,7 +620,6 @@
           </div>
         </div>
 
-        <!-- FLOATING ALERT CARD -->
         <div class="visual-card alert-card-float">
           <div class="acf-icon">🚨</div>
           <div class="acf-body">
@@ -118,7 +628,6 @@
           </div>
         </div>
 
-        <!-- FLOATING RIVER CARD -->
         <div class="visual-card weather-card-float">
           <div class="wcf-icon">🌊</div>
           <div class="wcf-body">
@@ -131,76 +640,38 @@
   </div>
 </section>
 
-<!-- ============ COVERAGE SECTION ============ -->
-<section class="coverage-section">
-  <div class="coverage-inner">
-    <div class="coverage-header">
-      <div>
-        <h2>Pan-India Multi-Disaster Coverage</h2>
-        <p>Continuously monitoring highly vulnerable districts across coastal, plains, and Himalayan belts.</p>
-      </div>
-      <a href="dashboard.html" class="link-btn">View full GIS dashboard →</a>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     🌦️ LIVE DATA GRID — Weather + Earthquakes side-by-side
+     ═══════════════════════════════════════════════════════════ -->
+<section class="live-data-section">
+  <div class="live-data-header">
+    <span class="eyebrow">📡 REAL-TIME MONITORING</span>
+    <h2>Live Data From Trusted Sources</h2>
+    <p>Weather from Open-Meteo · Earthquakes from USGS · Updated automatically every minute</p>
+  </div>
+
+  <div class="live-data-grid">
+    <!-- Left: Weather Widget -->
+    <div class="widget-wrap">
+      <div id="bsWeather"></div>
     </div>
-    <div class="coverage-grid">
-      <div class="cov-card"><div class="cov-info"><div class="cov-name">Puri 🌀</div><div class="cov-state">Odisha (Cyclone)</div></div><div class="cov-right"><div class="cov-score">82</div><span class="risk-badge severe">Severe</span></div></div>
-      <div class="cov-card"><div class="cov-info"><div class="cov-name">Guwahati 🌊</div><div class="cov-state">Assam (Flood)</div></div><div class="cov-right"><div class="cov-score">75</div><span class="risk-badge high">High</span></div></div>
-      <div class="cov-card"><div class="cov-info"><div class="cov-name">Wayanad 🏔️</div><div class="cov-state">Kerala (Landslide)</div></div><div class="cov-right"><div class="cov-score">48</div><span class="risk-badge moderate">Moderate</span></div></div>
-      <div class="cov-card"><div class="cov-info"><div class="cov-name">Mandi 🏔️</div><div class="cov-state">Himachal (Landslide)</div></div><div class="cov-right"><div class="cov-score">42</div><span class="risk-badge moderate">Moderate</span></div></div>
-      <div class="cov-card"><div class="cov-info"><div class="cov-name">Mumbai 🌧️</div><div class="cov-state">Maharashtra (Flood)</div></div><div class="cov-right"><div class="cov-score">38</div><span class="risk-badge low">Low</span></div></div>
-      <div class="cov-card"><div class="cov-info"><div class="cov-name">Bhuj 🌍</div><div class="cov-state">Gujarat (Seismic)</div></div><div class="cov-right"><div class="cov-score">23</div><span class="risk-badge low">Low</span></div></div>
-      <div class="cov-card"><div class="cov-info"><div class="cov-name">Darjeeling 🏔️</div><div class="cov-state">West Bengal (Landslide)</div></div><div class="cov-right"><div class="cov-score">65</div><span class="risk-badge high">High</span></div></div>
-      <div class="cov-card"><div class="cov-info"><div class="cov-name">Nellore 🌀</div><div class="cov-state">Andhra Pradesh (Cyclone)</div></div><div class="cov-right"><div class="cov-score">32</div><span class="risk-badge low">Low</span></div></div>
-      <div class="cov-card"><div class="cov-info"><div class="cov-name">Chamoli 🌍</div><div class="cov-state">Uttarakhand (Seismic)</div></div><div class="cov-right"><div class="cov-score">27</div><span class="risk-badge low">Low</span></div></div>
-      <div class="cov-card"><div class="cov-info"><div class="cov-name">Koshi 🌊</div><div class="cov-state">Bihar (Flood)</div></div><div class="cov-right"><div class="cov-score">88</div><span class="risk-badge severe">Severe</span></div></div>
-      <div class="cov-card"><div class="cov-info"><div class="cov-name">Cachar 🌊</div><div class="cov-state">Assam (Flood)</div></div><div class="cov-right"><div class="cov-score">34</div><span class="risk-badge low">Low</span></div></div>
-      <div class="cov-card"><div class="cov-info"><div class="cov-name">Digha 🌀</div><div class="cov-state">West Bengal (Cyclone)</div></div><div class="cov-right"><div class="cov-score">28</div><span class="risk-badge low">Low</span></div></div>
+
+    <!-- Right: Earthquakes Widget -->
+    <div class="widget-wrap">
+      <div id="bsEarthquakes" data-limit="6"></div>
     </div>
   </div>
 </section>
 
-<!-- ============ HOW IT WORKS ============ -->
-<section class="how-section">
-  <div class="how-inner">
-    <div class="how-header">
-      <p class="eyebrow">HOW IT WORKS</p>
-      <h2>From unified sensors to saved lives in minutes</h2>
-      <p class="how-sub">Our pipeline ingests IMD, CWC, and Seismic data, runs AI inference, and delivers automated warnings.</p>
-    </div>
-    <div class="how-pipeline">
-      <div class="pipe-step"><div class="pipe-icon">📡</div><div class="pipe-label">Data Ingestion</div><div class="pipe-sub">Weather, River, Seismic</div></div>
-      <div class="pipe-arrow">→</div>
-      <div class="pipe-step"><div class="pipe-icon">⚙️</div><div class="pipe-label">AI Processing</div><div class="pipe-sub">Multi-Hazard Risk Score</div></div>
-      <div class="pipe-arrow">→</div>
-      <div class="pipe-step"><div class="pipe-icon">🔍</div><div class="pipe-label">Threshold Check</div><div class="pipe-sub">Alert evaluated</div></div>
-      <div class="pipe-arrow">→</div>
-      <div class="pipe-step"><div class="pipe-icon">📲</div><div class="pipe-label">Alert Broadcast</div><div class="pipe-sub">Multilingual SMS</div></div>
-      <div class="pipe-arrow">→</div>
-      <div class="pipe-step"><div class="pipe-icon">🚁</div><div class="pipe-label">Rescue Response</div><div class="pipe-sub">NDMA dispatched</div></div>
-    </div>
-  </div>
-</section>
 
-<!-- ============ FEATURES ============ -->
-<section class="features-section">
-  <div class="features-inner">
-    <div class="features-header">
-      <h2 class="features-title">A complete early warning platform</h2>
-      <p class="features-sub">Data fusion, AI prediction, GIS visualisation, field reporting and multilingual alerts.</p>
-    </div>
-    <div class="features-grid">
-      <div class="feat-card"><div class="feat-icon-wrap blue">🛰️</div><h3>Multi-source Data Fusion</h3><p>Weather APIs, river water levels, and seismic activity in one pipeline.</p></div>
-      <div class="feat-card"><div class="feat-icon-wrap purple">🤖</div><h3>AI/ML Risk Prediction</h3><p>Gemini LLM powered risk scoring for diverse topographies.</p></div>
-      <div class="feat-card"><div class="feat-icon-wrap green">🗺️</div><h3>Pan-India GIS Map</h3><p>Live map of vulnerable coastlines, river basins, and hill stations.</p></div>
-      <div class="feat-card"><div class="feat-icon-wrap red">📢</div><h3>Real-time Early Warnings</h3><p>Auto SMS and app alerts generated 24-48 hours before disaster peaks.</p></div>
-      <div class="feat-card"><div class="feat-icon-wrap orange">📷</div><h3>Citizen Field Reporting</h3><p>Geo-tagged photos of flooded roads, cracks, and structural damage.</p></div>
-      <div class="feat-card"><div class="feat-icon-wrap teal">📊</div><h3>Unified Dashboards</h3><p>Break the silo: monitor cyclones, floods, and landslides in one view.</p></div>
-      <div class="feat-card"><div class="feat-icon-wrap indigo">🌐</div><h3>Multilingual Notifications</h3><p>English, Hindi, Marathi, Bengali, Tamil, and more regional languages.</p></div>
-      <div class="feat-card"><div class="feat-icon-wrap yellow">📶</div><h3>Offline Resilience</h3><p>SMS fallbacks that work even when internet connectivity drops.</p></div>
-    </div>
-  </div>
-</section>
 
-<!-- ============ EMERGENCY BANNER ============ -->
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     🆘 EMERGENCY
+     ═══════════════════════════════════════════════════════════ -->
 <section class="emergency-section">
   <div class="emergency-inner">
     <div class="em-left">
@@ -218,7 +689,9 @@
   </div>
 </section>
 
-<!-- ============ FOOTER ============ -->
+<!-- ═══════════════════════════════════════════════════════════
+     🌐 FOOTER
+     ═══════════════════════════════════════════════════════════ -->
 <footer class="footer">
   <div class="footer-inner">
     <div class="footer-brand">
@@ -231,41 +704,49 @@
       </div>
       <p class="footer-desc">AI-powered unified risk monitoring and early warning system across India.</p>
     </div>
+
     <div class="footer-links-group">
       <div class="footer-col">
         <div class="footer-col-title">Platform</div>
         <a href="dashboard.html">Live Dashboard</a>
         <a href="alerts.html">Alert Feed</a>
         <a href="report.html">Report Incident</a>
+        <a href="emergency-resources.html">Emergency Resources</a>
+        <a href="dos-donts.html">Dos &amp; Don'ts</a>
       </div>
       <div class="footer-col">
         <div class="footer-col-title">Emergency</div>
         <a href="tel:112">Call 112</a>
         <a href="tel:1070">NDRF 1070</a>
+        <a href="tel:1078">Disaster 1078</a>
+        <a href="tel:108">Ambulance 108</a>
       </div>
       <div class="footer-col">
         <div class="footer-col-title">Account</div>
         <a href="auth.html?mode=login">Log In</a>
         <a href="auth.html?mode=signup">Sign Up</a>
+        <a href="about.html">About</a>
+        <a href="legal.html">Privacy</a>
       </div>
     </div>
   </div>
-  <div class="footer-bottom">
-    <p>BhoomiSuraksha · Smart India Hackathon · Built for Disaster Resilience</p>
-    <div class="footer-badges">
-      <span>🏆 SIH 2025</span>
-      <span>🇮🇳 Made in India</span>
-      <span>🌍 Pan-India Ready</span>
-    </div>
-  </div>
-</footer>
+  
 
 <!-- Floating SOS -->
 <div class="float-sos-container" id="floatSosContainer">
   <div class="float-sos-menu" id="floatSosMenu">
-    <a href="tel:112" class="sos-option primary"><span class="sos-opt-icon">📞</span><div class="sos-opt-text"><strong>Call 112</strong><span>National Emergency</span></div></a>
-    <a href="tel:1070" class="sos-option"><span class="sos-opt-icon">🛡️</span><div class="sos-opt-text"><strong>NDRF 1070</strong><span>Disaster Response</span></div></a>
-    <a href="report.html" class="sos-option"><span class="sos-opt-icon">📷</span><div class="sos-opt-text"><strong>Report Incident</strong><span>Field Report</span></div></a>
+    <a href="tel:112" class="sos-option primary">
+      <span class="sos-opt-icon">📞</span>
+      <div class="sos-opt-text"><strong>Call 112</strong><span>National Emergency</span></div>
+    </a>
+    <a href="tel:1070" class="sos-option">
+      <span class="sos-opt-icon">🛡️</span>
+      <div class="sos-opt-text"><strong>NDRF 1070</strong><span>Disaster Response</span></div>
+    </a>
+    <a href="report.html" class="sos-option">
+      <span class="sos-opt-icon">📷</span>
+      <div class="sos-opt-text"><strong>Report Incident</strong><span>Field Report</span></div>
+    </a>
   </div>
   <button type="button" class="float-sos-btn" onclick="toggleSosMenu(event)" aria-label="SOS">
     <span class="sos-pulse-ring"></span>
@@ -280,80 +761,19 @@
   <span id="toastMessage">Success!</span>
 </div>
 
-<!-- LEAFLET JS (must load before script.js) -->
+<!-- Leaflet + Home JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="home.js"></script>
 
-<!-- HERO MINI MAP INITIALIZATION -->
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  const mapEl = document.getElementById('heroMiniMap');
-  if (!mapEl || typeof L === 'undefined') return;
+<!-- Widgets -->
+<script src="widgets/weather-sidebar.js"></script>
+<script src="widgets/earthquakes.js"></script>
 
-  // Center on India
-  const heroMap = L.map('heroMiniMap', {
-    center: [22.5, 82.0],
-    zoom: 4,
-    zoomControl: false,
-    attributionControl: false,
-    scrollWheelZoom: false,
-    dragging: true,
-  });
-
-  // Dark tile layer (CartoDB Dark)
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 19,
-  }).addTo(heroMap);
-
-  // Pan-India Multi-Disaster Risk Data
-  const zones = [
-    { name: 'Chennai Coast', state: 'Tamil Nadu', disaster: 'Cyclone', risk: 'Severe', color: '#dc2626', lat: 13.08, lng: 80.27 },
-    { name: 'Puri', state: 'Odisha', disaster: 'Cyclone', risk: 'Severe', color: '#dc2626', lat: 19.81, lng: 85.83 },
-    { name: 'Koshi Basin', state: 'Bihar', disaster: 'Flood', risk: 'Severe', color: '#dc2626', lat: 26.12, lng: 87.02 },
-    { name: 'Patna Plains', state: 'Bihar', disaster: 'Flood', risk: 'High', color: '#f97316', lat: 25.59, lng: 85.13 },
-    { name: 'Guwahati', state: 'Assam', disaster: 'Flood', risk: 'High', color: '#f97316', lat: 26.14, lng: 91.73 },
-    { name: 'Darjeeling', state: 'West Bengal', disaster: 'Landslide', risk: 'High', color: '#f97316', lat: 27.04, lng: 88.26 },
-    { name: 'Shillong Hills', state: 'Meghalaya', disaster: 'Landslide', risk: 'Moderate', color: '#eab308', lat: 25.57, lng: 91.88 },
-    { name: 'Wayanad', state: 'Kerala', disaster: 'Landslide', risk: 'Moderate', color: '#eab308', lat: 11.68, lng: 76.13 },
-    { name: 'Mandi', state: 'Himachal Pradesh', disaster: 'Landslide', risk: 'Moderate', color: '#eab308', lat: 31.70, lng: 76.93 },
-    { name: 'Mumbai', state: 'Maharashtra', disaster: 'Flood', risk: 'Low', color: '#10b981', lat: 19.07, lng: 72.87 },
-    { name: 'Bhuj', state: 'Gujarat', disaster: 'Seismic', risk: 'Low', color: '#10b981', lat: 23.25, lng: 69.66 },
-    { name: 'Uttarkashi', state: 'Uttarakhand', disaster: 'Seismic', risk: 'Low', color: '#10b981', lat: 30.72, lng: 78.44 },
-  ];
-
-  zones.forEach((zone) => {
-    const isPulse = zone.risk === 'Severe' || zone.risk === 'High';
-
-    const iconHtml = isPulse
-      ? `<div class="pulse-marker" style="background:${zone.color}"></div>`
-      : `<div style="width:10px;height:10px;border-radius:50%;background:${zone.color};border:2px solid rgba(255,255,255,0.6);box-shadow:0 0 6px ${zone.color};"></div>`;
-
-    const customIcon = L.divIcon({
-      className: 'custom-map-marker',
-      html: iconHtml,
-      iconSize: [14, 14],
-      iconAnchor: [7, 7],
-    });
-
-    const marker = L.marker([zone.lat, zone.lng], { icon: customIcon }).addTo(heroMap);
-
-    marker.bindPopup(`
-      <div style="font-family:Inter,sans-serif;min-width:150px;">
-        <div style="font-weight:700;font-size:0.9rem;color:#0f172a;">${zone.name}</div>
-        <div style="color:#64748b;font-size:0.75rem;margin-bottom:6px;">${zone.state}</div>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:0.75rem;color:#334155;">${zone.disaster}</span>
-          <span style="background:${zone.color};color:white;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:600;">${zone.risk}</span>
-        </div>
-      </div>
-    `);
-  });
-});
-</script>
-
-<!-- Firebase Config Script -->
-<script type="module" src="firebase-config.js"></script>
-<script src="script.js"></script>
-<script src="geofence-banner.js"></script>
-<script src="config.js"></script>
+<!-- Global widgets -->
+<script src="chatbot.js"></script>
+<script src="push-notify.js"></script>
+<script src="pwa.js"></script>
+<script src="pwa.js"></script>
+<script src="pwa-register.js"></script>
 </body>
 </html>

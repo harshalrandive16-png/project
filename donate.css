@@ -1,0 +1,159 @@
+/* ==========================================================
+   BHOOMISURAKSHA V10 - DONATE PAGE CSS
+========================================================== */
+
+:root {
+    --bg-main: #0a0d14; 
+    --bg-card: #11151e; 
+    --bg-elevated: #1a202c; 
+    --border-color: rgba(255, 255, 255, 0.08);
+    
+    --text-main: #f1f5f9;
+    --text-muted: #8b96a5;
+    
+    --c-cyan: #06b6d4;
+    --c-red: #ef4444;
+    --c-orange: #f97316;
+    --c-green: #10b981;
+    --c-gold: #fbbf24;
+
+    --font-main: 'Inter', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background-color: var(--bg-main); color: var(--text-main);
+    font-family: var(--font-main); overflow-x: hidden;
+}
+
+/* NAVBAR (Consistent) */
+.navbar {
+    display: flex; justify-content: space-between; align-items: center; 
+    padding: 14px 30px; border-bottom: 1px solid var(--border-color);
+    background: rgba(10, 13, 20, 0.95); position: sticky; top: 0; z-index: 1000;
+}
+.nav-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: white; }
+.brand-icon { font-size: 1.5rem; color: var(--c-cyan); }
+.brand-name { font-size: 1.1rem; font-weight: 700; display: block; }
+.brand-sub { font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;}
+.nav-links { display: flex; gap: 24px; list-style: none; }
+.nav-link { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: 0.2s; }
+.nav-link:hover { color: #fff; }
+.nav-link.active { color: var(--c-cyan); }
+.nav-right { display: flex; align-items: center; gap: 16px; }
+.user-profile { display: flex; align-items: center; gap: 10px; background: var(--bg-card); padding: 4px 12px 4px 4px; border-radius: 30px; border: 1px solid var(--border-color);}
+.user-avatar { width: 32px; height: 32px; background: var(--c-cyan); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; color: #000; }
+.user-info { display: flex; flex-direction: column; }
+.user-greet { font-size: 0.65rem; color: var(--text-muted); }
+.user-name { font-size: 0.8rem; font-weight: 600; }
+
+/* MAIN CONTAINER */
+.donate-main { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+
+/* HEADER */
+.page-header { margin-bottom: 40px; text-align: center; }
+.live-badge {
+    display: inline-flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 700;
+    color: var(--c-green); border: 1px solid rgba(16, 185, 129, 0.3); padding: 6px 14px;
+    border-radius: 20px; background: rgba(16, 185, 129, 0.05); margin-bottom: 16px; letter-spacing: 0.5px;
+}
+.page-title { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 10px; }
+.page-sub { color: var(--text-muted); font-size: 1rem; max-width: 600px; margin: 0 auto; line-height: 1.5; }
+
+/* GRID LAYOUT */
+.donate-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 40px; }
+
+/* LEFT: CAMPAIGNS */
+.campaigns-section { display: flex; flex-direction: column; gap: 20px; }
+.section-title { font-size: 1.2rem; font-weight: 600; color: #fff; margin-bottom: 10px; }
+
+.campaign-card {
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    border-radius: 12px; padding: 20px; transition: 0.2s;
+}
+.campaign-card:hover { border-color: rgba(255,255,255,0.15); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+
+.camp-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.camp-header h3 { font-size: 1.1rem; font-weight: 600; color: #fff; }
+.badge { padding: 3px 8px; border-radius: 6px; font-size: 0.65rem; font-weight: 700; }
+.badge-urgent { background: rgba(239, 68, 68, 0.15); color: var(--c-red); border: 1px solid var(--c-red); }
+.badge-high { background: rgba(249, 115, 22, 0.15); color: var(--c-orange); border: 1px solid var(--c-orange); }
+
+.camp-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+
+/* Progress Bar */
+.progress-stats { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; }
+.raised { color: #fff; }
+.goal { color: var(--text-muted); }
+.progress-track { width: 100%; height: 8px; background: var(--bg-elevated); border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
+.progress-fill { height: 100%; border-radius: 10px; transition: width 1.5s ease-in-out; }
+.fill-cyan { background: var(--c-cyan); box-shadow: 0 0 10px var(--c-cyan); }
+.fill-orange { background: var(--c-orange); box-shadow: 0 0 10px var(--c-orange); }
+
+.camp-footer { font-size: 0.8rem; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+.text-green { color: var(--c-green); }
+.text-gold { color: var(--c-gold); }
+
+/* Official Fund Highlight */
+.official-fund { background: linear-gradient(145deg, rgba(251, 191, 36, 0.05), var(--bg-card)); border-color: rgba(251, 191, 36, 0.2); }
+
+/* RIGHT: DONATION FORM */
+.form-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 30px; }
+.form-card h2 { font-size: 1.4rem; font-weight: 600; color: #fff; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px; }
+
+.form-group { margin-bottom: 20px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+.opt-text { font-weight: 400; font-size: 0.75rem; color: #64748b; }
+
+select, input[type="text"], input[type="email"], input[type="number"] {
+    width: 100%; background: var(--bg-main); border: 1px solid var(--border-color);
+    color: #fff; padding: 12px 14px; border-radius: 8px; font-size: 0.95rem; font-family: var(--font-main);
+    outline: none; transition: 0.2s;
+}
+select:focus, input:focus { border-color: var(--c-cyan); background: rgba(6, 182, 212, 0.05); }
+
+/* Amount Buttons */
+.amount-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px; }
+.amt-btn {
+    background: var(--bg-main); border: 1px solid var(--border-color); color: #fff;
+    padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 0.95rem;
+}
+.amt-btn:hover { background: var(--bg-elevated); }
+.amt-btn.active { background: rgba(6, 182, 212, 0.15); border-color: var(--c-cyan); color: var(--c-cyan); }
+
+/* Tax Note */
+.tax-group { background: rgba(251, 191, 36, 0.05); border: 1px solid rgba(251, 191, 36, 0.2); padding: 16px; border-radius: 8px; }
+.tax-note { font-size: 0.75rem; color: var(--c-gold); margin-top: 10px; display: flex; gap: 6px; line-height: 1.4; }
+
+/* Payment Methods */
+.payment-methods { display: flex; gap: 16px; }
+.pay-radio {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--bg-main); border: 1px solid var(--border-color); padding: 12px;
+    border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: 0.2s;
+}
+.pay-radio input { display: none; }
+.pay-radio.active { background: rgba(16, 185, 129, 0.1); border-color: var(--c-green); color: var(--c-green); }
+
+/* Submit Button */
+.btn-submit {
+    width: 100%; background: var(--c-cyan); color: #000; border: none;
+    padding: 16px; border-radius: 8px; font-size: 1.05rem; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: 0.2s; margin-top: 10px;
+}
+.btn-submit:hover { background: #0891b2; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(6, 182, 212, 0.3); }
+
+/* TOAST */
+#toast-container { position: fixed; top: 80px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+.toast { background: var(--bg-elevated); color: white; padding: 14px 18px; border-radius: 10px; border-left: 4px solid var(--c-cyan); box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 12px; font-size: 0.88rem; animation: toastIn 0.3s ease forwards; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+    .donate-grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+}

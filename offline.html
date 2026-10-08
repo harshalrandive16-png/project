@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Offline — BhoomiSuraksha</title>
+<meta name="theme-color" content="#10b981"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:#060b11; color:#e5e7eb;
+    min-height:100vh; display:grid; place-items:center;
+    padding:24px; overflow:hidden; position:relative;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; z-index:0;
+    background:
+      radial-gradient(600px 400px at 50% 20%, rgba(220,38,38,.12), transparent 60%),
+      radial-gradient(500px 350px at 50% 80%, rgba(16,185,129,.08), transparent 60%);
+  }
+  .wrap{ position:relative; z-index:1; text-align:center; max-width:420px; }
+  .icon{
+    font-size:72px; margin-bottom:18px;
+    animation:float 3s ease-in-out infinite;
+  }
+  @keyframes float{
+    0%,100%{ transform:translateY(0); }
+    50%{ transform:translateY(-12px); }
+  }
+  h1{
+    font-size:28px; font-weight:900; letter-spacing:-.5px;
+    margin-bottom:12px;
+    background:linear-gradient(135deg,#10b981,#34d399);
+    -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+  p{ color:#94a3b8; font-size:14px; line-height:1.7; margin-bottom:28px; }
+  .status{
+    display:inline-flex; align-items:center; gap:8px;
+    background:rgba(220,38,38,.1);
+    border:1px solid rgba(220,38,38,.3);
+    border-radius:999px; padding:7px 16px;
+    font-size:11.5px; font-weight:700;
+    color:#fca5a5; margin-bottom:24px;
+    letter-spacing:.8px; text-transform:uppercase;
+  }
+  .dot{
+    width:8px; height:8px; border-radius:50%;
+    background:#ef4444;
+    box-shadow:0 0 0 0 rgba(239,68,68,.6);
+    animation:pulse 1.6s infinite;
+  }
+  @keyframes pulse{
+    70%{ box-shadow:0 0 0 10px rgba(239,68,68,0); }
+    100%{ box-shadow:0 0 0 0 rgba(239,68,68,0); }
+  }
+  .btn{
+    display:inline-block;
+    background:linear-gradient(135deg,#10b981,#059669);
+    color:#04140d; text-decoration:none;
+    padding:13px 28px; border-radius:12px;
+    font-size:14px; font-weight:800; letter-spacing:.3px;
+    box-shadow:0 10px 26px rgba(16,185,129,.3);
+    border:none; cursor:pointer; font-family:inherit;
+    transition:transform .2s;
+  }
+  .btn:hover{ transform:translateY(-2px); }
+  .cached{
+    margin-top:28px; padding-top:22px;
+    border-top:1px solid rgba(255,255,255,.08);
+  }
+  .cached h3{
+    font-size:11px; font-weight:800; letter-spacing:1.4px;
+    text-transform:uppercase; color:#10b981;
+    margin-bottom:14px;
+  }
+  .cached-links{
+    display:grid; grid-template-columns:1fr 1fr; gap:8px;
+  }
+  .cached-links a{
+    background:rgba(16,24,40,.75);
+    border:1px solid rgba(16,185,129,.18);
+    border-radius:10px; padding:11px;
+    color:#e5e7eb; text-decoration:none;
+    font-size:12.5px; font-weight:600;
+    transition:.2s;
+  }
+  .cached-links a:hover{
+    background:rgba(16,185,129,.1);
+    border-color:#10b981;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="status"><span class="dot"></span> No Internet Connection</div>
+    <div class="icon">🌐</div>
+    <h1>You're Offline</h1>
+    <p>Looks like you've lost your connection. Don't worry — your cached BhoomiSuraksha data is still available below.</p>
+    <button class="btn" onclick="location.reload()">🔄 Try Again</button>
+
+    <div class="cached">
+      <h3>Available Offline</h3>
+      <div class="cached-links">
+        <a href="./dashboard.html">📊 Dashboard</a>
+        <a href="./alerts.html">🚨 Alerts</a>
+        <a href="./report.html">📝 Report</a>
+        <a href="./dos-donts.html">📋 Do's & Don'ts</a>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Auto reload when back online
+  window.addEventListener('online', () => location.reload());
+</script>
+</body>
+</html>

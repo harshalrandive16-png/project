@@ -1,7 +1,10 @@
 node_modules/
 .env
-serviceAccountKey.json
+.env.*
+!.env.example
 ai.env
+serviceAccountKey.json
+*serviceAccount*.json
+firebase-debug.log
 *.log
-uploads/
-tmp_uploads/
+_archive/
