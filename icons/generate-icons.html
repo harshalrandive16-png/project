@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head><title>Icon Generator</title></head>
+<body style="background:#060b11;color:#fff;font-family:sans-serif;padding:20px;">
+<h2>BhoomiSuraksha Icon Generator</h2>
+<p>Right-click each canvas → "Save image as" → save with the filename shown.</p>
+<div id="out"></div>
+<script>
+  const sizes = [72, 96, 128, 144, 152, 180, 192, 384, 512];
+  const out = document.getElementById('out');
+
+  sizes.forEach(s => {
+    const canvas = document.createElement('canvas');
+    canvas.width = s; canvas.height = s;
+    const ctx = canvas.getContext('2d');
+
+    // Gradient background
+    const grad = ctx.createLinearGradient(0, 0, s, s);
+    grad.addColorStop(0, '#10b981');
+    grad.addColorStop(1, '#059669');
+    ctx.fillStyle = grad;
+    // Rounded square
+    const r = s * 0.22;
+    ctx.beginPath();
+    ctx.moveTo(r, 0); ctx.lineTo(s-r, 0); ctx.quadraticCurveTo(s, 0, s, r);
+    ctx.lineTo(s, s-r); ctx.quadraticCurveTo(s, s, s-r, s);
+    ctx.lineTo(r, s); ctx.quadraticCurveTo(0, s, 0, s-r);
+    ctx.lineTo(0, r); ctx.quadraticCurveTo(0, 0, r, 0);
+    ctx.closePath(); ctx.fill();
+
+    // Globe emoji
+    ctx.font = (s*0.55) + 'px serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('🌍', s/2, s/2 + s*0.03);
+
+    const name = s === 180 ? 'apple-touch-icon.png' : `icon-${s}.png`;
+    const div = document.createElement('div');
+    div.style.cssText = 'display:inline-block;margin:10px;text-align:center;';
+    div.innerHTML = `<div style="font-size:11px;margin-bottom:4px;">${name}</div>`;
+    div.appendChild(canvas);
+    out.appendChild(div);
+  });
+
+  // Also create maskable-512
+  const mcanvas = document.createElement('canvas');
+  mcanvas.width = 512; mcanvas.height = 512;
+  const mctx = mcanvas.getContext('2d');
+  mctx.fillStyle = '#059669';
+  mctx.fillRect(0, 0, 512, 512);
+  mctx.font = '220px serif';
+  mctx.textAlign = 'center'; mctx.textBaseline = 'middle';
+  mctx.fillText('🌍', 256, 270);
+  const mdiv = document.createElement('div');
+  mdiv.style.cssText = 'display:inline-block;margin:10px;text-align:center;';
+  mdiv.innerHTML = `<div style="font-size:11px;margin-bottom:4px;">maskable-512.png</div>`;
+  mdiv.appendChild(mcanvas);
+  out.appendChild(mdiv);
+</script>
+</body>
+</html>
