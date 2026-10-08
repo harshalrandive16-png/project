@@ -1,75 +1,160 @@
-/* ================================================================
-   Geofence — find users in radius + build alert payload
-   ================================================================ */
-const { isInsideGeofence } = require('./haversine');
+/* ═══════════════════════════════════════════════════════════════
+   🏔️ BhoomiSuraksha — geofence-banner.js
+   FIXES: window.BHOOMI_API (no hardcoded localhost),
+          toast instead of spam alerts
+   Include on any page: <script src="geofence-banner.js"></script>
+   ═══════════════════════════════════════════════════════════════ */
+(function () {
+  // ✅ FIX: deploy-aware API URL
+  var API = (window.BHOOMI_API) ||
+    (location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+      ? 'http://localhost:5000'
+      : location.origin);
 
-/**
- * Filter Firestore user docs that have lastLocation and are in radius
- * @param {FirebaseFirestore.QueryDocumentSnapshot[]} userDocs
- */
-function findUsersInRadius(userDocs, centerLat, centerLon, radiusKm) {
-  const matched = [];
+  function getToken() {
+    return localStorage.getItem('bhoomiToken') || localStorage.getItem('landslideToken') || '';
+  }
 
-  userDocs.forEach((doc) => {
-    const u = doc.data();
-    const loc = u.lastLocation;
-    if (!loc || loc.lat == null || loc.lon == null) return;
-
-    const { inside, distanceKm } = isInsideGeofence(
-      Number(loc.lat),
-      Number(loc.lon),
-      Number(centerLat),
-      Number(centerLon),
-      Number(radiusKm)
-    );
-
-    if (inside) {
-      matched.push({
-        uid: doc.id,
-        name: u.name || 'Citizen',
-        email: u.email || '',
-        phone: u.phone || '',
-        state: u.state || '',
-        distanceKm,
-        lastLocation: loc
-      });
+  function ensureUI() {
+    if (!document.getElementById('geofence-banner-css')) {
+      var s = document.createElement('style');
+      s.id = 'geofence-banner-css';
+      s.textContent =
+        '#geoBanner{position:fixed;top:0;left:0;right:0;z-index:99999;display:none;padding:12px 16px;font-family:Inter,system-ui,sans-serif;color:#fff;box-shadow:0 8px 30px rgba(0,0,0,.4)}' +
+        '#geoBanner.show{display:block}#geoBanner.severe{background:linear-gradient(90deg,#7f1d1d,#dc2626)}' +
+        '#geoBanner.high{background:linear-gradient(90deg,#9a3412,#f97316)}' +
+        '#geoBanner .inner{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}' +
+        '#geoBanner .msg{font-size:14px;font-weight:600;line-height:1.4}#geoBanner .msg small{display:block;font-weight:400;opacity:.95;margin-top:4px}' +
+        '#geoBanner button{border:0;border-radius:8px;padding:8px 12px;font-weight:700;cursor:pointer;background:rgba(0,0,0,.25);color:#fff}' +
+        '#geoShareBar{position:fixed;bottom:100px;right:24px;z-index:9998}' +
+        '#geoShareBar button{background:#0f172a;color:#10b981;border:1px solid rgba(16,185,129,.45);padding:10px 14px;border-radius:999px;font-weight:700;cursor:pointer;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.35)}';
+      document.head.appendChild(s);
     }
+    if (!document.getElementById('geoBanner')) {
+      var b = document.createElement('div');
+      b.id = 'geoBanner';
+      b.innerHTML = '<div class="inner"><div class="msg" id="geoBannerMsg"></div><button type="button" id="geoBannerClose">Dismiss</button></div>';
+      document.body.appendChild(b);
+      document.getElementById('geoBannerClose').onclick = function () {
+        b.classList.remove('show');
+      };
+    }
+    if (!document.getElementById('geoShareBar')) {
+      var bar = document.createElement('div');
+      bar.id = 'geoShareBar';
+      bar.innerHTML = '<button type="button" id="btnShareLoc">📍 Share Location for Alerts</button>';
+      document.body.appendChild(bar);
+      document.getElementById('btnShareLoc').onclick = shareLocation;
+    }
+  }
+
+  function showBanner(alert) {
+    ensureUI();
+    var el = document.getElementById('geoBanner');
+    var msg = document.getElementById('geoBannerMsg');
+    var level = String(alert.riskLevel || 'high').toLowerCase();
+    el.className = 'show ' + (level === 'severe' ? 'severe' : 'high');
+    var sms = alert.smsHindi || alert.smsEnglish || '';
+    msg.innerHTML =
+      '⚠️ <strong>' + (alert.riskLevel || '') + ' ' +
+      (alert.primaryDisaster || alert.disasterType || '') + '</strong> — ' +
+      (alert.locationName || alert.location || 'Your area') +
+      (alert.userDistance != null ? ' · ' + Number(alert.userDistance).toFixed(1) + ' km away' : '') +
+      '<small>' + sms + '</small>';
+
+    if ('vibrate' in navigator) {
+      try { navigator.vibrate([200, 100, 200]); } catch (e) {}
+    }
+  }
+
+  function toastMsg(text, ok) {
+    var t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:99999;' +
+      'background:' + (ok ? 'rgba(16,185,129,.95)' : 'rgba(220,38,38,.95)') + ';color:#fff;' +
+      'padding:12px 20px;border-radius:10px;font-family:Inter,sans-serif;font-weight:600;font-size:14px;' +
+      'box-shadow:0 8px 30px rgba(0,0,0,.4)';
+    t.textContent = text;
+    document.body.appendChild(t);
+    setTimeout(function () { t.remove(); }, 3000);
+  }
+
+  function shareLocation() {
+    var token = getToken();
+    if (!token) {
+      toastMsg('Pehle login karo', false);
+      setTimeout(function () { window.location.href = 'auth.html?mode=login'; }, 1200);
+      return;
+    }
+    if (!navigator.geolocation) {
+      toastMsg('GPS not supported', false);
+      return;
+    }
+    var btn = document.getElementById('btnShareLoc');
+    if (btn) btn.textContent = '⏳ Saving...';
+
+    navigator.geolocation.getCurrentPosition(
+      async function (pos) {
+        try {
+          var res = await fetch(API + '/api/user/location', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer ' + token
+            },
+            body: JSON.stringify({
+              lat: pos.coords.latitude,
+              lon: pos.coords.longitude,
+              accuracy: pos.coords.accuracy,
+              source: 'browser'
+            })
+          });
+
+          var text = await res.text();
+          var data;
+          try { data = JSON.parse(text); }
+          catch (e) { throw new Error('Server error — restart karo. Body: ' + text.slice(0, 80)); }
+
+          if (!res.ok || (!data.ok && !data.success)) {
+            throw new Error(data.error || data.message || 'Save failed');
+          }
+
+          if (btn) btn.textContent = '✅ Location ON';
+          toastMsg('📍 Location saved! Geofence alerts ON', true);
+          pullMyAlerts();
+        } catch (err) {
+          toastMsg('Location save failed: ' + err.message, false);
+          if (btn) btn.textContent = '📍 Share Location for Alerts';
+        }
+      },
+      function (err) {
+        toastMsg('GPS error: ' + err.message, false);
+        if (btn) btn.textContent = '📍 Share Location for Alerts';
+      },
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
+  }
+
+  async function pullMyAlerts() {
+    var token = getToken();
+    if (!token) return;
+    try {
+      var res = await fetch(API + '/api/alerts/my', {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      var data = await res.json();
+      if (!data.alerts || !data.alerts.length) return;
+      var unread = data.alerts.find(function (a) { return !a.read; }) || data.alerts[0];
+      if (unread) showBanner(unread);
+    } catch (e) {
+      console.warn('⚠️ pullMyAlerts:', e.message);
+    }
+  }
+
+  window.BhoomiGeofence = { shareLocation: shareLocation, pullMyAlerts: pullMyAlerts, showBanner: showBanner };
+
+  document.addEventListener('DOMContentLoaded', function () {
+    ensureUI();
+    pullMyAlerts();
+    setInterval(pullMyAlerts, 60000);
   });
-
-  // nearest first
-  matched.sort((a, b) => a.distanceKm - b.distanceKm);
-  return matched;
-}
-
-function buildGeofenceAlert({
-  centerLat,
-  centerLon,
-  radiusKm,
-  location,
-  riskLevel,
-  score,
-  primaryDisaster,
-  smsEnglish,
-  smsHindi,
-  matchedUsers,
-  engine
-}) {
-  return {
-    type: 'geofence',
-    location: location || 'Unknown',
-    center: { lat: Number(centerLat), lon: Number(centerLon) },
-    radiusKm: Number(radiusKm),
-    riskLevel,
-    score,
-    primaryDisaster: primaryDisaster || 'Multi',
-    smsEnglish: smsEnglish || '',
-    smsHindi: smsHindi || '',
-    userCount: matchedUsers.length,
-    targetedUserIds: matchedUsers.map((u) => u.uid),
-    engine: engine || 'unknown',
-    message: `⚠️ ${riskLevel} ${primaryDisaster || 'disaster'} risk near ${location}. ${radiusKm}km geofence — ${matchedUsers.length} users notified.`,
-    createdAt: new Date().toISOString()
-  };
-}
-
-module.exports = { findUsersInRadius, buildGeofenceAlert };
+})();

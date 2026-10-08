@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050810">
+<title>BhoomiSuraksha — Judges Demo Console</title>
+<style>
+  :root { --bg:#050810; --card:rgba(15,23,42,.75); --line:rgba(255,255,255,.09); --txt:#e2e8f0; --mut:#94a3b8; --ok:#10b981; --warn:#f59e0b; --bad:#ef4444; --blue:#3b82f6; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--txt); padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom); }
+  .wrap { max-width:980px; margin:0 auto; padding:22px 0 40px; }
+  h1 { font-size:24px; font-weight:800; }
+  .sub { color:var(--mut); font-size:13px; margin:6px 0 18px; line-height:1.5; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:760px){ .grid { grid-template-columns:1fr; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:14px; }
+  .card h2 { font-size:12px; text-transform:uppercase; letter-spacing:.6px; color:var(--mut); margin-bottom:12px; font-weight:700; }
+  .chips { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+  .chip { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 14px; min-width:130px; }
+  .chip b { display:block; font-size:22px; }
+  .chip span { font-size:11px; color:var(--mut); text-transform:uppercase; letter-spacing:.4px; }
+  label { font-size:11px; color:var(--mut); text-transform:uppercase; letter-spacing:.4px; display:block; margin:10px 0 4px; }
+  input[type=text], input[type=password], select { width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:rgba(5,8,16,.7); color:var(--txt); font-size:14px; }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .chk { display:flex; gap:8px; align-items:flex-start; font-size:13px; margin-top:10px; color:var(--txt); }
+  .chk input { margin-top:3px; }
+  .chk small { color:var(--mut); display:block; font-size:11px; }
+  button { font:inherit; cursor:pointer; border:none; border-radius:12px; padding:12px 14px; font-weight:800; font-size:14px; color:#fff; }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  .sc { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:6px; }
+  .sc button { padding:18px 8px; font-size:15px; background:linear-gradient(135deg,#1e293b,#0f172a); border:1px solid var(--line); }
+  .sc button:hover:not(:disabled) { border-color:var(--ok); }
+  .btn-stop { background:linear-gradient(135deg,#ef4444,#b91c1c); width:100%; margin-top:10px; }
+  .btn-sm { background:rgba(255,255,255,.08); font-size:12px; padding:8px 10px; margin-top:8px; margin-right:6px; }
+  .badge { display:inline-block; font-size:10px; font-weight:800; padding:3px 8px; border-radius:999px; background:rgba(245,158,11,.15); color:var(--warn); letter-spacing:.5px; }
+  .metric { display:flex; justify-content:space-between; align-items:baseline; padding:8px 0; border-top:1px solid var(--line); font-size:14px; }
+  .metric:first-of-type { border-top:none; }
+  .metric b { font-size:20px; }
+  .bar { height:10px; background:rgba(255,255,255,.07); border-radius:6px; overflow:hidden; margin:6px 0 4px; }
+  .bar > i { display:block; height:100%; width:0; background:var(--ok); transition:width .5s, background .5s; }
+  .risk { font-weight:800; }
+  .risk.LOW { color:var(--ok); } .risk.MODERATE { color:#eab308; } .risk.HIGH { color:var(--warn); } .risk.SEVERE { color:var(--bad); }
+  .log { font-size:13px; line-height:1.6; }
+  .log div { padding:6px 0; border-top:1px solid var(--line); }
+  .log div:first-child { border-top:none; }
+  .muted { color:var(--mut); font-size:12px; line-height:1.55; }
+  .url { font-family:ui-monospace,Menlo,monospace; background:rgba(5,8,16,.8); border:1px dashed var(--line); padding:8px 10px; border-radius:8px; font-size:13px; word-break:break-all; margin-top:6px; }
+  #msg { margin-top:10px; font-size:13px; min-height:18px; }
+  #msg.err { color:var(--bad); } #msg.ok { color:var(--ok); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🎬 Judges Demo Console</h1>
+  <p class="sub">Scenario chalao → radius ke andar jude hue phones pe siren bajega, bahar wale phones silent rahenge. Sensor readings yahan <span class="badge">SIMULATED</span> hain aur real sensor pipeline ko touch nahi karte.</p>
+
+  <div class="chips">
+    <div class="chip"><b id="cPhones">0</b><span>Phones connected</span></div>
+    <div class="chip"><b id="cLoc">0</b><span>Phones with location</span></div>
+    <div class="chip"><b id="cSms">—</b><span id="cSmsLbl">SMS budget</span></div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <h2>1 · Phones ko jodo</h2>
+        <div class="muted">Judge ke phone pe ye page kholo, "Siren Protection ON" dabao aur location allow karo:</div>
+        <div class="url" id="sirenUrl"></div>
+        <div class="muted" style="margin-top:8px">Phone aur laptop same WiFi pe hon, ya site deployed ho. <code>localhost</code> phone pe nahi khulega — laptop ka LAN IP use karo.</div>
+      </div>
+
+      <div class="card">
+        <h2>2 · Access</h2>
+        <div id="authInfo" class="muted"></div>
+        <div id="pinRow">
+          <label for="pin">Demo PIN</label>
+          <input type="password" id="pin" placeholder="DEMO_PIN" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>3 · Alert area</h2>
+        <div class="two">
+          <div><label for="lat">Latitude</label><input type="text" id="lat" inputmode="decimal" placeholder="21.1458"></div>
+          <div><label for="lon">Longitude</label><input type="text" id="lon" inputmode="decimal" placeholder="79.0882"></div>
+        </div>
+        <button class="btn-sm" id="btnHere" type="button">📍 Is device ki location</button>
+        <button class="btn-sm" id="btnFar" type="button">🛰️ ~300 km door (phone silent rehna chahiye)</button>
+        <label for="radius">Radius</label>
+        <select id="radius">
+          <option value="5">5 km</option><option value="10">10 km</option>
+          <option value="15" selected>15 km</option><option value="25">25 km</option>
+        </select>
+        <label class="chk"><input type="checkbox" id="optInstant"><span>Instant alert<small>Prediction ka wait nahi — turant bajao</small></span></label>
+        <label class="chk"><input type="checkbox" id="optUnknown" checked><span>Location-unknown phones ko bhi bajao<small>Safety-first. Band karo to sirf verified-in-radius phones bajenge</small></span></label>
+        <label class="chk"><input type="checkbox" id="optSms" disabled><span id="smsLbl">Demo SMS bhejo<small id="smsHint">Check ho raha hai…</small></span></label>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2>4 · Scenario</h2>
+        <div class="sc">
+          <button type="button" data-sc="flood">🌊<br>Flood</button>
+          <button type="button" data-sc="landslide">⛰️<br>Landslide</button>
+          <button type="button" data-sc="fire">🔥<br>Fire</button>
+        </div>
+        <button class="btn-stop" id="btnStop" type="button">⏹ Stop & silence all phones</button>
+        <div id="msg"></div>
+      </div>
+
+      <div class="card">
+        <h2>Live sensor <span class="badge">SIMULATED</span></h2>
+        <div id="simEmpty" class="muted">Scenario chalao — readings, rate-of-rise aur ETA yahan dikhenge.</div>
+        <div id="sim" style="display:none">
+          <div class="metric"><span id="pLabel">—</span><b id="pVal">—</b></div>
+          <div class="bar"><i id="pBar"></i></div>
+          <div class="metric"><span>Rate of rise</span><b id="rate">—</b></div>
+          <div class="metric"><span>Danger level tak ETA</span><b id="eta">—</b></div>
+          <div class="metric"><span id="sLabel">—</span><b id="sVal">—</b></div>
+          <div class="metric"><span>Risk</span><b class="risk LOW" id="risk">LOW</b></div>
+          <div class="muted" id="simNote" style="margin-top:6px"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Alert result</h2>
+        <div class="log" id="log"><div class="muted">Abhi koi alert nahi.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var API = (['localhost', '127.0.0.1'].indexOf(location.hostname) !== -1) ? 'http://localhost:5000' : location.origin;
+  var $ = function (id) { return document.getElementById(id); };
+
+  var cid = sessionStorage.getItem('demoCid');
+  if (!cid) { cid = 'console-' + Math.random().toString(36).slice(2, 12); sessionStorage.setItem('demoCid', cid); }
+  var statusCache = null;
+
+  $('sirenUrl').textContent = location.origin + '/mobile-siren.html';
+  $('pin').value = sessionStorage.getItem('demoPin') || '';
+  $('pin').addEventListener('input', function () { sessionStorage.setItem('demoPin', this.value); });
+
+  function setMsg(t, cls) { var m = $('msg'); m.textContent = t || ''; m.className = cls || ''; }
+
+  function headers() {
+    var h = { 'Content-Type': 'application/json' };
+    var pin = $('pin').value.trim();
+    if (pin) h['x-demo-pin'] = pin;
+    var t = localStorage.getItem('bhoomiToken');
+    if (t && t !== 'demo-token') h['Authorization'] = 'Bearer ' + t;
+    return h;
+  }
+
+  function renderStatus(s) {
+    statusCache = s;
+    $('cPhones').textContent = s.presence.phones;
+    $('cLoc').textContent = s.presence.phonesWithLocation;
+    var sms = s.sms;
+    $('cSms').textContent = sms.enabled ? (sms.remaining + '/' + sms.cap) : 'OFF';
+    $('cSmsLbl').textContent = sms.enabled ? 'SMS left today' : 'SMS budget';
+    var cb = $('optSms');
+    cb.disabled = !(sms.enabled && sms.remaining > 0);
+    if (cb.disabled) cb.checked = false;
+    $('smsHint').textContent = sms.enabled
+      ? ('Sirf pre-approved test numbers ko, aaj ' + sms.remaining + ' bache. Real users ko kabhi nahi.')
+      : 'Off hai (server .env: DEMO_SMS=on + DEMO_SMS_NUMBERS). Siren aur screen alert bina SMS ke bhi dikhte hain.';
+    var needPin = s.auth.pinConfigured;
+    $('pinRow').style.display = needPin ? 'block' : 'none';
+    $('authInfo').textContent = needPin
+      ? 'PIN daalo ya admin login rakho (dono me se ek chalega).'
+      : 'DEMO_PIN set nahi hai — sirf admin login (auth.html) se chalega.';
+  }
+
+  function refreshStatus() {
+    fetch(API + '/api/demo/status').then(function (r) { return r.json(); }).then(renderStatus).catch(function () {});
+  }
+
+  /* ---------- SSE ---------- */
+  var es = null, retry = 2000, retryT = null;
+  function connect() {
+    if (retryT) { clearTimeout(retryT); retryT = null; }
+    if (es) { es.close(); es = null; }
+    es = new EventSource(API + '/api/demo/stream?role=console&cid=' + encodeURIComponent(cid));
+    es.addEventListener('hello', function (e) { retry = 2000; refreshStatus(); });
+    es.addEventListener('presence', function (e) {
+      var p = JSON.parse(e.data);
+      $('cPhones').textContent = p.phones;
+      $('cLoc').textContent = p.phonesWithLocation;
+    });
+    es.addEventListener('sim_start', function (e) {
+      var d = JSON.parse(e.data);
+      $('simEmpty').style.display = 'none'; $('sim').style.display = 'block';
+      $('simNote').textContent = d.label + ' simulation · 1 tick = 1 simulated minute';
+      ['pVal', 'rate', 'eta', 'sVal'].forEach(function (k) { $(k).textContent = '—'; });
+      $('pBar').style.width = '0';
+    });
+    es.addEventListener('sim', function (e) {
+      var d = JSON.parse(e.data);
+      $('pLabel').textContent = d.primary.label + ' (danger ' + d.primary.threshold + d.primary.unit + ')';
+      $('pVal').textContent = d.primary.value + ' ' + d.primary.unit;
+      var pct = Math.min(100, Math.round(d.primary.value / d.primary.threshold * 100));
+      var bar = $('pBar'); bar.style.width = pct + '%';
+      bar.style.background = d.risk === 'SEVERE' ? 'var(--bad)' : d.risk === 'HIGH' ? 'var(--warn)' : d.risk === 'MODERATE' ? '#eab308' : 'var(--ok)';
+      $('rate').textContent = d.ratePerMin == null ? 'measuring…' : '+' + d.ratePerMin + ' ' + d.primary.unit + '/min';
+      $('eta').textContent = d.etaMin == null ? '—' : '~' + Math.round(d.etaMin) + ' min';
+      $('sLabel').textContent = d.secondary.label;
+      $('sVal').textContent = d.secondary.value + ' ' + d.secondary.unit;
+      var r = $('risk'); r.textContent = d.risk; r.className = 'risk ' + d.risk;
+    });
+    es.addEventListener('sim_end', function () { $('simNote').textContent += ' · finished'; });
+    es.addEventListener('summary', function (e) { addSummary(JSON.parse(e.data)); refreshStatus(); });
+    es.onerror = function () {
+      if (es) { es.close(); es = null; }
+      if (!retryT) { retryT = setTimeout(connect, retry); retry = Math.min(retry * 2, 30000); }
+    };
+  }
+
+  function addSummary(s) {
+    var log = $('log');
+    if (log.firstChild && log.firstChild.className === 'muted') log.innerHTML = '';
+    var d = document.createElement('div');
+    var p = s.phones;
+    var smsTxt = !s.sms.requested ? 'SMS: not requested'
+      : s.sms.sent ? ('SMS: ' + s.sms.sent + ' test number(s) ko gaya')
+      : ('SMS: nahi gaya (' + (s.sms.skippedReason || 'unknown') + ')');
+    d.textContent = new Date(s.at).toLocaleTimeString('en-IN') + ' · ' + s.scenario.toUpperCase() +
+      ' · radius ' + s.radiusKm + ' km · 📱 bajaye: ' + p.ringing + ' · bahar (silent): ' + p.outsideRadius +
+      ' · location unknown: ' + p.unknownLocation + (s.etaMin != null ? ' · ETA ~' + Math.round(s.etaMin) + ' min' : ' · instant') +
+      ' · ' + smsTxt;
+    log.insertBefore(d, log.firstChild);
+  }
+
+  /* ---------- actions ---------- */
+  function getOrigin() {
+    var lat = parseFloat($('lat').value), lon = parseFloat($('lon').value);
+    if (!isFinite(lat) || !isFinite(lon)) return null;
+    return { lat: lat, lon: lon };
+  }
+
+  $('btnHere').addEventListener('click', function () {
+    if (!navigator.geolocation) return setMsg('Browser geolocation support nahi karta', 'err');
+    navigator.geolocation.getCurrentPosition(function (p) {
+      $('lat').value = p.coords.latitude.toFixed(5);
+      $('lon').value = p.coords.longitude.toFixed(5);
+      setMsg('Location set ✓', 'ok');
+    }, function () { setMsg('Location permission nahi mili — lat/lon haath se daalo', 'err'); }, { enableHighAccuracy: true, timeout: 10000 });
+  });
+
+  $('btnFar').addEventListener('click', function () {
+    var o = getOrigin();
+    if (!o) return setMsg('Pehle apni location set karo', 'err');
+    $('lat').value = (o.lat + 2.7).toFixed(5);      // ~300 km uttar
+    setMsg('Origin ~300 km door shift ho gaya — ab scenario chalao, phone silent rehna chahiye', 'ok');
+  });
+
+  document.querySelectorAll('[data-sc]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var o = getOrigin();
+      if (!o) return setMsg('Pehle alert area (lat/lon) set karo', 'err');
+      var sms = $('optSms').checked;
+      if (sms && !confirm('Demo SMS pre-approved test numbers ko jayega (paise kharch). Continue?')) return;
+      setMsg('Bhej raha hoon…');
+      fetch(API + '/api/demo/scenario', {
+        method: 'POST', headers: headers(),
+        body: JSON.stringify({
+          scenario: btn.getAttribute('data-sc'), lat: o.lat, lon: o.lon,
+          radiusKm: parseInt($('radius').value, 10),
+          instant: $('optInstant').checked, includeUnknown: $('optUnknown').checked, sms: sms
+        })
+      }).then(function (r) { return r.json().then(function (j) { return { s: r.status, j: j }; }); })
+        .then(function (x) {
+          if (x.j.ok) setMsg('✅ ' + x.j.scenario + ' scenario chal raha hai', 'ok');
+          else setMsg('❌ ' + (x.j.error || ('HTTP ' + x.s)), 'err');
+        }).catch(function (e) { setMsg('❌ Network: ' + e.message, 'err'); });
+    });
+  });
+
+  $('btnStop').addEventListener('click', function () {
+    fetch(API + '/api/demo/stop', { method: 'POST', headers: headers(), body: '{}' })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { setMsg(j.ok ? '⏹ Sab phones silent' : ('❌ ' + (j.error || 'failed')), j.ok ? 'ok' : 'err'); })
+      .catch(function (e) { setMsg('❌ ' + e.message, 'err'); });
+  });
+
+  refreshStatus();
+  connect();
+  setInterval(refreshStatus, 15000);
+})();
+</script>
+</body>
+</html>
