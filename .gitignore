@@ -1,10 +1,62 @@
-node_modules/
+# ═══════════════════════════════════════════════════════════
+# BhoomiSuraksha v5.2 — .gitignore (Security Hardened)
+# ═══════════════════════════════════════════════════════════
+
+# ── Secrets & Credentials (NEVER commit) ──
 .env
 .env.*
 !.env.example
-ai.env
 serviceAccountKey.json
-*serviceAccount*.json
-firebase-debug.log
+**/serviceAccountKey.json
+*firebase*adminsdk*.json
+credentials.json
+secrets/
+
+# ── Dependencies ──
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json.bak
+
+# ── Logs & Runtime ──
+logs/
 *.log
-_archive/
+npm-debug.log*
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# ── OS Junk ──
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+
+# ── IDE / Editor ──
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.vs/
+
+# ── Build / Temp ──
+dist/
+build/
+tmp/
+temp/
+uploads/
+coverage/
+.nyc_output/
+
+# ── Local simulator dumps ──
+iot-dump/
+sensor-cache/
+
+# ── Backup files ──
+*.bak
+*.backup
+*.old
+public-backup/
