@@ -1,227 +1,342 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BhoomiSuraksha — Live Alert Demo</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<style>
-  :root{
-    --bg:#050810;--panel:rgba(16,24,40,.66);--line:rgba(16,185,129,.2);--text:#e5e7eb;--muted:#94a3b8;
-    --accent:#10b981;--accent2:#34d399;--severe:#ef4444;--high:#f97316;--moderate:#eab308;--low:#10b981;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
-    padding:14px 22px;border-bottom:1px solid var(--line);background:rgba(5,8,16,.85);position:sticky;top:0;z-index:20;backdrop-filter:blur(12px)}
-  .brand{font-weight:800;font-size:18px;display:flex;align-items:center;gap:10px}
-  .brand i{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
-  nav{display:flex;gap:6px;flex-wrap:wrap}
-  nav a{color:var(--muted);text-decoration:none;font-size:13px;font-weight:600;padding:7px 12px;border-radius:10px}
-  nav a:hover,nav a.on{color:var(--accent2);background:rgba(16,185,129,.12)}
-  .wrap{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);gap:16px;padding:16px 22px 28px}
-  @media(max-width:980px){.wrap{grid-template-columns:1fr}}
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;backdrop-filter:blur(14px)}
-  .panel h2{font-size:15px;font-weight:700;margin-bottom:12px}
-  #map{height:520px;border-radius:14px;border:1px solid var(--line);background:#0b0f1a}
-  @media(max-width:980px){#map{height:380px}}
-  .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
-  button,select{font:600 13px 'Inter',sans-serif;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--text);padding:9px 14px;cursor:pointer}
-  button.primary{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#04130d;border:0}
-  button:focus-visible,select:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
-  .loc{font-size:13px;color:var(--muted)}
-  .pipe{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
-  .step{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px}
-  .step b{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px}
-  .step span{font-size:13px;font-weight:700}
-  .step.low{border-color:rgba(16,185,129,.4)}.step.moderate{border-color:rgba(234,179,8,.5)}
-  .step.high{border-color:rgba(249,115,22,.6)}.step.severe{border-color:var(--severe);background:rgba(239,68,68,.12)}
-  .nodes{display:grid;gap:10px}
-  .node{border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:12px;background:rgba(255,255,255,.03)}
-  .node .top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
-  .node .name{font-weight:700;font-size:14px}
-  .badge{font-size:11px;font-weight:800;padding:4px 10px;border-radius:99px;color:#04130d;background:var(--low)}
-  .badge.MODERATE{background:var(--moderate)}.badge.HIGH{background:var(--high)}
-  .badge.SEVERE{background:var(--severe);color:#fff;animation:pulse 1s infinite}
-  @keyframes pulse{50%{opacity:.55}}
-  @media(prefers-reduced-motion:reduce){.badge.SEVERE{animation:none}}
-  .vals{font-size:22px;font-weight:800;margin:4px 0}
-  .vals small{font-size:12px;color:var(--muted);font-weight:500;margin-left:6px}
-  .sub{font-size:12px;color:var(--muted);line-height:1.5}
-  .log{max-height:190px;overflow:auto;font-size:12px;line-height:1.6;color:var(--muted)}
-  .log div{padding:3px 0;border-bottom:1px dashed rgba(255,255,255,.06)}
-  .log b{color:var(--text);font-weight:600}
-  .col{display:flex;flex-direction:column;gap:16px}
-  .empty{color:var(--muted);font-size:13px}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Alert Demo - BhoomiSuraksha v5.2</title>
+    
+    <!-- Global Config (Must load first) -->
+    <script src="config.js"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #050810;
+            --card-bg: rgba(15, 21, 35, 0.75);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --input-bg: #0a0f18;
+            --input-border: rgba(255, 255, 255, 0.15);
+            --text-main: #ffffff;
+            --text-muted: #8b9bb4;
+            --accent-green: #10b981;
+            --danger-red: #ef4444;
+            --danger-hover: #dc2626;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .alert-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 35px 40px;
+            width: 100%;
+            max-width: 520px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .badge {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        h2 {
+            margin: 0 0 5px 0;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"], select, textarea {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: var(--text-main);
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-green);
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .hint-text {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+        .hint-text.green { color: var(--accent-green); }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger-red), var(--danger-hover));
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.6);
+        }
+
+        .btn-danger:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .footer-info {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 11px;
+            color: #586985;
+            line-height: 1.6;
+        }
+        .footer-info span { color: var(--accent-green); font-weight: 600; }
+        
+        #statusMsg {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: none;
+        }
+        .status-success { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; }
+        .status-error { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; }
+    </style>
 </head>
 <body>
-<header>
-  <div class="brand"><i></i>BhoomiSuraksha <span style="font-weight:500;color:var(--muted);font-size:13px">Live Alert Demo</span></div>
-  <nav>
-    <a href="index.html">Home</a><a href="dashboard.html">Dashboard</a>
-    <a href="live-alert-demo.html" class="on">Live Demo</a><a href="admin-stats.html">System Stats</a>
-    <a href="govt-data-map.html">Govt Data Map</a><a href="mobile-siren.html">Mobile Siren</a>
-  </nav>
-</header>
 
-<div class="wrap">
-  <section class="panel">
-    <h2>Meri location aur sensor nodes</h2>
-    <div class="bar">
-      <button class="primary" id="locBtn">Meri location detect karo</button>
-      <label class="loc">Alert radius
-        <select id="radius"><option value="5">5 km</option><option value="10">10 km</option><option value="15" selected>15 km</option></select>
-      </label>
-      <span class="loc" id="locText">Location abhi detect nahi hui.</span>
+    <div class="alert-card">
+        <div class="badge">🚨 FAST2SMS REAL MOBILE ALERT</div>
+        
+        <h2>Dispatch Emergency SMS & Siren</h2>
+        <div class="subtitle">BhoomiSuraksha · Pan-India Early Warning System</div>
+
+        <form id="dispatchForm">
+            <div class="form-group">
+                <label>10-Digit Indian Mobile Number(s)</label>
+                <input type="text" id="mobileNumbers" placeholder="e.g. 9876543210" value="8766028491" required>
+                <div class="hint-text green">✅ Fast2SMS API V2 Gateway Active</div>
+                <div class="hint-text">💡 Multiple numbers comma se: 9876543210, 9123456789</div>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Disaster Hazard</label>
+                    <select id="hazardType">
+                        <option value="Severe Flood Hazard">Severe Flood Hazard</option>
+                        <option value="Cyclone Alert">Cyclone Alert</option>
+                        <option value="Landslide Warning">Landslide Warning</option>
+                        <option value="Earthquake Detected">Earthquake Detected</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Geofence Radius</label>
+                    <select id="radius">
+                        <option value="15">15 km Radius</option>
+                        <option value="30">30 km Radius</option>
+                        <option value="50">50 km Radius</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Location</label>
+                <input type="text" id="location" value="Nagpur, Maharashtra" required>
+            </div>
+
+            <div class="form-group">
+                <label>Custom SMS Message (Optional)</label>
+                <textarea id="customMsg" placeholder="Empty = auto NDMA emergency format"></textarea>
+            </div>
+
+            <button type="submit" class="btn-danger" id="submitBtn">
+                🚀 Send Emergency SMS + Play Emergency Siren
+            </button>
+        </form>
+
+        <div id="statusMsg"></div>
+
+        <div class="footer-info">
+            Gateway: <span>Fast2SMS bulkV2</span> · Helpline: 112 / NDRF 1070<br>
+            Pipeline: SENSE → PREDICT → ALERT → RESPOND
+        </div>
     </div>
-    <div id="map" role="application" aria-label="Sensor nodes ka map"></div>
-  </section>
 
-  <aside class="col">
-    <section class="panel">
-      <h2>Sense → Predict → Alert → Respond</h2>
-      <div class="pipe" id="pipe">
-        <div class="step" id="pSense"><b>Sense</b><span>—</span></div>
-        <div class="step" id="pPredict"><b>Predict</b><span>—</span></div>
-        <div class="step" id="pAlert"><b>Alert</b><span>—</span></div>
-        <div class="step" id="pRespond"><b>Respond</b><span>—</span></div>
-      </div>
-      <div class="nodes" id="nodes"><div class="empty">Sensor data load ho raha hai…</div></div>
-    </section>
-    <section class="panel">
-      <h2>Live event log</h2>
-      <div class="log" id="log"><div class="empty">Abhi koi event nahi.</div></div>
-    </section>
-  </aside>
-</div>
+    <script>
+        let audioCtx;
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-(function(){
-  'use strict';
-  const API = window.BHOOMI_API || (['localhost','127.0.0.1'].includes(location.hostname) ? 'http://localhost:5000' : location.origin);
-  const $ = id => document.getElementById(id);
-  const COLORS = {LOW:'#10b981',MODERATE:'#eab308',HIGH:'#f97316',SEVERE:'#ef4444'};
-  const ICONS = {jalNode:'🌊',bhumiNode:'⛰️',vanNode:'🔥',vayuNode:'🌫️'};
-  const RANK = {LOW:0,MODERATE:1,HIGH:2,SEVERE:3};
+        function triggerSirenAndFlash() {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
 
-  const map = L.map('map',{zoomControl:true}).setView([21.1524,79.0805],10);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
-    attribution:'&copy; OpenStreetMap &copy; CARTO',maxZoom:19}).addTo(map);
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
 
-  let me=null, meMarker=null, meCircle=null;
-  const nodeMarkers={}, nodeCircles={};
-  const lastRisk={}; let lastSirenActive=false, firstLoad=true;
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(1600, audioCtx.currentTime + 0.5);
+                osc.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 1.0);
 
-  const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  function haversine(a,b,c,d){
-    const R=6371,r=x=>x*Math.PI/180,dLat=r(c-a),dLon=r(d-b);
-    const h=Math.sin(dLat/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dLon/2)**2;
-    return 2*R*Math.asin(Math.sqrt(h));
-  }
-  function log(msg){
-    const box=$('log'); if(box.querySelector('.empty')) box.innerHTML='';
-    const t=new Date().toLocaleTimeString('en-IN');
-    const div=document.createElement('div'); div.innerHTML='<b>'+t+'</b> &nbsp;'+esc(msg);
-    box.prepend(div); while(box.children.length>60) box.removeChild(box.lastChild);
-  }
-  function radiusKm(){ return Number($('radius').value); }
+                let sweepCount = 0;
+                const interval = setInterval(() => {
+                    sweepCount++;
+                    if (sweepCount >= 3) {
+                        clearInterval(interval);
+                    } else {
+                        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                        osc.frequency.linearRampToValueAtTime(1600, audioCtx.currentTime + 0.5);
+                        osc.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 1.0);
+                    }
+                }, 1000);
 
-  /* ---------- Location (koi fake fallback nahi) ---------- */
-  function setMe(lat,lon,acc){
-    me={lat,lon};
-    $('locText').textContent='Aapki location: '+lat.toFixed(4)+', '+lon.toFixed(4)+(acc?' (±'+Math.round(acc)+' m)':'');
-    if(meMarker) map.removeLayer(meMarker); if(meCircle) map.removeLayer(meCircle);
-    meMarker=L.circleMarker([lat,lon],{radius:8,color:'#fff',weight:2,fillColor:'#38bdf8',fillOpacity:1}).addTo(map).bindTooltip('Aap yahan ho');
-    meCircle=L.circle([lat,lon],{radius:radiusKm()*1000,color:'#38bdf8',weight:1.5,fillOpacity:.07,dashArray:'6 6'}).addTo(map);
-    map.fitBounds(meCircle.getBounds(),{padding:[30,30]});
-    log('Location mili — '+radiusKm()+' km alert radius set');
-    if(lastSensors) renderNodes(lastSensors);
-  }
-  $('locBtn').addEventListener('click',()=>{
-    if(!navigator.geolocation){ $('locText').textContent='Is browser mein GPS support nahi hai.'; return; }
-    $('locText').textContent='Location detect ho rahi hai…';
-    navigator.geolocation.getCurrentPosition(
-      p=>setMe(p.coords.latitude,p.coords.longitude,p.coords.accuracy),
-      e=>{ $('locText').textContent = e.code===1 ? 'Location permission deny hui. Browser settings mein allow karo.' : 'Location nahi mil paayi. Dobara try karo.'; },
-      {enableHighAccuracy:true,timeout:15000,maximumAge:60000}
-    );
-  });
-  $('radius').addEventListener('change',()=>{ if(meCircle) meCircle.setRadius(radiusKm()*1000); if(lastSensors) renderNodes(lastSensors); });
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
 
-  /* ---------- Sensors ---------- */
-  let lastSensors=null;
-  function valueText(n){
-    const d=n.data||{};
-    if(n.nodeId==='jalNode') return {v:(d.waterLevel??0)+' cm',s:'Paani ka level • trend: '+(d.trend||'—')};
-    if(n.nodeId==='bhumiNode') return {v:(d.slopeTilt??0)+'°',s:'Slope tilt • vibration: '+(d.vibration??0)};
-    if(n.nodeId==='vanNode') return {v:(d.temperature??0)+' °C',s:'CO: '+(d.co??0)+' ppm • humidity: '+(d.humidity??0)+'%'};
-    return {v:'—',s:Object.entries(d).map(([k,v])=>k+': '+v).join(' • ')};
-  }
-  function renderNodes(sensors){
-    const list=Object.values(sensors);
-    $('nodes').innerHTML=list.map(n=>{
-      const t=valueText(n), loc=n.location||{};
-      let dist='';
-      if(me && loc.lat!=null){
-        const km=haversine(me.lat,me.lon,loc.lat,loc.lng);
-        dist='<br>Aapse '+km.toFixed(1)+' km door — '+(km<=radiusKm()?'<b style="color:#fca5a5">radius ke andar</b>':'radius ke bahar');
-      }
-      return '<div class="node"><div class="top"><span class="name">'+(ICONS[n.nodeId]||'📡')+' '+esc(n.name)+'</span>'+
-        '<span class="badge '+esc(n.risk)+'">'+esc(n.risk)+'</span></div>'+
-        '<div class="vals">'+esc(t.v)+'<small>'+esc(t.s)+'</small></div>'+
-        '<div class="sub">'+esc(n.hardware||'')+' • '+esc(loc.label||'')+
-        '<br>Last update: '+(n.timestamp?new Date(n.timestamp).toLocaleTimeString('en-IN'):'abhi tak data nahi')+dist+'</div></div>';
-    }).join('');
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
 
-    list.forEach(n=>{
-      const loc=n.location; if(!loc||loc.lat==null) return;
-      const c=COLORS[n.risk]||COLORS.LOW;
-      if(!nodeMarkers[n.nodeId]){
-        nodeMarkers[n.nodeId]=L.circleMarker([loc.lat,loc.lng],{radius:10,weight:2,color:'#fff',fillOpacity:1}).addTo(map);
-        nodeCircles[n.nodeId]=L.circle([loc.lat,loc.lng],{radius:radiusKm()*1000,weight:1,fillOpacity:.05}).addTo(map);
-      }
-      nodeMarkers[n.nodeId].setStyle({fillColor:c}).bindTooltip(n.name+' — '+n.risk);
-      nodeCircles[n.nodeId].setStyle({color:c,fillColor:c}).setRadius(radiusKm()*1000);
-      if(!firstLoad && lastRisk[n.nodeId] && lastRisk[n.nodeId]!==n.risk) log(n.name+': risk '+lastRisk[n.nodeId]+' → '+n.risk);
-      lastRisk[n.nodeId]=n.risk;
-    });
-    if(firstLoad && !me && list[0] && list[0].location) map.setView([list[0].location.lat,list[0].location.lng],11);
-    firstLoad=false;
-  }
-  function setStep(id,cls,text){ const e=$(id); e.className='step '+cls; e.querySelector('span').textContent=text; }
+                osc.start();
+                osc.stop(audioCtx.currentTime + 3);
 
-  async function pollSensors(){
-    try{
-      const r=await fetch(API+'/api/sensors/live'); const j=await r.json();
-      const sensors=(j.data&&j.data.sensors)||{};
-      lastSensors=sensors; renderNodes(sensors);
-      const list=Object.values(sensors);
-      const active=list.filter(n=>n.timestamp).length;
-      setStep('pSense',active?'low':'moderate',active?active+'/'+list.length+' node live':'Data ka intezaar');
-      const top=list.reduce((m,n)=>RANK[n.risk]>RANK[m]?n.risk:m,'LOW');
-      setStep('pPredict',top.toLowerCase(),'Sabse upar risk: '+top);
-    }catch(e){
-      setStep('pSense','severe','Server offline'); $('nodes').innerHTML='<div class="empty">Backend se connect nahi ho paa raha. node server.js chalu hai?</div>';
-    }
-  }
-  async function pollSiren(){
-    try{
-      const r=await fetch(API+'/api/siren/status'); const s=await r.json();
-      setStep('pAlert',s.alertActive?'severe':'low',s.alertActive?'Siren ACTIVE':'Standby');
-      setStep('pRespond',s.connectedDevices?'low':'moderate',s.connectedDevices+' device siren par');
-      if(s.alertActive && !lastSirenActive) log('🚨 Siren fire hui: '+(s.message||'emergency alert'));
-      if(!s.alertActive && lastSirenActive) log('Siren state reset ho gayi');
-      lastSirenActive=!!s.alertActive;
-    }catch(e){ setStep('pAlert','moderate','Unknown'); setStep('pRespond','moderate','Unknown'); }
-  }
-  pollSensors(); pollSiren();
-  setInterval(pollSensors,3000); setInterval(pollSiren,3000);
-  log('Demo page connect ho gaya — live polling chalu (har 3 sec)');
-})();
-</script>
+                // Screen Red Flash Effect
+                document.body.style.transition = "background-color 0.2s";
+                document.body.style.backgroundColor = "#450a0a";
+                setTimeout(() => { document.body.style.backgroundColor = "#050810"; }, 3000);
+            } catch (err) {
+                console.warn("Audio Context Error:", err);
+            }
+        }
+
+        document.getElementById('dispatchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const btn = document.getElementById('submitBtn');
+            const statusBox = document.getElementById('statusMsg');
+            const originalText = btn.innerHTML;
+
+            // Trigger Siren and Visual Flash IMMEDIATELY
+            triggerSirenAndFlash();
+
+            btn.innerHTML = '⏳ Dispatching Alert...';
+            btn.disabled = true;
+            statusBox.style.display = 'none';
+
+            const payload = {
+                numbers: document.getElementById('mobileNumbers').value.split(',').map(n => n.trim()),
+                hazard: document.getElementById('hazardType').value,
+                radius: document.getElementById('radius').value,
+                location: document.getElementById('location').value,
+                customMessage: document.getElementById('customMsg').value
+            };
+
+            try {
+                const apiEndpoint = `${window.BHOOMI_API || 'http://localhost:5000'}/api/sms/send-test`;
+                const headers = window.getAuthHeaders ? window.getAuthHeaders() : { 'Content-Type': 'application/json' };
+
+                const response = await fetch(apiEndpoint, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    btn.innerHTML = '✅ Dispatch Triggered!';
+                    statusBox.className = 'status-success';
+                    statusBox.innerHTML = `<strong>Success (${data.mode || 'OK'}):</strong> ${data.message}`;
+                    statusBox.style.display = 'block';
+                } else {
+                    throw new Error(data.message || 'Dispatch failed on server');
+                }
+            } catch (err) {
+                console.error("Dispatch Error:", err);
+                statusBox.className = 'status-error';
+                statusBox.innerHTML = `<strong>⚠️ Alert:</strong> ${err.message}<br><small>Target API: ${window.BHOOMI_API}</small>`;
+                statusBox.style.display = 'block';
+            } finally {
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 3000);
+            }
+        });
+    </script>
 </body>
 </html>
