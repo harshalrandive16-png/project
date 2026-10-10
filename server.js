@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // 🏔️ BhoomiSuraksha — server.js v5.2 (security-hardened)
-// Fixes: CORS for Github Pages + Preflight, Fast2SMS Demo Mode, /api/live
+// Fixes: CORS + Preflight, Fast2SMS Public Demo Mode, /api/live
 // ═══════════════════════════════════════════════════════════════
 
 require('dotenv').config();
@@ -38,9 +38,7 @@ app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5000;
 
 // ═══════════════════════════════════════════════════════════════
-// 🌐 DYNAMIC CORS & PREFLIGHT OPTIONS HANDLER  (PROBLEM 4 FIX)
-// Allows: Localhost, GitHub Pages, Render, Custom Domains
-// Headers: Authorization, Content-Type, x-api-key, x-sensor-key
+// 🌐 DYNAMIC CORS & PREFLIGHT OPTIONS HANDLER
 // ═══════════════════════════════════════════════════════════════
 const ALLOWED_ORIGINS = [
   'http://localhost:5000',
@@ -54,7 +52,6 @@ const ALLOWED_ORIGINS = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow non-browser tools (curl / Postman / mobile native) — origin undefined
     if (!origin) return callback(null, true);
 
     const isAllowedExact = ALLOWED_ORIGINS.includes(origin);
@@ -85,7 +82,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Explicit preflight for ALL routes
+app.options('*', cors(corsOptions));
 
 app.use(express.json({ limit: '1mb' }));
 
@@ -112,6 +109,7 @@ const authLimiter = makeLimiter(15 * 60 * 1000, 10);
 const reportLimiter = makeLimiter(60 * 1000, 5);
 const chatLimiter = makeLimiter(60 * 1000, 20);
 const analyzeLimiter = makeLimiter(60 * 1000, 15);
+const smsDemoLimiter = makeLimiter(60 * 1000, 8); // Demo SMS abuse protection
 
 // ═══════════════════════════════════════════════════════════════
 // 🔥 FIREBASE INIT
@@ -332,67 +330,96 @@ app.get('/api/sensors/live', (req, res) => {
   }
 });
 
-// 📱 DEMO SMS + SIREN DISPATCH (ADMIN ONLY) - SIMULATION FALLBACK
-app.post('/api/sms/send-test', ...adminOnly, async (req, res) => {
-  const { phone, phones, numbers, message, hazard, location, radius } = req.body || {};
+// ═══════════════════════════════════════════════════════════════
+// 📱 DEMO SMS + SIREN DISPATCH — PUBLIC DEMO MODE (NO JWT REQUIRED)
+// live-alert-demo.html iske through chalega bina login ke
+// Rate limited: 8 req / minute
+// ═══════════════════════════════════════════════════════════════
+app.post('/api/sms/send-test', smsDemoLimiter, async (req, res) => {
+  try {
+    const { phone, phones, numbers, message, hazard, location, radius, customMessage } = req.body || {};
 
-  const inputNumbers = numbers || phones || phone || '';
-  const cleanNums = cleanPhones(Array.isArray(inputNumbers) ? inputNumbers.join(',') : inputNumbers);
+    const inputNumbers = numbers || phones || phone || '';
+    const cleanNums = cleanPhones(Array.isArray(inputNumbers) ? inputNumbers.join(',') : inputNumbers);
 
-  if (!cleanNums.length) {
-    return res.status(400).json({
-      success: false,
-      message: 'At least one valid 10-digit phone number required'
-    });
-  }
-
-  const text = clip(message, 300) ||
-    `BhoomiSuraksha ALERT: ${hazard || 'Severe disaster'} risk near ${location || 'your area'}. Move to safety NOW. Helpline 112`;
-
-  console.log(`📢 DISPATCH REQUEST → ${cleanNums.length} numbers`);
-
-  // Trigger Live Siren immediately
-  broadcastSirenToMobiles(text.slice(0, 140));
-
-  const apiKey = process.env.FAST2SMS_API_KEY;
-  if (apiKey && apiKey !== 'YOUR_FAST2SMS_KEY_HERE') {
-    const smsResult = await sendGeofencedSMS(cleanNums.join(','), text);
-    safeSave('sms_logs', {
-      target: cleanNums.join(','),
-      message: text,
-      result: smsResult,
-      sentBy: req.user.email
-    });
-
-    if (smsResult.success) {
-      return res.json({
-        success: true,
-        mode: 'LIVE_GATEWAY',
-        message: 'SMS sent + Siren broadcasted!',
-        smsResult
+    if (!cleanNums.length) {
+      return res.status(400).json({
+        ok: false,
+        success: false,
+        message: 'At least one valid 10-digit Indian mobile number is required.'
       });
     }
+
+    const hazardName = hazard || 'Severe Hazard';
+    const locName = location || 'Nagpur, Maharashtra';
+    const radiusKm = radius || 15;
+
+    const alertMessage = clip(customMessage || message, 300) ||
+      `ALERT [NDMA]: BhoomiSuraksha ${hazardName} warning in ${locName} within ${radiusKm}km. Evacuate immediately. Helpline 112`;
+
+    console.log(`📢 DEMO DISPATCH → ${cleanNums.join(', ')} | ${hazardName} @ ${locName}`);
+
+    // 1. Always fire SSE Siren first (< 1.5s)
+    broadcastSirenToMobiles(alertMessage.slice(0, 140));
+
+    // 2. Fast2SMS live key check
+    const apiKey = process.env.FAST2SMS_API_KEY;
+
+    if (apiKey && apiKey !== 'YOUR_FAST2SMS_KEY_HERE' && String(apiKey).trim() !== '') {
+      const smsResult = await sendGeofencedSMS(cleanNums.join(','), alertMessage);
+      safeSave('sms_logs', {
+        target: cleanNums.join(','),
+        message: alertMessage,
+        result: smsResult,
+        triggeredFrom: 'live-alert-demo',
+        mode: 'LIVE'
+      });
+
+      if (smsResult && smsResult.success) {
+        return res.json({
+          ok: true,
+          success: true,
+          mode: 'LIVE_FAST2SMS_GATEWAY',
+          message: `Real SMS dispatched to ${cleanNums.length} recipient(s) + Emergency Siren Activated!`,
+          smsResult
+        });
+      }
+
+      // Siren already played — soft fail SMS
+      return res.json({
+        ok: true,
+        success: true,
+        mode: 'SIREN_ACTIVE_SMS_FAILED',
+        message: `Siren Activated! SMS note: ${(smsResult && smsResult.error) || 'Check Fast2SMS key/balance'}`
+      });
+    }
+
+    // 3. DEMO SIMULATION (no key / empty key)
+    console.log(`📡 [DEMO SIMULATION] "${alertMessage}" → ${cleanNums.join(', ')}`);
+    safeSave('sms_logs', {
+      target: cleanNums.join(','),
+      message: alertMessage,
+      simulated: true,
+      triggeredFrom: 'live-alert-demo',
+      mode: 'SIMULATION'
+    });
+
+    return res.json({
+      ok: true,
+      success: true,
+      mode: 'DEMO_SIMULATION_MODE',
+      message: `✅ Emergency Siren Triggered + Demo Alert Simulated for ${cleanNums.length} recipient(s)! (Add FAST2SMS_API_KEY in .env for live SMS)`,
+      recipients: cleanNums
+    });
+
+  } catch (error) {
+    console.error('❌ Dispatch Route Error:', error.message || error);
     return res.status(500).json({
+      ok: false,
       success: false,
-      message: 'Siren played but SMS failed: ' + (smsResult.error || 'Gateway Error')
+      message: error.message || 'Internal Server Error during dispatch.'
     });
   }
-
-  // DEMO SIMULATION MODE
-  console.log(`[SIMULATION MODE] SMS alert to: ${cleanNums.join(', ')}`);
-  safeSave('sms_logs', {
-    target: cleanNums.join(','),
-    message: text,
-    simulated: true,
-    sentBy: req.user.email
-  });
-
-  return res.json({
-    success: true,
-    mode: 'SIMULATION_MODE',
-    message: '[DEMO MODE] Siren played! Add FAST2SMS_API_KEY in .env for real SMS delivery.',
-    recipients: cleanNums
-  });
 });
 
 // 🛰️ LIVE DATA APIs
@@ -455,5 +482,6 @@ app.listen(PORT, () => {
   console.log(`📍 Port: ${PORT}`);
   console.log(`🔥 Firestore: ${db ? 'CONNECTED' : 'MOCK MODE'}`);
   console.log('🌐 CORS: GitHub Pages + Localhost + Render ARMED');
+  console.log('📱 SMS Demo Route: PUBLIC (no JWT) + rate-limited');
   console.log('══════════════════════════════════════════════\n');
 });
