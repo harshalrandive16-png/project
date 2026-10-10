@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // 🏔️ BhoomiSuraksha — server.js v5.2 (security-hardened)
-// Fixes: CORS for Github Pages, Fast2SMS Demo Mode, Added /api/live
+// Fixes: CORS for Github Pages + Preflight, Fast2SMS Demo Mode, /api/live
 // ═══════════════════════════════════════════════════════════════
 
 require('dotenv').config();
@@ -37,22 +37,60 @@ app.set('trust proxy', 1);
 
 const PORT = process.env.PORT || 5000;
 
-// ── CORS: fixed for GitHub Pages & Localhost ──
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || `http://localhost:${PORT}`)
-  .split(',').map(s => s.trim()).filter(Boolean);
+// ═══════════════════════════════════════════════════════════════
+// 🌐 DYNAMIC CORS & PREFLIGHT OPTIONS HANDLER  (PROBLEM 4 FIX)
+// Allows: Localhost, GitHub Pages, Render, Custom Domains
+// Headers: Authorization, Content-Type, x-api-key, x-sensor-key
+// ═══════════════════════════════════════════════════════════════
+const ALLOWED_ORIGINS = [
+  'http://localhost:5000',
+  'http://127.0.0.1:5000',
+  'http://localhost:3000',
+  'http://127.0.0.1:5500',
+  'https://harshalrandive16-png.github.io',
+  'https://project-2-wszb.onrender.com',
+  ...(process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim())
+].filter(Boolean);
 
-app.use(cors({
-  origin(origin, cb) {
-    // origin nahi = same-origin / curl, OR github.io domain, OR allowed origins
-    if (!origin || ALLOWED_ORIGINS.includes(origin) || origin.includes('github.io') || origin.includes('onrender.com')) {
-        return cb(null, true);
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow non-browser tools (curl / Postman / mobile native) — origin undefined
+    if (!origin) return callback(null, true);
+
+    const isAllowedExact = ALLOWED_ORIGINS.includes(origin);
+    const isAllowedDomain =
+      origin.endsWith('.github.io') ||
+      origin.endsWith('.onrender.com') ||
+      origin.includes('localhost') ||
+      origin.includes('127.0.0.1');
+
+    if (isAllowedExact || isAllowedDomain) {
+      return callback(null, true);
     }
-    return cb(null, false);
-  }
-}));
+
+    console.warn(`🛡️ CORS Blocked for Origin: ${origin}`);
+    return callback(new Error(`CORS policy violation for origin: ${origin}`));
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'x-api-key',
+    'x-sensor-key',
+    'X-Requested-With',
+    'Accept'
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Explicit preflight for ALL routes
+
 app.use(express.json({ limit: '1mb' }));
 
 console.log('🚀 BhoomiSuraksha server v5.2 booting...');
+console.log('🌐 CORS origins armed:', ALLOWED_ORIGINS.join(' | '));
 
 // ═══════════════════════════════════════════════════════════════
 // 🚦 RATE LIMITERS
@@ -89,9 +127,9 @@ function readJsonFile(filePath) {
 
 function loadFirebaseCreds() {
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    return process.env.FIREBASE_SERVICE_ACCOUNT.startsWith('{') 
-        ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) 
-        : readJsonFile(process.env.FIREBASE_SERVICE_ACCOUNT);
+    return process.env.FIREBASE_SERVICE_ACCOUNT.startsWith('{')
+      ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
+      : readJsonFile(process.env.FIREBASE_SERVICE_ACCOUNT);
   }
   const defaultKeyPath = path.join(__dirname, 'serviceAccountKey.json');
   if (fs.existsSync(defaultKeyPath)) return readJsonFile(defaultKeyPath);
@@ -179,7 +217,8 @@ if (!HAS_PUBLIC) {
     catch { return res.status(400).json({ ok: false, error: 'Bad request' }); }
     const segs = p.split('/').filter(Boolean);
     const last = segs[segs.length - 1] || '';
-    const blocked = (BLOCKED_EXT.test(last) && last !== 'manifest.json') || segs.some(s => s.startsWith('.') || BLOCKED_SEGMENTS.has(s) || BLOCKED_FILES.has(s));
+    const blocked = (BLOCKED_EXT.test(last) && last !== 'manifest.json') ||
+      segs.some(s => s.startsWith('.') || BLOCKED_SEGMENTS.has(s) || BLOCKED_FILES.has(s));
     if (blocked) return res.status(403).json({ ok: false, error: 'Forbidden' });
     next();
   });
@@ -209,7 +248,7 @@ function requireAdmin(req, res, next) {
 const adminOnly = [authMiddleware, requireAdmin];
 
 function sensorAuth(req, res, next) {
-  const key = req.headers['x-api-key'];
+  const key = req.headers['x-api-key'] || req.headers['x-sensor-key'];
   const expected = process.env.SENSOR_API_KEY;
   if (expected && key && safeEqual(key, expected)) return next();
   return authMiddleware(req, res, () => requireAdmin(req, res, next));
@@ -224,11 +263,14 @@ let sirenResetTimer = null;
 const MAX_SIREN_CLIENTS = 2000;
 
 app.get('/api/siren/stream', (req, res) => {
-  if (sirenClients.length >= MAX_SIREN_CLIENTS) return res.status(503).json({ ok: false, error: 'Too many connected devices' });
-  
+  if (sirenClients.length >= MAX_SIREN_CLIENTS) {
+    return res.status(503).json({ ok: false, error: 'Too many connected devices' });
+  }
+
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders();
 
   const clientId = Date.now() + Math.random();
@@ -242,11 +284,17 @@ app.get('/api/siren/stream', (req, res) => {
 });
 
 setInterval(() => {
-  sirenClients.forEach(client => { try { client.res.write(': ping\n\n'); } catch (e) {} });
+  sirenClients.forEach(client => {
+    try { client.res.write(': ping\n\n'); } catch (e) {}
+  });
 }, 25000);
 
 function broadcastSirenToMobiles(message, opts = {}) {
-  const base = { alertActive: true, message: clip(message, 200) || '🚨 EMERGENCY ALERT — BhoomiSuraksha', time: Date.now() };
+  const base = {
+    alertActive: true,
+    message: clip(message, 200) || '🚨 EMERGENCY ALERT — BhoomiSuraksha',
+    time: Date.now()
+  };
   sirenState = { alertActive: true, message: base.message, triggeredAt: base.time };
 
   sirenClients.forEach(client => {
@@ -257,6 +305,7 @@ function broadcastSirenToMobiles(message, opts = {}) {
   sirenResetTimer = setTimeout(() => {
     sirenState = { alertActive: false, message: '', triggeredAt: null };
   }, 90000);
+
   return { sent: sirenClients.length };
 }
 
@@ -265,7 +314,10 @@ app.post('/api/sensors/ingest', sensorAuth, (req, res) => {
   try {
     const parsed = iotService.normalizeIngest(req.body);
     if (!parsed.ok) return res.status(400).json({ ok: false, error: parsed.error });
-    const state = iotService.processSensorData(parsed.nodeId, parsed.data, { location: parsed.location, deviceId: parsed.deviceId });
+    const state = iotService.processSensorData(parsed.nodeId, parsed.data, {
+      location: parsed.location,
+      deviceId: parsed.deviceId
+    });
     res.json({ ok: true, success: true, state });
   } catch (error) {
     res.status(500).json({ ok: false, error: 'Sensor ingest failed' });
@@ -280,58 +332,74 @@ app.get('/api/sensors/live', (req, res) => {
   }
 });
 
-// 📱 DEMO SMS + SIREN DISPATCH (ADMIN ONLY) - SIMULATION FALLBACK ADDED
+// 📱 DEMO SMS + SIREN DISPATCH (ADMIN ONLY) - SIMULATION FALLBACK
 app.post('/api/sms/send-test', ...adminOnly, async (req, res) => {
   const { phone, phones, numbers, message, hazard, location, radius } = req.body || {};
-  
-  // Clean inputs from Frontend Form Payload
+
   const inputNumbers = numbers || phones || phone || '';
   const cleanNums = cleanPhones(Array.isArray(inputNumbers) ? inputNumbers.join(',') : inputNumbers);
-  
+
   if (!cleanNums.length) {
-    return res.status(400).json({ success: false, message: 'At least one valid 10-digit phone number required' });
+    return res.status(400).json({
+      success: false,
+      message: 'At least one valid 10-digit phone number required'
+    });
   }
 
-  const text = clip(message, 300) || `BhoomiSuraksha ALERT: ${hazard || 'Severe disaster'} risk near ${location || 'your area'}. Move to safety NOW. Helpline 112`;
+  const text = clip(message, 300) ||
+    `BhoomiSuraksha ALERT: ${hazard || 'Severe disaster'} risk near ${location || 'your area'}. Move to safety NOW. Helpline 112`;
 
   console.log(`📢 DISPATCH REQUEST → ${cleanNums.length} numbers`);
 
-  // Trigger Live Siren Stream immediately
+  // Trigger Live Siren immediately
   broadcastSirenToMobiles(text.slice(0, 140));
 
-  // Check Fast2SMS Key
   const apiKey = process.env.FAST2SMS_API_KEY;
   if (apiKey && apiKey !== 'YOUR_FAST2SMS_KEY_HERE') {
-      // REAL LIVE SMS DISPATCH
-      const smsResult = await sendGeofencedSMS(cleanNums.join(','), text);
-      safeSave('sms_logs', { target: cleanNums.join(','), message: text, result: smsResult, sentBy: req.user.email });
+    const smsResult = await sendGeofencedSMS(cleanNums.join(','), text);
+    safeSave('sms_logs', {
+      target: cleanNums.join(','),
+      message: text,
+      result: smsResult,
+      sentBy: req.user.email
+    });
 
-      if (smsResult.success) {
-        return res.json({ success: true, mode: 'LIVE_GATEWAY', message: 'SMS sent + Siren broadcasted!', smsResult });
-      } else {
-        return res.status(500).json({ success: false, message: 'Siren played but SMS failed: ' + (smsResult.error || 'Gateway Error') });
-      }
-  } else {
-      // DEMO SIMULATION MODE
-      console.log(`[SIMULATION MODE] SMS alert to: ${cleanNums.join(', ')}`);
-      safeSave('sms_logs', { target: cleanNums.join(','), message: text, simulated: true, sentBy: req.user.email });
-
+    if (smsResult.success) {
       return res.json({
-          success: true, 
-          mode: 'SIMULATION_MODE', 
-          message: '[DEMO MODE] Siren played! Add FAST2SMS_API_KEY in .env for real SMS delivery.',
-          recipients: cleanNums
+        success: true,
+        mode: 'LIVE_GATEWAY',
+        message: 'SMS sent + Siren broadcasted!',
+        smsResult
       });
+    }
+    return res.status(500).json({
+      success: false,
+      message: 'Siren played but SMS failed: ' + (smsResult.error || 'Gateway Error')
+    });
   }
+
+  // DEMO SIMULATION MODE
+  console.log(`[SIMULATION MODE] SMS alert to: ${cleanNums.join(', ')}`);
+  safeSave('sms_logs', {
+    target: cleanNums.join(','),
+    message: text,
+    simulated: true,
+    sentBy: req.user.email
+  });
+
+  return res.json({
+    success: true,
+    mode: 'SIMULATION_MODE',
+    message: '[DEMO MODE] Siren played! Add FAST2SMS_API_KEY in .env for real SMS delivery.',
+    recipients: cleanNums
+  });
 });
 
-
-// 🛰️ LIVE DATA APIs & ROUTER FIX
-// TERA REQUESTED ROUTE ADD KIYA (With correct path)
+// 🛰️ LIVE DATA APIs
 try {
-    app.use('/api/live', require('./services/liveData'));
-} catch(err) {
-    console.warn("⚠️ Warning: Could not load /api/live router. Check if ./services/liveData.js exports an Express Router.");
+  app.use('/api/live', require('./services/liveData'));
+} catch (err) {
+  console.warn('⚠️ Warning: Could not load /api/live router. Check ./services/liveData.js');
 }
 
 const { getLiveZoneRisks, getLiveHighwayStatus, getIndiaEarthquakes } = require('./services/liveData');
@@ -351,7 +419,12 @@ const { getAllRealtimeDisasters } = require('./services/realtimeDisasters');
 app.get('/api/disasters/realtime', async (req, res) => {
   try {
     const disasters = await getAllRealtimeDisasters();
-    res.json({ ok: true, count: disasters.length, updatedAt: new Date().toISOString(), disasters });
+    res.json({
+      ok: true,
+      count: disasters.length,
+      updatedAt: new Date().toISOString(),
+      disasters
+    });
   } catch (err) {
     res.status(500).json({ ok: false, error: 'realtime-disasters-failed' });
   }
@@ -360,7 +433,10 @@ app.get('/api/disasters/realtime', async (req, res) => {
 // 🚫 API 404 HANDLER (MUST BE LAST)
 app.use((req, res) => {
   if (req.path.startsWith('/api')) {
-    return res.status(404).json({ ok: false, error: `API endpoint not found: ${req.method} ${req.path}` });
+    return res.status(404).json({
+      ok: false,
+      error: `API endpoint not found: ${req.method} ${req.path}`
+    });
   }
   res.status(404).sendFile(path.join(STATIC_ROOT, 'index.html'), (err) => {
     if (err) res.status(404).send('Not found');
@@ -378,5 +454,6 @@ app.listen(PORT, () => {
   console.log('🚀 BhoomiSuraksha v5.2 SERVER RUNNING');
   console.log(`📍 Port: ${PORT}`);
   console.log(`🔥 Firestore: ${db ? 'CONNECTED' : 'MOCK MODE'}`);
+  console.log('🌐 CORS: GitHub Pages + Localhost + Render ARMED');
   console.log('══════════════════════════════════════════════\n');
 });
