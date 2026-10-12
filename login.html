@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BhoomiSuraksha — Login / Signup</title>
+  <script src="config.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      background: #050810;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background-image:
+        radial-gradient(ellipse at 20% 20%, rgba(16, 185, 129, 0.12), transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(16, 185, 129, 0.08), transparent 45%);
+    }
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 20px;
+      padding: 32px 28px;
+      backdrop-filter: blur(18px);
+      box-shadow: 0 25px 50px rgba(0,0,0,0.45), 0 0 0 1px rgba(16,185,129,0.08);
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .logo h1 {
+      font-size: 1.45rem;
+      color: #10b981;
+      letter-spacing: 0.02em;
+    }
+    .logo p {
+      margin-top: 6px;
+      font-size: 0.85rem;
+      color: #94a3b8;
+    }
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 22px;
+      background: rgba(2, 6, 23, 0.6);
+      padding: 6px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.12);
+    }
+    .tab {
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      padding: 10px 12px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.92rem;
+      transition: 0.2s ease;
+    }
+    .tab.active {
+      background: rgba(16, 185, 129, 0.18);
+      color: #10b981;
+      box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.35);
+    }
+    .form { display: none; }
+    .form.active { display: block; }
+    .field { margin-bottom: 14px; }
+    .field label {
+      display: block;
+      font-size: 0.78rem;
+      color: #94a3b8;
+      margin-bottom: 6px;
+      letter-spacing: 0.03em;
+    }
+    .field input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(2, 6, 23, 0.65);
+      color: #e2e8f0;
+      outline: none;
+      font-size: 0.95rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .field input:focus {
+      border-color: rgba(16, 185, 129, 0.55);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+    }
+    .btn {
+      width: 100%;
+      margin-top: 8px;
+      padding: 13px 16px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: #04140f;
+      font-weight: 700;
+      font-size: 0.98rem;
+      cursor: pointer;
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
+    .btn:hover { filter: brightness(1.05); transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .msg {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 0.86rem;
+      display: none;
+    }
+    .msg.show { display: block; }
+    .msg.error {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+    }
+    .msg.success {
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #6ee7b7;
+    }
+    .links {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 0.82rem;
+      color: #64748b;
+    }
+    .links a {
+      color: #34d399;
+      text-decoration: none;
+    }
+    .links a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <h1>🏔️ BhoomiSuraksha</h1>
+      <p>Early Warning & Risk Monitoring</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" id="tabLogin" type="button">Login</button>
+      <button class="tab" id="tabSignup" type="button">Signup</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <form class="form active" id="loginForm">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="you@example.com" required autocomplete="email" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" required minlength="6" autocomplete="current-password" />
+      </div>
+      <button class="btn" id="loginBtn" type="submit">Login Securely</button>
+    </form>
+
+    <!-- SIGNUP FORM -->
+    <form class="form" id="signupForm">
+      <div class="field">
+        <label>Full Name</label>
+        <input type="text" id="signupName" placeholder="Harshal Randive" required maxlength="80" />
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="signupEmail" placeholder="you@example.com" required autocomplete="email" />
+      </div>
+      <div class="field">
+        <label>Phone (optional)</label>
+        <input type="tel" id="signupPhone" placeholder="10-digit mobile" maxlength="15" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="signupPassword" placeholder="min 6 characters" required minlength="6" autocomplete="new-password" />
+      </div>
+      <button class="btn" id="signupBtn" type="submit">Create Account</button>
+    </form>
+
+    <div class="msg" id="msgBox"></div>
+
+    <div class="links">
+      <a href="index.html">← Back to Home</a>
+      ·
+      <a href="dashboard.html">Dashboard</a>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const API = window.BHOOMI_API || (
+        (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+          ? 'http://localhost:5000'
+          : (location.hostname.includes('github.io')
+              ? 'https://project-2-wszb.onrender.com'
+              : location.origin)
+      );
+
+      const tabLogin = document.getElementById('tabLogin');
+      const tabSignup = document.getElementById('tabSignup');
+      const loginForm = document.getElementById('loginForm');
+      const signupForm = document.getElementById('signupForm');
+      const msgBox = document.getElementById('msgBox');
+
+      function showMsg(text, type) {
+        msgBox.textContent = text;
+        msgBox.className = 'msg show ' + (type === 'success' ? 'success' : 'error');
+      }
+
+      function clearMsg() {
+        msgBox.className = 'msg';
+        msgBox.textContent = '';
+      }
+
+      function switchTab(mode) {
+        clearMsg();
+        if (mode === 'login') {
+          tabLogin.classList.add('active');
+          tabSignup.classList.remove('active');
+          loginForm.classList.add('active');
+          signupForm.classList.remove('active');
+        } else {
+          tabSignup.classList.add('active');
+          tabLogin.classList.remove('active');
+          signupForm.classList.add('active');
+          loginForm.classList.remove('active');
+        }
+      }
+
+      tabLogin.addEventListener('click', () => switchTab('login'));
+      tabSignup.addEventListener('click', () => switchTab('signup'));
+
+      function saveSession(token, user) {
+        localStorage.setItem('bhoomi_token', token);
+        localStorage.setItem('bhoomi_user', JSON.stringify(user || {}));
+      }
+
+      // LOGIN
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearMsg();
+        const btn = document.getElementById('loginBtn');
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+
+        btn.disabled = true;
+        btn.textContent = 'Logging in...';
+
+        try {
+          const res = await fetch(API + '/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+          const data = await res.json();
+
+          if (!res.ok || !data.ok) {
+            throw new Error(data.error || 'Login failed');
+          }
+
+          saveSession(data.token, data.user);
+          showMsg('Login successful! Redirecting...', 'success');
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 700);
+        } catch (err) {
+          showMsg(err.message || 'Login error', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Login Securely';
+        }
+      });
+
+      // SIGNUP
+      signupForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearMsg();
+        const btn = document.getElementById('signupBtn');
+        const name = document.getElementById('signupName').value.trim();
+        const email = document.getElementById('signupEmail').value.trim();
+        const phone = document.getElementById('signupPhone').value.trim();
+        const password = document.getElementById('signupPassword').value;
+
+        btn.disabled = true;
+        btn.textContent = 'Creating...';
+
+        try {
+          const res = await fetch(API + '/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, phone, password })
+          });
+          const data = await res.json();
+
+          if (!res.ok || !data.ok) {
+            throw new Error(data.error || 'Signup failed');
+          }
+
+          saveSession(data.token, data.user);
+          showMsg('Account created! Redirecting...', 'success');
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 700);
+        } catch (err) {
+          showMsg(err.message || 'Signup error', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Create Account';
+        }
+      });
+
+      // Already logged in?
+      if (localStorage.getItem('bhoomi_token')) {
+        // optional auto-redirect — comment out if not wanted
+        // window.location.href = 'dashboard.html';
+      }
+    })();
+  </script>
+</body>
+</html>

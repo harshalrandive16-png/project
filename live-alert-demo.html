@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Alert Demo - BhoomiSuraksha v5.2</title>
     
-    <!-- Global Config (Must load first) -->
+    <!-- Global Config -->
     <script src="config.js"></script>
     
     <!-- Google Fonts: Inter -->
@@ -166,12 +166,13 @@
             line-height: 1.6;
         }
         .footer-info span { color: var(--accent-green); font-weight: 600; }
-        
+
         #statusMsg {
             margin-top: 15px;
-            padding: 12px;
+            padding: 14px;
             border-radius: 8px;
-            font-size: 13px;
+            font-size: 12px;
+            line-height: 1.5;
             display: none;
         }
         .status-success { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; }
@@ -274,12 +275,12 @@
                 osc.start();
                 osc.stop(audioCtx.currentTime + 3);
 
-                // Screen Red Flash Effect
+                // Flash Screen Red
                 document.body.style.transition = "background-color 0.2s";
                 document.body.style.backgroundColor = "#450a0a";
                 setTimeout(() => { document.body.style.backgroundColor = "#050810"; }, 3000);
             } catch (err) {
-                console.warn("Audio Context Error:", err);
+                console.warn("Audio Siren Warning:", err);
             }
         }
 
@@ -290,7 +291,7 @@
             const statusBox = document.getElementById('statusMsg');
             const originalText = btn.innerHTML;
 
-            // Trigger Siren and Visual Flash IMMEDIATELY
+            // Trigger Real Web Audio Siren Instantly (<1.5s latency)
             triggerSirenAndFlash();
 
             btn.innerHTML = '⏳ Dispatching Alert...';
@@ -307,36 +308,37 @@
 
             try {
                 const apiEndpoint = `${window.BHOOMI_API || 'http://localhost:5000'}/api/sms/send-test`;
-                const headers = window.getAuthHeaders ? window.getAuthHeaders() : { 'Content-Type': 'application/json' };
 
                 const response = await fetch(apiEndpoint, {
                     method: 'POST',
-                    headers: headers,
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
                 const data = await response.json();
 
-                if (response.ok && data.success) {
-                    btn.innerHTML = '✅ Dispatch Triggered!';
+                if (response.ok && (data.success || data.ok)) {
+                    btn.innerHTML = '✅ Emergency Alert Dispatched!';
                     statusBox.className = 'status-success';
                     statusBox.innerHTML = `<strong>Success (${data.mode || 'OK'}):</strong> ${data.message}`;
                     statusBox.style.display = 'block';
                 } else {
-                    throw new Error(data.message || 'Dispatch failed on server');
+                    throw new Error(data.message || data.error || 'Dispatch failed on server');
                 }
             } catch (err) {
                 console.error("Dispatch Error:", err);
                 statusBox.className = 'status-error';
-                statusBox.innerHTML = `<strong>⚠️ Alert:</strong> ${err.message}<br><small>Target API: ${window.BHOOMI_API}</small>`;
+                statusBox.innerHTML = `<strong>⚠️ Alert Error:</strong> ${err.message}<br><small>API Target: ${window.BHOOMI_API}</small>`;
                 statusBox.style.display = 'block';
             } finally {
                 setTimeout(() => {
                     btn.innerHTML = originalText;
                     btn.disabled = false;
-                }, 3000);
+                }, 4000);
             }
         });
     </script>
+    <script src="config.js"></script>
+<script src="push-register.js"></script>
 </body>
 </html>

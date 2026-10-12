@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BhoomiSuraksha — Live Fast2SMS Mobile Alert & Siren</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #060b11;
+      --card: rgba(15, 23, 42, 0.92);
+      --border: rgba(16, 185, 129, 0.3);
+      --accent: #10b981;
+      --danger: #dc2626;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      background: radial-gradient(ellipse at top, #0f172a 0%, #060b11 65%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      width: 100%;
+      max-width: 540px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+    }
+    .badge {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      background: rgba(220, 38, 38, 0.15);
+      color: #fca5a5;
+      border: 1px solid rgba(220, 38, 38, 0.4);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+    h1 { font-size: 1.45rem; font-weight: 800; margin-bottom: 6px; }
+    .sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 22px; }
+    label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin: 14px 0 6px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    input, select, textarea {
+      width: 100%;
+      background: #0b1220;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 0.95rem;
+      outline: none;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+    }
+    .hint {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 6px;
+      line-height: 1.45;
+    }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
+    .btn {
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      cursor: pointer;
+      margin-top: 18px;
+      font-family: inherit;
+      transition: 0.15s ease;
+    }
+    .btn-danger {
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      color: #fff;
+      box-shadow: 0 12px 28px rgba(220,38,38,0.35);
+    }
+    .btn-danger:hover { filter: brightness(1.06); transform: translateY(-1px); }
+    .btn-danger:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-mute {
+      background: rgba(30, 41, 59, 0.95);
+      color: #fecaca;
+      border: 1px solid rgba(248,113,113,0.35);
+    }
+    .siren-box {
+      display: none;
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(127, 29, 29, 0.4);
+      border: 1px solid rgba(248,113,113,0.35);
+    }
+    .siren-box.active { display: block; animation: pulse 1.1s infinite; }
+    @keyframes pulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.35); }
+      50% { box-shadow: 0 0 0 10px rgba(220,38,38,0); }
+    }
+    .status {
+      display: none;
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .status.ok {
+      display: block;
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.35);
+      color: #6ee7b7;
+    }
+    .status.err {
+      display: block;
+      background: rgba(220,38,38,0.12);
+      border: 1px solid rgba(220,38,38,0.35);
+      color: #fca5a5;
+    }
+    .foot {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 0.75rem;
+      color: #64748b;
+      line-height: 1.5;
+    }
+    .pill { color: #34d399; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">📲 FAST2SMS REAL MOBILE ALERT</div>
+    <h1>Dispatch Emergency SMS & Siren</h1>
+    <p class="sub">BhoomiSuraksha · Pan-India Early Warning System</p>
+
+    <label>10-Digit Indian Mobile Number(s)</label>
+    <input id="phones" type="text" placeholder="e.g. 9876543210" value="" />
+    <div class="hint">
+      ✅ Fast2SMS API V2 Gateway Active<br/>
+      💡 Multiple numbers comma se: <code>9876543210, 9123456789</code>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Disaster Hazard</label>
+        <select id="hazard">
+          <option>Severe Flood Hazard</option>
+          <option>Cyclone / Storm Surge</option>
+          <option>Landslide Hazard</option>
+          <option>Earthquake / Seismic</option>
+          <option>Cloudburst / Extreme Rain</option>
+        </select>
+      </div>
+      <div>
+        <label>Geofence Radius</label>
+        <select id="radius">
+          <option value="10">10 km Radius</option>
+          <option value="15" selected>15 km Radius</option>
+          <option value="25">25 km Radius</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Location</label>
+    <input id="location" type="text" value="Nagpur, Maharashtra" />
+
+    <label>Custom SMS Message (Optional)</label>
+    <textarea id="customMsg" rows="3" placeholder="Empty = auto NDMA emergency format"></textarea>
+
+    <button class="btn btn-danger" id="sendBtn" onclick="dispatchFast2SMS()">
+      🚀 SEND REAL MOBILE SMS + PLAY EMERGENCY SIREN
+    </button>
+
+    <div class="siren-box" id="sirenBox">
+      <div style="font-weight:800; margin-bottom:8px;">🚨 EMERGENCY SIREN ACTIVE (800Hz–1600Hz)</div>
+      <button class="btn btn-mute" onclick="stopSiren()">🔇 MUTE SIREN</button>
+    </div>
+
+    <div class="status" id="statusBox"></div>
+
+    <div class="foot">
+      Gateway: <span class="pill">Fast2SMS bulkV2</span> · Helpline: 112 / NDRF 1070<br/>
+      Pipeline: SENSE → PREDICT → ALERT → RESPOND
+    </div>
+  </div>
+
+  <script>
+    const API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+      ? 'http://localhost:5000'
+      : location.origin;
+
+    let audioCtx = null;
+    let sirenTimer = null;
+    let sirenOsc = null;
+
+    function showStatus(ok, text) {
+      const box = document.getElementById('statusBox');
+      box.className = 'status ' + (ok ? 'ok' : 'err');
+      box.textContent = text;
+    }
+
+    function startSiren() {
+      stopSiren();
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        sirenOsc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        sirenOsc.type = 'sawtooth';
+        gain.gain.value = 0.08;
+        sirenOsc.connect(gain);
+        gain.connect(audioCtx.destination);
+        sirenOsc.start();
+        let t = 0;
+        sirenTimer = setInterval(() => {
+          t += 0.08;
+          const freq = 800 + (Math.sin(t) * 0.5 + 0.5) * 800;
+          if (sirenOsc) sirenOsc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        }, 40);
+        document.getElementById('sirenBox').classList.add('active');
+      } catch (e) {
+        console.warn('Siren blocked:', e.message);
+      }
+    }
+
+    function stopSiren() {
+      if (sirenTimer) clearInterval(sirenTimer);
+      sirenTimer = null;
+      try { if (sirenOsc) sirenOsc.stop(); } catch (_) {}
+      sirenOsc = null;
+      if (audioCtx) { try { audioCtx.close(); } catch (_) {} }
+      audioCtx = null;
+      document.getElementById('sirenBox').classList.remove('active');
+    }
+
+    async function dispatchFast2SMS() {
+      const btn = document.getElementById('sendBtn');
+      const phones = document.getElementById('phones').value.trim();
+      const hazard = document.getElementById('hazard').value;
+      const locationName = document.getElementById('location').value.trim() || 'Nagpur';
+      const custom = document.getElementById('customMsg').value.trim();
+
+      if (!phones) {
+        showStatus(false, '❌ Apni 10-digit mobile number input box mein dalo.');
+        return;
+      }
+
+      const smsText = custom || `BhoomiSuraksha ALERT: ${hazard} detected near ${locationName}. Move to safe ground immediately! Emergency Helpline: 112 / NDRF 1070`;
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Requesting Fast2SMS Gateway...';
+      startSiren();
+      showStatus(true, '📡 Connecting to Fast2SMS API Gateway...');
+
+      try {
+        const res = await fetch(API + '/api/sms/send-test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: phones, phones: phones, message: smsText })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success && data.smsResult?.success) {
+          showStatus(
+            true,
+            `✅ FAST2SMS MOBILE SMS DISPATCHED SUCCESSFULLY!\n\n` +
+            `📱 Recipient(s): ${data.smsResult.numbersSent.join(', ')}\n` +
+            `📩 Message: "${smsText}"\n` +
+            `🆔 Request ID: ${data.smsResult.request_id || 'OK'}\n\n` +
+            `Mobile phone ka SMS Inbox check karo!`
+          );
+        } else {
+          const err = data.smsResult?.error || data.error || data.message || JSON.stringify(data);
+          showStatus(
+            false,
+            `⚠️ Fast2SMS Response Error: ${err}\n\n` +
+            `Checklist:\n` +
+            `1) Mobile number valid 10-digit hai?\n` +
+            `2) Fast2SMS account me ₹100 wallet balance recharged hai?\n` +
+            `3) Node server running on port 5000?`
+          );
+        }
+      } catch (err) {
+        showStatus(false, `❌ Network error: ${err.message}\n\nMake sure 'node server.js' is running!`);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🚀 SEND REAL MOBILE SMS + PLAY EMERGENCY SIREN';
+      }
+    }
+
+    window.addEventListener('beforeunload', stopSiren);
+  </script>
+</body>
+</html>

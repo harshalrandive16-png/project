@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BhoomiSuraksha - SMS Broadcast Node</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: #151b2b;
+            --border-color: #2a3245;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-blue: #3b82f6;
+            --accent-blue-hover: #2563eb;
+            --danger-red: #ef4444;
+            --success-green: #22c55e;
+            --warning-orange: #f59e0b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-primary); min-height: 100vh; display: flex; flex-direction: column; }
+
+        .navbar {
+            background: rgba(21, 27, 43, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .navbar h1 { font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
+        .navbar h1 i { color: var(--warning-orange); }
+
+        .back-btn {
+            background: transparent; color: var(--text-primary); border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; text-decoration: none;
+            display: flex; align-items: center; gap: 8px; transition: 0.3s;
+        }
+        .back-btn:hover { background: var(--border-color); }
+
+        .container {
+            display: grid; grid-template-columns: 1fr 400px; gap: 2rem;
+            padding: 2rem; flex-grow: 1; max-width: 1400px; margin: 0 auto; width: 100%;
+        }
+
+        .control-panel {
+            background: var(--panel-bg); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem;
+        }
+
+        h2 { font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--accent-blue); }
+
+        .input-group { display: flex; gap: 10px; }
+
+        input[type="text"] {
+            flex-grow: 1; background: var(--bg-color); border: 1px solid var(--border-color);
+            color: white; padding: 0.75rem 1rem; border-radius: 6px; font-size: 1rem;
+        }
+        input[type="text"]:focus { outline: none; border-color: var(--accent-blue); }
+
+        button.btn-primary {
+            background: var(--accent-blue); color: white; border: none;
+            padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.3s;
+        }
+        button.btn-primary:hover { background: var(--accent-blue-hover); }
+
+        .phone-list {
+            display: flex; flex-wrap: wrap; gap: 10px; min-height: 50px;
+            background: var(--bg-color); padding: 1rem; border-radius: 6px; border: 1px dashed var(--border-color);
+        }
+
+        .phone-tag {
+            background: var(--border-color); padding: 5px 12px; border-radius: 20px;
+            font-size: 0.85rem; display: flex; align-items: center; gap: 8px;
+        }
+        .phone-tag i { cursor: pointer; color: var(--danger-red); }
+
+        .alert-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+        .alert-btn {
+            background: var(--bg-color); border: 1px solid var(--border-color);
+            color: var(--text-secondary); padding: 1rem; border-radius: 8px; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; gap: 8px; transition: 0.3s;
+        }
+        .alert-btn.active {
+            background: rgba(59, 130, 246, 0.1); border-color: var(--accent-blue); color: var(--text-primary);
+        }
+        .alert-btn i { font-size: 1.5rem; }
+        .alert-btn.flood i { color: #3b82f6; }
+        .alert-btn.earthquake i { color: #8b5cf6; }
+        .alert-btn.cyclone i { color: #06b6d4; }
+        .alert-btn.heatwave i { color: #f59e0b; }
+
+        .broadcast-btn {
+            background: var(--danger-red); color: white; border: none; padding: 1rem;
+            font-size: 1.1rem; font-weight: bold; border-radius: 8px; cursor: pointer;
+            margin-top: auto; display: flex; justify-content: center; align-items: center;
+            gap: 10px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+        }
+        .broadcast-btn:disabled { background: #475569; cursor: not-allowed; box-shadow: none; }
+
+        .progress-container { display: none; margin-top: 1rem; }
+        .progress-bar-bg { background: var(--bg-color); height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 10px; }
+        .progress-bar-fill { height: 100%; background: var(--success-green); width: 0%; transition: width 0.3s; }
+        
+        .log-box {
+            background: #000; color: #22c55e; font-family: monospace; padding: 10px;
+            border-radius: 6px; height: 130px; overflow-y: auto; font-size: 0.85rem; line-height: 1.5;
+        }
+
+        .preview-panel { display: flex; justify-content: center; align-items: center; }
+        .mobile-frame {
+            width: 300px; height: 580px; background: #ffffff; border: 12px solid #334155;
+            border-radius: 40px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        .mobile-notch {
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 120px; height: 25px; background: #334155; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; z-index: 10;
+        }
+        .mobile-header { background: #f8fafc; padding: 2rem 1rem 1rem; border-bottom: 1px solid #e2e8f0; color: #0f172a; font-weight: 600; }
+        .mobile-body { flex-grow: 1; background: #f1f5f9; padding: 1rem; display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; }
+        .sms-bubble {
+            background: #e5e7eb; color: #1f2937; padding: 12px 16px; border-radius: 18px;
+            border-bottom-left-radius: 4px; font-size: 0.85rem; max-width: 90%; line-height: 1.4;
+            opacity: 0; transform: translateY(20px); transition: all 0.3s ease;
+        }
+        .sms-bubble.visible { opacity: 1; transform: translateY(0); }
+        .sms-time { font-size: 0.7rem; color: #64748b; margin-top: 5px; text-align: right; }
+
+        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <h1><i class="fa-solid fa-satellite-dish"></i> BhoomiSuraksha SMS Node (Server Connected)</h1>
+        <a href="dashboard.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</a>
+    </nav>
+
+    <div class="container">
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div>
+                <h2>1. Target Mobile Numbers (India +91)</h2>
+                <div class="input-group">
+                    <input type="text" id="phoneInput" placeholder="Enter 10-digit Mobile Number" maxlength="10">
+                    <button class="btn-primary" onclick="addPhone()">Add</button>
+                </div>
+            </div>
+
+            <div class="phone-list" id="phoneList"></div>
+
+            <div>
+                <h2>2. Select Emergency Payload</h2>
+                <div class="alert-options">
+                    <button class="alert-btn flood active" onclick="selectAlert('flood', this)">
+                        <i class="fa-solid fa-water"></i> Flood Warning
+                    </button>
+                    <button class="alert-btn earthquake" onclick="selectAlert('earthquake', this)">
+                        <i class="fa-solid fa-house-crack"></i> Earthquake
+                    </button>
+                    <button class="alert-btn cyclone" onclick="selectAlert('cyclone', this)">
+                        <i class="fa-solid fa-hurricane"></i> Cyclone Alert
+                    </button>
+                    <button class="alert-btn heatwave" onclick="selectAlert('heatwave', this)">
+                        <i class="fa-solid fa-temperature-arrow-up"></i> Heatwave
+                    </button>
+                </div>
+            </div>
+
+            <button class="broadcast-btn" id="broadcastBtn" onclick="sendBroadcastToServer()">
+                <i class="fa-solid fa-tower-broadcast"></i> SEND VIA SERVER API
+            </button>
+
+            <div class="progress-container" id="progressContainer">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 5px;">
+                    <span id="statusLabel">Connecting to Server...</span>
+                    <span id="progressText">0%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progressBar"></div>
+                </div>
+                <div class="log-box" id="logBox">
+                    > Initializing connection...<br>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phone Screen Preview -->
+        <div class="preview-panel">
+            <div class="mobile-frame">
+                <div class="mobile-notch"></div>
+                <div class="mobile-header">
+                    <div style="display: flex; flex-direction: column;">
+                        <span>BhoomiSuraksha</span>
+                        <span style="font-size: 0.7rem; color: #64748b;">Emergency Alert System</span>
+                    </div>
+                </div>
+                <div class="mobile-body" id="mobileBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SERVER_URL = "http://localhost:5000/api/send-sms";
+        let phoneNumbers = ["9876543210", "9123456780"];
+        let currentAlert = "flood";
+
+        const templates = {
+            flood: "⚠️ BHOOMISURAKSHA ALERT\nSevere Flood Warning in your sector. Evacuate to higher ground immediately. Helpline: 1078",
+            earthquake: "⚠️ BHOOMISURAKSHA ALERT\nMagnitude 6.2 Earthquake detected nearby. Drop, Cover, and Hold on.",
+            cyclone: "⚠️ BHOOMISURAKSHA ALERT\nCyclone approaching coast. Secure your home, stock supplies. Helpline: 1078",
+            heatwave: "⚠️ BHOOMISURAKSHA ALERT\nExtreme Heatwave expected today (45°C+). Avoid direct sunlight between 11AM-4PM."
+        };
+
+        function init() {
+            renderPhones();
+            updatePreview();
+        }
+
+        function addPhone() {
+            const input = document.getElementById("phoneInput");
+            const val = input.value.trim();
+            const regex = /^[6-9]\d{9}$/;
+            
+            if(regex.test(val)) {
+                if(!phoneNumbers.includes(val)) {
+                    phoneNumbers.push(val);
+                    renderPhones();
+                    input.value = "";
+                } else { alert("Number already added!"); }
+            } else { alert("Please enter a valid 10-digit Indian mobile number."); }
+        }
+
+        function removePhone(number) {
+            phoneNumbers = phoneNumbers.filter(n => n !== number);
+            renderPhones();
+        }
+
+        function renderPhones() {
+            const list = document.getElementById("phoneList");
+            list.innerHTML = "";
+            phoneNumbers.forEach(num => {
+                list.innerHTML += `
+                    <div class="phone-tag">
+                        +91 ${num} 
+                        <i class="fa-solid fa-xmark" onclick="removePhone('${num}')"></i>
+                    </div>`;
+            });
+            document.getElementById("broadcastBtn").disabled = phoneNumbers.length === 0;
+        }
+
+        function selectAlert(type, btnElement) {
+            currentAlert = type;
+            document.querySelectorAll('.alert-btn').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const body = document.getElementById("mobileBody");
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            body.innerHTML = '';
+            setTimeout(() => {
+                body.innerHTML = `
+                    <div class="sms-bubble visible">
+                        ${templates[currentAlert].replace(/\n/g, '<br>')}
+                        <div class="sms-time">${time}</div>
+                    </div>`;
+            }, 100);
+        }
+
+        // Real API Call to Node.js Backend Server
+        async function sendBroadcastToServer() {
+            if(phoneNumbers.length === 0) return;
+
+            const btn = document.getElementById("broadcastBtn");
+            const progContainer = document.getElementById("progressContainer");
+            const progBar = document.getElementById("progressBar");
+            const progText = document.getElementById("progressText");
+            const logBox = document.getElementById("logBox");
+            const statusLabel = document.getElementById("statusLabel");
+
+            btn.disabled = true;
+            progContainer.style.display = "block";
+            progBar.style.width = "20%";
+            progText.innerText = "20%";
+            statusLabel.innerText = "Posting to Server...";
+            
+            logBox.innerHTML = `> Connecting to backend at ${SERVER_URL}...<br>`;
+            logBox.scrollTop = logBox.scrollHeight;
+
+            try {
+                const response = await fetch(SERVER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phoneNumbers: phoneNumbers,
+                        message: templates[currentAlert]
+                    })
+                });
+
+                progBar.style.width = "70%";
+                progText.innerText = "70%";
+
+                const data = await response.json();
+
+                if(data.success) {
+                    progBar.style.width = "100%";
+                    progText.innerText = "100%";
+                    statusLabel.innerText = "Broadcast Complete!";
+
+                    logBox.innerHTML += `<span style="color:var(--accent-blue)">> Server Response Received [HTTP 200 OK]</span><br>`;
+                    
+                    data.details.forEach(item => {
+                        const statusColor = item.status === "DELIVERED" ? "var(--success-green)" : "var(--danger-red)";
+                        const modeTag = item.mode ? `(${item.mode} MODE)` : "";
+                        logBox.innerHTML += `> Target +91 ${item.phone} -> <span style="color:${statusColor}">${item.status} ${modeTag}</span><br>`;
+                    });
+
+                    logBox.innerHTML += `<br><span style="color:var(--success-green)">> SUCCESS: Sent: ${data.totalSent}, Failed: ${data.totalFailed}</span>`;
+                    logBox.scrollTop = logBox.scrollHeight;
+
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-check-double"></i> SENT TO SERVER';
+                    btn.style.background = 'var(--success-green)';
+                } else {
+                    throw new Error(data.error || "Server processing failed.");
+                }
+
+            } catch (err) {
+                console.error("API Error:", err);
+                progBar.style.width = "100%";
+                progBar.style.background = "var(--danger-red)";
+                statusLabel.innerText = "Connection Failed!";
+                
+                logBox.innerHTML += `<span style="color:var(--danger-red)">> ERROR: Unable to reach server. Make sure 'node server.js' is running on port 5000.</span><br>`;
+                logBox.innerHTML += `<span style="color:var(--danger-red)">> Detail: ${err.message}</span>`;
+                logBox.scrollTop = logBox.scrollHeight;
+                
+                btn.disabled = false;
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

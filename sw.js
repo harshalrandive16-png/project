@@ -1,9 +1,9 @@
 /* ============================================================
-   BhoomiSuraksha — Service Worker
-   PWA offline shell + push notifications
+   BhoomiSuraksha v5.2 — Service Worker
+   PWA offline shell + Multi-Gateway WebPush Lock-screen Alerts
 ============================================================ */
 
-const CACHE_VERSION = 'bhoomi-v1.0.0';
+const CACHE_VERSION = 'bhoomi-v5.2.0';
 const SHELL_CACHE = `shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 
@@ -20,6 +20,7 @@ const APP_SHELL = [
   './family-tracker.html',
   './rss-feed.html',
   './about.html',
+  './live-alert-demo.html',
   './style.css',
   './config.js',
   './chatbot.js',
@@ -72,7 +73,6 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(req.url);
 
-  // Don't hijack non-same-origin heavily (CDN etc.) except opaque fallback
   // API: network-first, no hard cache (fresh alerts/AI)
   if (isAPIRequest(url)) {
     event.respondWith(
@@ -136,37 +136,65 @@ self.addEventListener('fetch', (event) => {
   }
 });
 
-/* ---- Push Notifications (existing feature compatible) ---- */
+/* ============================================================
+   🚨 BhoomiSuraksha v5.2 — WebPush Lock-screen Channel (Channel 4)
+   High-priority L3 RED vibration + requireInteraction banner
+============================================================ */
 self.addEventListener('push', function (event) {
   let data = {
-    title: '🚨 BhoomiSuraksha Alert',
-    body: 'Emergency alert in your area. Open app for details.',
-    url: './alerts.html'
+    title: '🚨 BhoomiSuraksha EMERGENCY ALERT',
+    body: 'L3 RED Critical Threshold breached! Move to safety immediately. Helpline 112.',
+    url: './live-alert-demo.html',
+    level: 'RED'
   };
 
   if (event.data) {
     try {
-      data = { ...data, ...event.data.json() };
+      const parsed = event.data.json();
+      data = { ...data, ...parsed };
     } catch (e) {
-      data.body = event.data.text();
+      data.body = event.data.text() || data.body;
     }
   }
+
+  const isRed = String(data.level || data.title || '').toUpperCase().includes('RED');
 
   const options = {
     body: data.body,
     icon: './icons/icon-192.svg',
     badge: './icons/icon-192.svg',
-    vibrate: [300, 100, 300, 100, 300],
+    vibrate: isRed
+      ? [800, 200, 800, 200, 800, 200, 1000, 300, 1000]
+      : [300, 100, 300, 100, 300],
+    tag: 'bhoomi-alert-' + Date.now(),
+    renotify: true,
     requireInteraction: true,
-    data: { url: data.url || './alerts.html' }
+    silent: false,
+    data: {
+      url: data.url || './alerts.html',
+      level: data.level || 'RED'
+    },
+    actions: [
+      { action: 'open', title: 'Open Dashboard' },
+      { action: 'helpline', title: 'Call 112' }
+    ]
   };
 
-  event.waitUntil(self.registration.showNotification(data.title, options));
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
 });
 
 self.addEventListener('notificationclick', function (event) {
   event.notification.close();
+
+  if (event.action === 'helpline') {
+    event.waitUntil(clients.openWindow('tel:112'));
+    return;
+  }
+
   const target = (event.notification.data && event.notification.data.url) || './alerts.html';
+
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
       for (const client of windowClients) {
@@ -180,6 +208,12 @@ self.addEventListener('notificationclick', function (event) {
   );
 });
 
+self.addEventListener('notificationclose', function (event) {
+  console.log('[SW] Notification dismissed:', event.notification.tag);
+});
+
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
